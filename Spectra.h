@@ -23,6 +23,38 @@
 #include <map>
 #include <sstream>
 
+typedef struct siDetect {
+  int detect;
+  int quad;
+  double energy;
+  double time;
+} siHit;
+
+typedef struct csiDetect {
+  int detect;
+  double energy;
+  double time;
+} csiHit;
+
+typedef struct mmCenter {
+  int column;
+  int row;
+  double energy;
+  double time;
+} mmCenter;
+
+typedef struct mmStrip {
+  int row;
+  double energy;
+  double time;
+} mmStrip;
+
+typedef struct mmChain {
+  int column;
+  double energy;
+  double time;
+} mmChain;
+
 // Header file for the classes stored in the TTree if any.
 
 class Spectra {
@@ -63,45 +95,47 @@ public :
 private:
   void InitChannelMap();
 
-  map<int,pair<int,int> > siForwardMap;
+  std::map<int,std::pair<int,int> > siForwardMap;
   int siForwardChannel[10][4];
 
-  map<int,pair<int,int> > siLeftMap;
+  std::map<int,std::pair<int,int> > siLeftMap;
   int siLeftChannel[6][4];
 
-  map<int,int> CsIForwardMap;
-  int CsIForwardChannel[10];
+  std::map<int,int> csiForwardMap;
+  int csiForwardChannel[10];
 
-  map<int,int> CsILeftMap;
-  int CsILeftChannel[6];
+  std::map<int,int> csiLeftMap;
+  int csiLeftChannel[6];
 
-  map<int, int> Aget_Map;
+  std::map<int,int> Aget_Map;
 
-  map<int,pair<int,int> > MM_Map_Asad0_Aget0;
-  map<int,pair<int,int> > MM_Map_Asad0_Aget1;
-  map<int,pair<int,int> > MM_Map_Asad0_Aget2;
-  map<int,pair<int,int> > MM_Map_Asad0_Aget3;
+  std::map<int,std::pair<int,int> > MM_Map_Asad0_Aget0;
+  std::map<int,std::pair<int,int> > MM_Map_Asad0_Aget1;
+  std::map<int,std::pair<int,int> > MM_Map_Asad0_Aget2;
+  std::map<int,std::pair<int,int> > MM_Map_Asad0_Aget3;
 
-  map<int,pair<int,int> > MM_Map_Asad1_Aget0;
-  map<int,pair<int,int> > MM_Map_Asad1_Aget1;
-  map<int,pair<int,int> > MM_Map_Asad1_Aget2;
-  map<int,pair<int,int> > MM_Map_Asad1_Aget3;
+  std::map<int,std::pair<int,int> > MM_Map_Asad1_Aget0;
+  std::map<int,std::pair<int,int> > MM_Map_Asad1_Aget1;
+  std::map<int,std::pair<int,int> > MM_Map_Asad1_Aget2;
+  std::map<int,std::pair<int,int> > MM_Map_Asad1_Aget3;
 
-  map<int,int> MM_Map_Asad2_Aget0;
-  map<int,int> MM_Map_Asad2_Aget1;
-  map<int,pair<int,int> > MM_Map_Asad2_Aget2;
-  map<int,pair<int,int> > MM_Map_Asad2_Aget3;
+  std::map<int,int> MM_Map_Asad2_Aget0;
+  std::map<int,int> MM_Map_Asad2_Aget1;
+  std::map<int,std::pair<int,int> > MM_Map_Asad2_Aget2;
+  std::map<int,std::pair<int,int> > MM_Map_Asad2_Aget3;
 
-  map<int,int> MM_Map_Asad3_Aget0;
-  map<int,int> MM_Map_Asad3_Aget1;
-  map<int,pair<int,int> > MM_Map_Asad3_Aget2;
-  map<int,pair<int,int> > MM_Map_Asad3_Aget3;
+  std::map<int,int> MM_Map_Asad3_Aget0;
+  std::map<int,int> MM_Map_Asad3_Aget1;
+  std::map<int,std::pair<int,int> > MM_Map_Asad3_Aget2;
+  std::map<int,std::pair<int,int> > MM_Map_Asad3_Aget3;
 
 // Histograms
 private:
+  TH1F* hSiEForwardTotal[10];
   TH1F* hSiEForward[10][4];
   TH1F* hSiTForward[10][4];
 
+  TH1F* hSiELeftTotal[8];
   TH1F* hSiELeft[8][4];
   TH1F* hSiTLeft[8][4];
 
@@ -200,64 +234,64 @@ inline void Spectra::InitChannelMap() {
   //////////////////////////
 
   // Detector 1
-  siForwardMap[5] = make_pair(1, 1);
-  siForwardMap[12] = make_pair(1, 2);
-  siForwardMap[18] = make_pair(1, 3);
-  siForwardMap[25] = make_pair(1, 4);
+  siForwardMap[5] = std::make_pair(1, 1);
+  siForwardMap[12] = std::make_pair(1, 2);
+  siForwardMap[18] = std::make_pair(1, 3);
+  siForwardMap[25] = std::make_pair(1, 4);
 
   // Detector 2
-  siForwardMap[31] = make_pair(2, 1);
-  siForwardMap[37] = make_pair(2, 2);
-  siForwardMap[43] = make_pair(2, 3);
-  siForwardMap[50] = make_pair(2, 4);
+  siForwardMap[31] = std::make_pair(2, 1);
+  siForwardMap[37] = std::make_pair(2, 2);
+  siForwardMap[43] = std::make_pair(2, 3);
+  siForwardMap[50] = std::make_pair(2, 4);
 
   // Detector 3
-  siForwardMap[54] = make_pair(3, 1);
-  siForwardMap[59] = make_pair(3, 2);
-  siForwardMap[63] = make_pair(3, 3);
-  siForwardMap[67] = make_pair(3, 4);
+  siForwardMap[54] = std::make_pair(3, 1);
+  siForwardMap[59] = std::make_pair(3, 2);
+  siForwardMap[63] = std::make_pair(3, 3);
+  siForwardMap[67] = std::make_pair(3, 4);
 
   // Detector 4
-  siForwardMap[23] = make_pair(4, 1);
-  siForwardMap[3] = make_pair(4, 2);
-  siForwardMap[9] = make_pair(4, 3);
-  siForwardMap[16] = make_pair(4, 4);
+  siForwardMap[23] = std::make_pair(4, 1);
+  siForwardMap[3] = std::make_pair(4, 2);
+  siForwardMap[9] = std::make_pair(4, 3);
+  siForwardMap[16] = std::make_pair(4, 4);
 
   // Detector 5
-  siForwardMap[29] = make_pair(5, 1);
-  siForwardMap[35] = make_pair(5, 2);
-  siForwardMap[41] = make_pair(5, 3);
-  siForwardMap[48] = make_pair(5, 4);
+  siForwardMap[29] = std::make_pair(5, 1);
+  siForwardMap[35] = std::make_pair(5, 2);
+  siForwardMap[41] = std::make_pair(5, 3);
+  siForwardMap[48] = std::make_pair(5, 4);
 
   // Detector 6
-  siForwardMap[52] = make_pair(6, 1);
-  siForwardMap[57] = make_pair(6, 2);
-  siForwardMap[61] = make_pair(6, 3);
-  siForwardMap[65] = make_pair(6, 4);
+  siForwardMap[52] = std::make_pair(6, 1);
+  siForwardMap[57] = std::make_pair(6, 2);
+  siForwardMap[61] = std::make_pair(6, 3);
+  siForwardMap[65] = std::make_pair(6, 4);
 
   // Detector 7
-  siForwardMap[1] = make_pair(7, 1);
-  siForwardMap[7] = make_pair(7, 2);
-  siForwardMap[14] = make_pair(7, 3);
-  siForwardMap[20] = make_pair(7, 4);
+  siForwardMap[1] = std::make_pair(7, 1);
+  siForwardMap[7] = std::make_pair(7, 2);
+  siForwardMap[14] = std::make_pair(7, 3);
+  siForwardMap[20] = std::make_pair(7, 4);
 
   // Detector 8
-  siForwardMap[46] = make_pair(8, 1);
-  siForwardMap[27] = make_pair(8, 2);
-  siForwardMap[33] = make_pair(8, 3);
-  siForwardMap[39] = make_pair(8, 4);
+  siForwardMap[46] = std::make_pair(8, 1);
+  siForwardMap[27] = std::make_pair(8, 2);
+  siForwardMap[33] = std::make_pair(8, 3);
+  siForwardMap[39] = std::make_pair(8, 4);
 
   // Detector 9
-  siForwardMap[4] = make_pair(9, 1);
-  siForwardMap[10] = make_pair(9, 2);
-  siForwardMap[17] = make_pair(9, 3);
-  siForwardMap[24] = make_pair(9, 4);
+  siForwardMap[4] = std::make_pair(9, 1);
+  siForwardMap[10] = std::make_pair(9, 2);
+  siForwardMap[17] = std::make_pair(9, 3);
+  siForwardMap[24] = std::make_pair(9, 4);
 
   // Detector 10
-  siForwardMap[30] = make_pair(10, 1);
-  siForwardMap[36] = make_pair(10, 2);
-  siForwardMap[42] = make_pair(10, 3);
-  siForwardMap[49] = make_pair(10, 4);
+  siForwardMap[30] = std::make_pair(10, 1);
+  siForwardMap[36] = std::make_pair(10, 2);
+  siForwardMap[42] = std::make_pair(10, 3);
+  siForwardMap[49] = std::make_pair(10, 4);
 
   siForwardChannel[0][0] = 5;
   siForwardChannel[0][1] = 12;
@@ -305,40 +339,40 @@ inline void Spectra::InitChannelMap() {
   ////////////////////////////
 
   // Detector 1
-  siLeftMap[5] = make_pair(1, 1);
-  siLeftMap[12] = make_pair(1, 2);
-  siLeftMap[18] = make_pair(1, 3);
-  siLeftMap[25] = make_pair(1, 4);
+  siLeftMap[5] = std::make_pair(1, 1);
+  siLeftMap[12] = std::make_pair(1, 2);
+  siLeftMap[18] = std::make_pair(1, 3);
+  siLeftMap[25] = std::make_pair(1, 4);
 
   // Detector 2
-  siLeftMap[50] = make_pair(2, 1);
-  siLeftMap[31] = make_pair(2, 2);
-  siLeftMap[37] = make_pair(2, 3);
-  siLeftMap[43] = make_pair(2, 4);
+  siLeftMap[50] = std::make_pair(2, 1);
+  siLeftMap[31] = std::make_pair(2, 2);
+  siLeftMap[37] = std::make_pair(2, 3);
+  siLeftMap[43] = std::make_pair(2, 4);
 
   // Detector 3
-  siLeftMap[54] = make_pair(3, 1);
-  siLeftMap[59] = make_pair(3, 2);
-  siLeftMap[63] = make_pair(3, 3);
-  siLeftMap[67] = make_pair(3, 4);
+  siLeftMap[54] = std::make_pair(3, 1);
+  siLeftMap[59] = std::make_pair(3, 2);
+  siLeftMap[63] = std::make_pair(3, 3);
+  siLeftMap[67] = std::make_pair(3, 4);
 
   // Detector 4
-  siLeftMap[23] = make_pair(4, 1);
-  siLeftMap[3] = make_pair(4, 2);
-  siLeftMap[9] = make_pair(4, 3);
-  siLeftMap[16] = make_pair(4, 4);
+  siLeftMap[23] = std::make_pair(4, 1);
+  siLeftMap[3] = std::make_pair(4, 2);
+  siLeftMap[9] = std::make_pair(4, 3);
+  siLeftMap[16] = std::make_pair(4, 4);
 
   // Detector 5
-  siLeftMap[29] = make_pair(5, 1);
-  siLeftMap[35] = make_pair(5, 2);
-  siLeftMap[41] = make_pair(5, 3);
-  siLeftMap[48] = make_pair(5, 4);
+  siLeftMap[29] = std::make_pair(5, 1);
+  siLeftMap[35] = std::make_pair(5, 2);
+  siLeftMap[41] = std::make_pair(5, 3);
+  siLeftMap[48] = std::make_pair(5, 4);
 
   // Detector 6
-  siLeftMap[65] = make_pair(6, 1);
-  siLeftMap[52] = make_pair(6, 2);
-  siLeftMap[57] = make_pair(6, 3);
-  siLeftMap[61] = make_pair(6, 4);
+  siLeftMap[65] = std::make_pair(6, 1);
+  siLeftMap[52] = std::make_pair(6, 2);
+  siLeftMap[57] = std::make_pair(6, 3);
+  siLeftMap[61] = std::make_pair(6, 4);
 
   siLeftChannel[0][0] = 5;
   siLeftChannel[0][1] = 12;
@@ -369,45 +403,45 @@ inline void Spectra::InitChannelMap() {
   // Forward CsI Detectors //
   ///////////////////////////
 
-  CsIForwardMap[2] = 1;
-  CsIForwardMap[7] = 2;
-  CsIForwardMap[10] = 3;
-  CsIForwardMap[16] = 4;
-  CsIForwardMap[19] = 5;
-  CsIForwardMap[25] = 6;
-  CsIForwardMap[28] = 7;
-  CsIForwardMap[33] = 8;
-  CsIForwardMap[36] = 9;
-  CsIForwardMap[41] = 10;
+  csiForwardMap[2] = 1;
+  csiForwardMap[7] = 2;
+  csiForwardMap[10] = 3;
+  csiForwardMap[16] = 4;
+  csiForwardMap[19] = 5;
+  csiForwardMap[25] = 6;
+  csiForwardMap[28] = 7;
+  csiForwardMap[33] = 8;
+  csiForwardMap[36] = 9;
+  csiForwardMap[41] = 10;
 
-  CsIForwardChannel[0] = 2;
-  CsIForwardChannel[1] = 7;
-  CsIForwardChannel[2] = 10;
-  CsIForwardChannel[3] = 16;
-  CsIForwardChannel[4] = 19;
-  CsIForwardChannel[5] = 25;
-  CsIForwardChannel[6] = 28;
-  CsIForwardChannel[7] = 33;
-  CsIForwardChannel[8] = 36;
-  CsIForwardChannel[9] = 41;
+  csiForwardChannel[0] = 2;
+  csiForwardChannel[1] = 7;
+  csiForwardChannel[2] = 10;
+  csiForwardChannel[3] = 16;
+  csiForwardChannel[4] = 19;
+  csiForwardChannel[5] = 25;
+  csiForwardChannel[6] = 28;
+  csiForwardChannel[7] = 33;
+  csiForwardChannel[8] = 36;
+  csiForwardChannel[9] = 41;
 
   /////////////////////////////
   // Beam Left CsI Detectors //
   /////////////////////////////
 
-  CsILeftMap[44] = 1;
-  CsILeftMap[50] = 2;
-  CsILeftMap[53] = 3;
-  CsILeftMap[59] = 4;
-  CsILeftMap[62] = 5;
-  CsILeftMap[67] = 6;
+  csiLeftMap[44] = 1;
+  csiLeftMap[50] = 2;
+  csiLeftMap[53] = 3;
+  csiLeftMap[59] = 4;
+  csiLeftMap[62] = 5;
+  csiLeftMap[67] = 6;
 
-  CsILeftChannel[0] = 44;
-  CsILeftChannel[1] = 50;
-  CsILeftChannel[2] = 53;
-  CsILeftChannel[3] = 59;
-  CsILeftChannel[4] = 62;
-  CsILeftChannel[5] = 67;
+  csiLeftChannel[0] = 44;
+  csiLeftChannel[1] = 50;
+  csiLeftChannel[2] = 53;
+  csiLeftChannel[3] = 59;
+  csiLeftChannel[4] = 62;
+  csiLeftChannel[5] = 67;
 
   ////////////////////
   // Micromegas Map //
@@ -431,7 +465,7 @@ inline void Spectra::InitChannelMap() {
   for(int i=0; i<64; i++) {
     if(i%4==0 && i!=0) j--;
     int remain = i%4;
-    MM_Map_Asad0_Aget0[Aget_Map[i]] = make_pair(4-remain, j);
+    MM_Map_Asad0_Aget0[Aget_Map[i]] = std::make_pair(4-remain, j);
   }
 
   // Asad0_Aget1
@@ -439,7 +473,7 @@ inline void Spectra::InitChannelMap() {
   for(int i=0; i<64; i++) {
     if(i%4==0 && i!=0) j--;
     int remain = i%4;
-    MM_Map_Asad0_Aget1[Aget_Map[i]] = make_pair(4-remain, j);
+    MM_Map_Asad0_Aget1[Aget_Map[i]] = std::make_pair(4-remain, j);
   }
 
   // Asad0_Aget2
@@ -447,7 +481,7 @@ inline void Spectra::InitChannelMap() {
   for(int i=0; i<64; i++) {
     if(i%4==0 && i!=0) j--;
     int remain = i%4;
-    MM_Map_Asad0_Aget2[Aget_Map[i]] = make_pair(1+remain, j);
+    MM_Map_Asad0_Aget2[Aget_Map[i]] = std::make_pair(1+remain, j);
   }
 
   // Asad0_Aget3
@@ -455,7 +489,7 @@ inline void Spectra::InitChannelMap() {
   for(int i=0; i<64; i++) {
     if(i%4==0 && i!=0) j--;
     int remain = i%4;
-    MM_Map_Asad0_Aget3[Aget_Map[i]] = make_pair(1+remain, j);
+    MM_Map_Asad0_Aget3[Aget_Map[i]] = std::make_pair(1+remain, j);
   }
 
   // Asad1_Aget0
@@ -463,7 +497,7 @@ inline void Spectra::InitChannelMap() {
   for(int i=0; i<64; i++) {
     if(i%4==0 && i!=0) j--;
     int remain = i%4;
-    MM_Map_Asad1_Aget0[Aget_Map[i]] = make_pair(1+remain, j);
+    MM_Map_Asad1_Aget0[Aget_Map[i]] = std::make_pair(1+remain, j);
   }
 
   // Asad1_Aget1
@@ -471,7 +505,7 @@ inline void Spectra::InitChannelMap() {
   for(int i=0; i<64; i++) {
     if(i%4==0 && i!=0) j--;
     int remain = i%4;
-    MM_Map_Asad1_Aget1[Aget_Map[i]] = make_pair(1+remain, j);
+    MM_Map_Asad1_Aget1[Aget_Map[i]] = std::make_pair(1+remain, j);
   }
 
   // Asad1_Aget2
@@ -479,7 +513,7 @@ inline void Spectra::InitChannelMap() {
   for(int i=0; i<64; i++) {
     if(i%4==0 && i!=0) j--;
     int remain = i%4;
-    MM_Map_Asad1_Aget2[Aget_Map[i]] = make_pair(4-remain, j);
+    MM_Map_Asad1_Aget2[Aget_Map[i]] = std::make_pair(4-remain, j);
   }
 
   // Asad1_Aget3
@@ -487,7 +521,7 @@ inline void Spectra::InitChannelMap() {
   for(int i=0; i<64; i++) {
     if(i%4==0 && i!=0) j--;
     int remain = i%4;
-    MM_Map_Asad1_Aget3[Aget_Map[i]] = make_pair(4-remain, j);
+    MM_Map_Asad1_Aget3[Aget_Map[i]] = std::make_pair(4-remain, j);
   }
 
   // Asad2_Aget0
@@ -521,15 +555,14 @@ inline void Spectra::InitChannelMap() {
   // Asad2_Aget2
   j=63;
   for(int i=0; i<64; i++) {
-    MM_Map_Asad2_Aget2[Aget_Map[i]] = make_pair(0,j);
+    MM_Map_Asad2_Aget2[Aget_Map[i]] = std::make_pair(0,j);
     j--;
   }
 
   // Asad2_Aget3
-  map<int, pair<int, int> > MM_Map_Asad2_Aget3;
   j=127;
   for(int i=0; i<64; i++) {
-    MM_Map_Asad2_Aget3[Aget_Map[i]] = make_pair(0,j);
+    MM_Map_Asad2_Aget3[Aget_Map[i]] = std::make_pair(0,j);
     j--;
   }
 
@@ -562,15 +595,14 @@ inline void Spectra::InitChannelMap() {
   // Asad3_Aget2
   j=63;
   for(int i=0; i<64; i++) {
-    MM_Map_Asad3_Aget2[Aget_Map[i]] = make_pair(5,j);
+    MM_Map_Asad3_Aget2[Aget_Map[i]] = std::make_pair(5,j);
     j--;
   }
 
   // Asad3_Aget3
-  map<int, pair<int, int> > MM_Map_Asad3_Aget3;
   j=127;
   for(int i=0; i<64; i++) {
-    MM_Map_Asad3_Aget3[Aget_Map[i]] = make_pair(5,j);
+    MM_Map_Asad3_Aget3[Aget_Map[i]] = std::make_pair(5,j);
     j--;
   }
 
