@@ -1,7 +1,11 @@
 {
   TChain *chain = new TChain("mfmData");
 
-  TString PathToFiles = "/Volumes/hd/research/run0817a/rootM2R-MaxModule/run";
+  // Work Mac
+  // TString PathToFiles = "/Volumes/hd/research/run0817a/rootM2R-MaxModule/run";
+
+  // Home Mac
+  TString PathToFiles = "/Volumes/hd2/research/data/run0817a/rootM2R-MaxModule/run";
 
   chain->Add(PathToFiles+"172.root");
   chain->Add(PathToFiles+"175.root");

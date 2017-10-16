@@ -9,6 +9,17 @@ void Spectra::Loop() {
 
   bool individualMMHistograms = false;
 
+  // Read si calibrations
+  std::pair<double, double> siEForwardCalibration[10][4] = {std::make_pair(0., 0.)};
+  std::ifstream inSiCalFile("siCalibration.dat");
+  assert(inSiCalFile.is_open());
+  int var1, var2, var3;
+  double slope, intercept;
+  while(inSiCalFile >> var1 >> var2 >> var3 >> slope >> intercept) {
+    siEForwardCalibration[var1-1][var2-1] = std::make_pair(slope, intercept);
+  }
+  inSiCalFile.close();
+
   // Read gainFile.dat
   std::ifstream inGainFile("gainFile.dat");
   assert(inGainFile.is_open());
@@ -32,65 +43,75 @@ void Spectra::Loop() {
   // Histograms for the Forward Si Detectors
   for(int i=0; i<10; i++) {
     TString name = Form("SiEForward_d%d", i+1);
-    hSiEForwardTotal[i] = new TH1F(name,name,1000,0,4000);
-    hSiEForwardTotal[i]->GetXaxis()->SetTitle("Channels");
-    hSiEForwardTotal[i]->GetYaxis()->SetTitle("Counts");
+    hSiEForwardTotal[i] = new TH1F(name, name, 1000, 0, 4000);
+    hSiEForwardTotal[i]->GetXaxis()->SetTitle("Channels"); hSiEForwardTotal[i]->GetXaxis()->CenterTitle();
+    hSiEForwardTotal[i]->GetYaxis()->SetTitle("Counts"); hSiEForwardTotal[i]->GetXaxis()->CenterTitle(); hSiEForwardTotal[i]->GetYaxis()->SetTitleOffset(1.4);
     for(int j=0; j<4; j++) {
-      TString name = Form("SiEForward_d%d_q%d_ch%d",i+1,j+1,siForwardChannel[i][j]);
-      hSiEForward[i][j] = new TH1F(name,name,1000,0,4000);
-      hSiEForward[i][j]->GetXaxis()->SetTitle("Channels");
-      hSiEForward[i][j]->GetYaxis()->SetTitle("Counts");
+      TString name = Form("SiEForward_d%d_q%d_ch%d", i+1, j+1, siForwardChannel[i][j]);
+      hSiEForward[i][j] = new TH1F(name, name, 1000, 0, 4000);
+      hSiEForward[i][j]->GetXaxis()->SetTitle("Channels"); hSiEForward[i][j]->GetXaxis()->CenterTitle();
+      hSiEForward[i][j]->GetYaxis()->SetTitle("Counts"); hSiEForward[i][j]->GetYaxis()->CenterTitle(); hSiEForward[i][j]->GetYaxis()->SetTitleOffset(1.4);
 
-      name = Form("SiTForward_d%d_q%d_ch%d",i+1,j+1, siForwardChannel[i][j]);
-      hSiTForward[i][j] = new TH1F(name,name,1000,0,20000);
-      hSiTForward[i][j]->GetXaxis()->SetTitle("Channels");
-      hSiTForward[i][j]->GetYaxis()->SetTitle("Counts");
+      name = Form("SiEForwardCal_d%d_q%d_ch%d", i+1, j+1, siForwardChannel[i][j]);
+      hSiEForwardCal[i][j] = new TH1F(name, name, 1000, 0, 20000);
+      hSiEForwardCal[i][j]->GetXaxis()->SetTitle("Energy [keV]"); hSiEForwardCal[i][j]->GetXaxis()->CenterTitle();
+      hSiEForwardCal[i][j]->GetYaxis()->SetTitle("Counts"); hSiEForwardCal[i][j]->GetYaxis()->CenterTitle(); hSiEForwardCal[i][j]->GetYaxis()->SetTitleOffset(1.4);
+
+      name = Form("SiTForward_d%d_q%d_ch%d", i+1, j+1, siForwardChannel[i][j]);
+      hSiTForward[i][j] = new TH1F(name, name, 1000, 0, 20000);
+      hSiTForward[i][j]->GetXaxis()->SetTitle("Channels"); hSiTForward[i][j]->GetXaxis()->CenterTitle();
+      hSiTForward[i][j]->GetYaxis()->SetTitle("Counts"); hSiTForward[i][j]->GetYaxis()->CenterTitle(); hSiTForward[i][j]->GetYaxis()->SetTitleOffset(1.4);
     }
   }
 
   // Histograms for the Beam Left Si Detectors
   for(int i=0; i<8; i++) {
     TString name = Form("SiELeft_d%d", i+1);
-    hSiELeftTotal[i] = new TH1F(name,name,1000,0,4000);
-    hSiELeftTotal[i]->GetXaxis()->SetTitle("Channels");
-    hSiELeftTotal[i]->GetYaxis()->SetTitle("Counts");
+    hSiELeftTotal[i] = new TH1F(name, name, 1000, 0, 4000);
+    hSiELeftTotal[i]->GetXaxis()->SetTitle("Channels"); hSiELeftTotal[i]->GetXaxis()->CenterTitle();
+    hSiELeftTotal[i]->GetYaxis()->SetTitle("Counts"); hSiELeftTotal[i]->GetYaxis()->CenterTitle(); hSiELeftTotal[i]->GetYaxis()->SetTitleOffset(1.4);
     for(int j=0; j<4; j++) {
-      TString name = Form("SiELeft_d%d_q%d_ch%d",i+1,j+1,siLeftChannel[i][j]);
-      hSiELeft[i][j] = new TH1F(name,name,1000,0,4000);
-      hSiELeft[i][j]->GetXaxis()->SetTitle("Channels");
-      hSiELeft[i][j]->GetYaxis()->SetTitle("Counts");
+      TString name = Form("SiELeft_d%d_q%d_ch%d", i+1, j+1, siLeftChannel[i][j]);
+      hSiELeft[i][j] = new TH1F(name, name, 1000, 0, 4000);
+      hSiELeft[i][j]->GetXaxis()->SetTitle("Channels"); hSiELeft[i][j]->GetXaxis()->CenterTitle();
+      hSiELeft[i][j]->GetYaxis()->SetTitle("Counts"); hSiELeft[i][j]->GetYaxis()->CenterTitle(); hSiELeft[i][j]->GetYaxis()->SetTitleOffset(1.4);
 
-      name = Form("SiTLeft_d%d_q%d_ch%d",i+1,j+1,siLeftChannel[i][j]);
-      hSiTLeft[i][j] = new TH1F(name,name,1000,0,20000);
-      hSiTLeft[i][j]->GetXaxis()->SetTitle("Channels");
-      hSiTLeft[i][j]->GetYaxis()->SetTitle("Counts");
+      name = Form("SiELeftCal_d%d_q%d_ch%d", i+1, j+1, siLeftChannel[i][j]);
+      hSiELeftCal[i][j] = new TH1F(name, name, 1000, 0, 4000);
+      hSiELeftCal[i][j]->GetXaxis()->SetTitle("Channels"); hSiELeftCal[i][j]->GetXaxis()->CenterTitle();
+      hSiELeftCal[i][j]->GetYaxis()->SetTitle("Counts"); hSiELeftCal[i][j]->GetYaxis()->CenterTitle(); hSiELeftCal[i][j]->GetYaxis()->SetTitleOffset(1.4);
+
+      name = Form("SiTLeft_d%d_q%d_ch%d", i+1, j+1, siLeftChannel[i][j]);
+      hSiTLeft[i][j] = new TH1F(name, name, 1000, 0, 20000);
+      hSiTLeft[i][j]->GetXaxis()->SetTitle("Channels"); hSiTLeft[i][j]->GetXaxis()->CenterTitle();
+      hSiTLeft[i][j]->GetYaxis()->SetTitle("Counts"); hSiTLeft[i][j]->GetYaxis()->CenterTitle(); hSiTLeft[i][j]->GetYaxis()->SetTitleOffset(1.4);
     }
   }
 
   // Histograms for the Forward CsI Detectors
   for(int i=0; i<10; i++) {
-    TString name = Form("CsIEForward_d%d_ch%d",i+1,csiForwardChannel[i]);
-    hCsIEForward[i] = new TH1F(name,name,1000,0,4000);
-    hCsIEForward[i]->GetXaxis()->SetTitle("Channels");
-    hCsIEForward[i]->GetYaxis()->SetTitle("Counts");
+    TString name = Form("CsIEForward_d%d_ch%d", i+1, csiForwardChannel[i]);
+    hCsIEForward[i] = new TH1F(name, name, 1000, 0, 4000);
+    hCsIEForward[i]->GetXaxis()->SetTitle("Channels"); hCsIEForward[i]->GetXaxis()->CenterTitle();
+    hCsIEForward[i]->GetYaxis()->SetTitle("Counts"); hCsIEForward[i]->GetYaxis()->CenterTitle(); hCsIEForward[i]->GetYaxis()->SetTitleOffset(1.4);
 
-    name = Form("CsITForward_d%d_ch%d",i+1,csiForwardChannel[i]);
-    hCsITForward[i] = new TH1F(name,name,1000,0,20000);
-    hCsITForward[i]->GetXaxis()->SetTitle("Channels");
-    hCsITForward[i]->GetYaxis()->SetTitle("Counts");
+    name = Form("CsITForward_d%d_ch%d", i+1, csiForwardChannel[i]);
+    hCsITForward[i] = new TH1F(name, name, 1000, 0, 20000);
+    hCsITForward[i]->GetXaxis()->SetTitle("Channels"); hCsITForward[i]->GetXaxis()->CenterTitle();
+    hCsITForward[i]->GetYaxis()->SetTitle("Counts"); hCsITForward[i]->GetYaxis()->CenterTitle(); hCsITForward[i]->GetYaxis()->SetTitleOffset(1.4);
   }
 
   // Histograms for the Beam Left CsI Detectors
   for(int i=0; i<8; i++) {
-    TString name = Form("CsIELeft_d%d_ch%d",i+1,csiLeftChannel[i]);
+    TString name = Form("CsIELeft_d%d_ch%d", i+1, csiLeftChannel[i]);
     hCsIELeft[i] = new TH1F(name,name,1000,0,4000);
-    hCsIELeft[i]->GetXaxis()->SetTitle("Channels");
-    hCsIELeft[i]->GetYaxis()->SetTitle("Counts");
+    hCsIELeft[i]->GetXaxis()->SetTitle("Channels"); hCsIELeft[i]->GetXaxis()->CenterTitle();
+    hCsIELeft[i]->GetYaxis()->SetTitle("Counts"); hCsIELeft[i]->GetYaxis()->CenterTitle(); hCsIELeft[i]->GetYaxis()->SetTitleOffset(1.4);
 
-    name = Form("CsITLeft_d%d_ch%d",i+1,csiLeftChannel[i]);
+    name = Form("CsITLeft_d%d_ch%d", i+1, csiLeftChannel[i]);
     hCsITLeft[i] = new TH1F(name,name,1000,0,20000);
-    hCsITLeft[i]->GetXaxis()->SetTitle("Channels");
-    hCsITLeft[i]->GetYaxis()->SetTitle("Counts");
+    hCsITLeft[i]->GetXaxis()->SetTitle("Channels"); hCsITLeft[i]->GetXaxis()->CenterTitle();
+    hCsITLeft[i]->GetYaxis()->SetTitle("Counts"); hCsITLeft[i]->GetYaxis()->CenterTitle(); hCsITLeft[i]->GetYaxis()->SetTitleOffset(1.4);
   }
 
   TH2F* hMicroMegasCenterCumulative = new TH2F("MM_Center_Cumulative", "MM_Center_Cumulative", 82, -41, 41, 128, 0, 128);
@@ -109,15 +130,35 @@ void Spectra::Loop() {
   TH1F* hIonizationChamberT = new TH1F("icT", "icT", 500, 0, 20000);
 
   // dE plots
-  TH2F* hdEECenterPad122 = new TH2F("dEECenterPad122", "dEECenterPad122", 500, 0, 4000, 500, 0, 4000);
-  TH2F* hdEECenterPad122Punchthrough = new TH2F("dEECenterPad122Punchthrough", "dEECenterPad122Punchthrough", 500, 0, 4000, 500, 0, 4000);
   TH2F* hdEECenterPad = new TH2F("dEECenterPad", "dEECenterPad", 500, 0, 4000, 500, 0, 25000);
+  hdEECenterPad->GetXaxis()->SetTitle("Energy [Channels]"); hdEECenterPad->GetXaxis()->CenterTitle();
+  hdEECenterPad->GetYaxis()->SetTitle("dE [Channels]"); hdEECenterPad->GetYaxis()->CenterTitle(); hdEECenterPad->GetYaxis()->SetTitleOffset(1.4);
   TH2F* hdEECenterPadPunchthrough = new TH2F("dEECenterPadPunchthrough", "dEECenterPadPunchthrough", 500, 0, 4000, 500, 0, 25000);
+  hdEECenterPadPunchthrough->GetXaxis()->SetTitle("Energy [Channels]"); hdEECenterPadPunchthrough->GetXaxis()->SetTitleSize(0.05); hdEECenterPadPunchthrough->GetXaxis()->CenterTitle();
+  hdEECenterPadPunchthrough->GetYaxis()->SetTitle("dE [Channels]"); hdEECenterPadPunchthrough->GetYaxis()->SetTitleSize(0.05); hdEECenterPadPunchthrough->GetYaxis()->CenterTitle();
+
+  TH2F* hdEECenterPadCal = new TH2F("dEECenterPadCal", "dEECenterPadCal", 500, 0, 20000, 500, 0, 25000);
+  hdEECenterPadCal->GetXaxis()->SetTitle("Energy [keV]"); hdEECenterPadCal->GetXaxis()->SetTitleSize(0.05); hdEECenterPadCal->GetXaxis()->CenterTitle();
+  hdEECenterPadCal->GetYaxis()->SetTitle("dE [Channels]"); hdEECenterPadCal->GetYaxis()->SetTitleSize(0.05); hdEECenterPadCal->GetYaxis()->CenterTitle(); hdEECenterPadCal->GetYaxis()->SetTitleOffset(1.);
+  TH2F* hdEECenterPadPunchthroughCal = new TH2F("dEECenterPadPunchthroughCal", "dEECenterPadPunchthroughCal", 500, 0, 20000, 500, 0, 25000);
+  hdEECenterPadPunchthroughCal->GetXaxis()->SetTitle("Energy [keV]"); hdEECenterPadPunchthroughCal->GetXaxis()->SetTitleSize(0.05); hdEECenterPadPunchthroughCal->GetXaxis()->CenterTitle();
+  hdEECenterPadPunchthroughCal->GetYaxis()->SetTitle("dE [Channels]"); hdEECenterPadPunchthroughCal->GetYaxis()->SetTitleSize(0.05); hdEECenterPadPunchthroughCal->GetYaxis()->CenterTitle(); hdEECenterPadPunchthroughCal->GetYaxis()->SetTitleOffset(1.);
+
   TH1F* hCenterPadTime = new TH1F("centerPadTime", "centerPadTime", 1000, 0, 20480);
 
   // Vertex vs E plots
   TH2F* hVertexE = new TH2F("vertexE", "vertexE", 128, 0, 128, 500, 0, 4000);
+  hVertexE->GetXaxis()->SetTitle("Energy [keV]"); hVertexE->GetXaxis()->SetTitleSize(0.05); hVertexE->GetXaxis()->CenterTitle();
+  hVertexE->GetYaxis()->SetTitle("dE [Channels]"); hVertexE->GetYaxis()->SetTitleSize(0.05); hVertexE->GetYaxis()->CenterTitle(); hVertexE->GetYaxis()->SetTitleOffset(1.);
   TH2F* hVertexEPunchthrough = new TH2F("vertexEPunchthrough", "vertexEPunchthrough", 128, 0, 128, 500, 0, 4000);
+  hVertexEPunchthrough->GetXaxis()->SetTitle("Energy [keV]"); hVertexEPunchthrough->GetXaxis()->SetTitleSize(0.05); hVertexEPunchthrough->GetXaxis()->CenterTitle();
+  hVertexEPunchthrough->GetYaxis()->SetTitle("dE [Channels]"); hVertexEPunchthrough->GetYaxis()->SetTitleSize(0.05); hVertexEPunchthrough->GetYaxis()->CenterTitle(); hVertexEPunchthrough->GetYaxis()->SetTitleOffset(1.);
+  TH2F* hVertexECal = new TH2F("vertexECal", "vertexECal", 128, 0, 128, 500, 0, 20000);
+  hVertexECal->GetXaxis()->SetTitle("Energy [keV]"); hVertexECal->GetXaxis()->SetTitleSize(0.05); hVertexECal->GetXaxis()->CenterTitle();
+  hVertexECal->GetYaxis()->SetTitle("dE [Channels]"); hVertexECal->GetYaxis()->SetTitleSize(0.05); hVertexECal->GetYaxis()->CenterTitle(); hVertexECal->GetYaxis()->SetTitleOffset(1.);
+  TH2F* hVertexEPunchthroughCal = new TH2F("vertexEPunchthroughCal", "vertexEPunchthroughCal", 128, 0, 128, 500, 0, 20000);
+  hVertexEPunchthroughCal->GetXaxis()->SetTitle("Energy [keV]"); hVertexEPunchthroughCal->GetXaxis()->SetTitleSize(0.05); hVertexEPunchthroughCal->GetXaxis()->CenterTitle();
+  hVertexEPunchthroughCal->GetYaxis()->SetTitle("dE [Channels]"); hVertexEPunchthroughCal->GetYaxis()->SetTitleSize(0.05); hVertexEPunchthroughCal->GetYaxis()->CenterTitle(); hVertexEPunchthroughCal->GetYaxis()->SetTitleOffset(1.);
 
   // For average energy deposited
   std::vector<double> padCumulative[6][128];
@@ -132,28 +173,29 @@ void Spectra::Loop() {
     nb = fChain->GetEntry(jentry);   nbytes += nb;
     // if (Cut(ientry) < 0) continue;
 
-    if(jentry!=0 && jentry%200==0) printf("Processed %lld events\n",jentry);
+    if(jentry!=0 && jentry%2000==0) printf("Processed %lld events\n",jentry);
 
     // Find hit in Si detectors
-    vector<siDetect> siDetect_;
+    std::vector<siDetect> siDetect_;
 
     // Find hit in CsI Detectors
-    vector<csiDetect> csiDetect_;
+    std::vector<csiDetect> csiDetect_;
 
     // Central Pads in Micromegas
-    vector<mmCenter> mmCenter_;
+    std::vector<mmCenter> mmCenter_;
+    std::vector<mmCenter> mmCenterMatched_;
 
     // Beam Left Strips in Micromegas
-    vector<mmStrip> mmLeftStrip_;
+    std::vector<mmStrip> mmLeftStrip_;
 
     // Beam Left Chains in Micromegas
-    vector<mmChain> mmLeftChain_;
+    std::vector<mmChain> mmLeftChain_;
 
     // Beam Right Strips in Micromegas
-    vector<mmStrip> mmRightStrip_;
+    std::vector<mmStrip> mmRightStrip_;
 
     // Beam Right Chains in Micromegas
-    vector<mmChain> mmRightChain_;
+    std::vector<mmChain> mmRightChain_;
 
     // IC
     int icE = 0.;
@@ -171,24 +213,32 @@ void Spectra::Loop() {
             std::pair<int,int> pad = MM_Map_Asad0_Aget0[mmChan[i]];
             mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
             mmCenter_.push_back(mmHit);
+            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i]};
+            mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget1
           else if(mmAget[i]==1) {
             std::pair<int,int> pad = MM_Map_Asad0_Aget1[mmChan[i]];
             mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
             mmCenter_.push_back(mmHit);
+            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i]};
+            mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget2
           else if(mmAget[i]==2) {
             std::pair<int,int> pad = MM_Map_Asad0_Aget2[mmChan[i]];
             mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
             mmCenter_.push_back(mmHit);
+            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i]};
+            mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget3
           else if(mmAget[i]==3) {
             std::pair<int,int> pad = MM_Map_Asad0_Aget3[mmChan[i]];
             mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
             mmCenter_.push_back(mmHit);
+            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i]};
+            mmCenterMatched_.push_back(mmHitMatched);
           }
         }
         // Asad1
@@ -198,24 +248,32 @@ void Spectra::Loop() {
             std::pair<int,int> pad = MM_Map_Asad1_Aget0[mmChan[i]];
             mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
             mmCenter_.push_back(mmHit);
+            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i]};
+            mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget1
           else if(mmAget[i]==1) {
             std::pair<int,int> pad = MM_Map_Asad1_Aget1[mmChan[i]];
             mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
             mmCenter_.push_back(mmHit);
+            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i]};
+            mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget2
           else if(mmAget[i]==2) {
             std::pair<int,int> pad = MM_Map_Asad1_Aget2[mmChan[i]];
             mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
             mmCenter_.push_back(mmHit);
+            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i]};
+            mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget3
           else if(mmAget[i]==3) {
             std::pair<int,int> pad = MM_Map_Asad1_Aget3[mmChan[i]];
             mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
             mmCenter_.push_back(mmHit);
+            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i]};
+            mmCenterMatched_.push_back(mmHitMatched);
           }
         }
         // Asad2
@@ -233,12 +291,16 @@ void Spectra::Loop() {
             std::pair<int,int> pad = MM_Map_Asad2_Aget2[mmChan[i]];
             mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
             mmCenter_.push_back(mmHit);
+            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i]};
+            mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget3 - Outside Central Pads
           else if(mmAget[i]==3) {
             std::pair<int,int> pad = MM_Map_Asad2_Aget3[mmChan[i]];
             mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
             mmCenter_.push_back(mmHit);
+            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i]};
+            mmCenterMatched_.push_back(mmHitMatched);
           }
         }
         // Asad3
@@ -256,12 +318,16 @@ void Spectra::Loop() {
             std::pair<int,int> pad = MM_Map_Asad3_Aget2[mmChan[i]];
             mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
             mmCenter_.push_back(mmHit);
+            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i]};
+            mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget3
           else if(mmAget[i]==3) {
             std::pair<int,int> pad = MM_Map_Asad3_Aget3[mmChan[i]];
             mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
             mmCenter_.push_back(mmHit);
+            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i]};
+            mmCenterMatched_.push_back(mmHitMatched);
           }
         }
       }
@@ -323,6 +389,10 @@ void Spectra::Loop() {
     int siDet = siDetect_[0].detect;
     int siQuad = siDetect_[0].quad;
     double siEnergy = siDetect_[0].energy;
+    double siEnergyCal = 0.;
+    if(siDet<11) {
+      siEnergyCal = siDetect_[0].energy*siEForwardCalibration[siDet-1][siQuad-1].first + siEForwardCalibration[siDet-1][siQuad-1].second;
+    }
     double siTime = siDetect_[0].time;
 
     // Find if CsI behind Si fired
@@ -335,10 +405,12 @@ void Spectra::Loop() {
     if(siDet<11) {
       hSiEForwardTotal[siDet-1]->Fill(siEnergy);
       hSiEForward[siDet-1][siQuad-1]->Fill(siEnergy);
+      hSiEForwardCal[siDet-1][siQuad-1]->Fill(siEnergyCal);
     }
     else {
       hSiELeftTotal[siDet-11]->Fill(siEnergy);
       hSiELeft[siDet-11][siQuad-1]->Fill(siEnergy);
+      hSiELeftCal[siDet-1][siQuad-1]->Fill(siEnergyCal);
     }
 
     // Sum up rows in central pads
@@ -348,31 +420,26 @@ void Spectra::Loop() {
     }
 
     // Fill MM Center Histograms
-    float centerPad122Energy = 0.;
     float centerPadEnergydE = 0.;
-    for(size_t i=0; i<mmCenter_.size(); i++) {
-      hMicroMegasCenterCumulative->Fill(mmCenter_[i].column-3, mmCenter_[i].row);
-      hCenterPadTime->Fill(mmCenter_[i].time);
+    for(size_t i=0; i<mmCenterMatched_.size(); i++) {
+      hMicroMegasCenterCumulative->Fill(mmCenterMatched_[i].column-3, mmCenterMatched_[i].row);
+      hCenterPadTime->Fill(mmCenterMatched_[i].time);
 
-      if(mmCenter_[i].time>4000 && mmCenter_[i].time<7000) centerPadEnergy[mmCenter_[i].row] += mmCenter_[i].energy;
+      if(mmCenterMatched_[i].time>4000 && mmCenterMatched_[i].time<7000) centerPadEnergy[mmCenterMatched_[i].row] += mmCenterMatched_[i].energy;
 
-      if(mmCenter_[i].row>117 && mmCenter_[i].row<124 && mmCenter_[i].column!=0 && mmCenter_[i].column!=5) {
-        if(mmCenter_[i].time>4000 && mmCenter_[i].time<7000) centerPadEnergydE += mmCenter_[i].energy;
-      }
-
-      if(mmCenter_[i].row==122 && mmCenter_[i].column!=0 && mmCenter_[i].column!=5) {
-        if(mmCenter_[i].time>4000 && mmCenter_[i].time<7000) centerPad122Energy += mmCenter_[i].energy;
+      if(mmCenterMatched_[i].row>117 && mmCenterMatched_[i].row<124 && mmCenterMatched_[i].column!=0 && mmCenterMatched_[i].column!=5) {
+        if(mmCenterMatched_[i].time>4000 && mmCenterMatched_[i].time<7000) centerPadEnergydE += mmCenterMatched_[i].energy;
       }
     }
 
     // Make dE plots
-    if(siDet==5 && !punchthrough && centerPad122Energy>0) {
-      hdEECenterPad122->Fill(siEnergy, centerPad122Energy);
+    if(siDet==5 && !punchthrough && centerPadEnergydE>100) {
       hdEECenterPad->Fill(siEnergy, centerPadEnergydE);
+      hdEECenterPadCal->Fill(siEnergyCal, centerPadEnergydE);
     }
-    if(siDet==5 && centerPad122Energy>0) {
-      hdEECenterPad122Punchthrough->Fill(siEnergy, centerPad122Energy);
+    if(siDet==5 && centerPadEnergydE>100) {
       hdEECenterPadPunchthrough->Fill(siEnergy, centerPadEnergydE);
+      hdEECenterPadPunchthroughCal->Fill(siEnergyCal, centerPadEnergydE);
     }
 
     // Make sure the reaction happened over the micromegas and not before
@@ -385,8 +452,14 @@ void Spectra::Loop() {
           maxRow = i;
         }
       }
-      if(siDet==5 && centerPadEnergydE<20000 && !punchthrough) hVertexE->Fill(maxRow, siEnergy);
-      if(siDet==5 && centerPadEnergydE<20000) hVertexEPunchthrough->Fill(maxRow, siEnergy);
+      if(siDet==5 && centerPadEnergydE<20000 && !punchthrough) {
+        hVertexE->Fill(maxRow, siEnergy);
+        hVertexECal->Fill(maxRow, siEnergyCal);
+      }
+      if(siDet==5 && centerPadEnergydE<20000) {
+        hVertexEPunchthrough->Fill(maxRow, siEnergy);
+        hVertexEPunchthroughCal->Fill(maxRow, siEnergyCal);
+      }
     }
 
     /*
@@ -729,23 +802,24 @@ void Spectra::Loop() {
 
   for(int i=0; i<10 ; i++) {
     // hSiEForwardTotal[i]->Write();
-    for(int j=0; j<4; j++) {
-      hSiEForward[i][j]->Write();
+    // for(int j=0; j<4; j++) {
+      // hSiEForward[i][j]->Write();
+      // hSiEForwardCal[i][j]->Write();
       // hSiTForward[i][j]->Write();
-    }
+    // }
     // hCsIEForward[i]->Write();
     // hCsITForward[i]->Write();
   }
 
-  for(int i=0; i<6 ; i++) {
+  // for(int i=0; i<6 ; i++) {
     // hSiELeftTotal[i]->Write();
-    for(int j=0; j<4; j++) {
-      hSiELeft[i][j]->Write();
+    // for(int j=0; j<4; j++) {
+      // hSiELeft[i][j]->Write();
       // hSiTLeft[i][j]->Write();
-    }
+    // }
     // hCsIELeft[i]->Write();
     // hCsITLeft[i]->Write();
-  }
+  // }
 
   // hIonizationChamberE->Write();
   // hIonizationChamberT->Write();
@@ -756,14 +830,16 @@ void Spectra::Loop() {
   // hMicroMegasCenterEnergyAverageScaled->Write();
   // hMicroMegasCenterTimeAverage->Write();
 
-  // hdEECenterPad122->Write();
-  // hdEECenterPad122Punchthrough->Write();
   // hdEECenterPad->Write();
   // hdEECenterPadPunchthrough->Write();
+  hdEECenterPadCal->Write();
+  hdEECenterPadPunchthroughCal->Write();
   // hCenterPadTime->Write();
 
   // hVertexE->Write();
   // hVertexEPunchthrough->Write();
+  hVertexECal->Write();
+  hVertexEPunchthroughCal->Write();
 
   file->Close();
 }

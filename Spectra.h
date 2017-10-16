@@ -95,48 +95,50 @@ public :
 private:
   void InitChannelMap();
 
-  std::map<int,std::pair<int,int> > siForwardMap;
+  std::map<int, std::pair<int, int> > siForwardMap;
   int siForwardChannel[10][4];
 
-  std::map<int,std::pair<int,int> > siLeftMap;
+  std::map<int, std::pair<int, int> > siLeftMap;
   int siLeftChannel[6][4];
 
-  std::map<int,int> csiForwardMap;
+  std::map<int, int> csiForwardMap;
   int csiForwardChannel[10];
 
-  std::map<int,int> csiLeftMap;
+  std::map<int, int> csiLeftMap;
   int csiLeftChannel[6];
 
-  std::map<int,int> Aget_Map;
+  std::map<int, int> Aget_Map;
 
-  std::map<int,std::pair<int,int> > MM_Map_Asad0_Aget0;
-  std::map<int,std::pair<int,int> > MM_Map_Asad0_Aget1;
-  std::map<int,std::pair<int,int> > MM_Map_Asad0_Aget2;
-  std::map<int,std::pair<int,int> > MM_Map_Asad0_Aget3;
+  std::map<int, std::pair<int, int> > MM_Map_Asad0_Aget0;
+  std::map<int, std::pair<int, int> > MM_Map_Asad0_Aget1;
+  std::map<int, std::pair<int, int> > MM_Map_Asad0_Aget2;
+  std::map<int, std::pair<int, int> > MM_Map_Asad0_Aget3;
 
-  std::map<int,std::pair<int,int> > MM_Map_Asad1_Aget0;
-  std::map<int,std::pair<int,int> > MM_Map_Asad1_Aget1;
-  std::map<int,std::pair<int,int> > MM_Map_Asad1_Aget2;
-  std::map<int,std::pair<int,int> > MM_Map_Asad1_Aget3;
+  std::map<int, std::pair<int, int> > MM_Map_Asad1_Aget0;
+  std::map<int, std::pair<int, int> > MM_Map_Asad1_Aget1;
+  std::map<int, std::pair<int, int> > MM_Map_Asad1_Aget2;
+  std::map<int, std::pair<int, int> > MM_Map_Asad1_Aget3;
 
-  std::map<int,int> MM_Map_Asad2_Aget0;
-  std::map<int,int> MM_Map_Asad2_Aget1;
-  std::map<int,std::pair<int,int> > MM_Map_Asad2_Aget2;
-  std::map<int,std::pair<int,int> > MM_Map_Asad2_Aget3;
+  std::map<int, int> MM_Map_Asad2_Aget0;
+  std::map<int, int> MM_Map_Asad2_Aget1;
+  std::map<int, std::pair<int, int> > MM_Map_Asad2_Aget2;
+  std::map<int, std::pair<int, int> > MM_Map_Asad2_Aget3;
 
-  std::map<int,int> MM_Map_Asad3_Aget0;
-  std::map<int,int> MM_Map_Asad3_Aget1;
-  std::map<int,std::pair<int,int> > MM_Map_Asad3_Aget2;
-  std::map<int,std::pair<int,int> > MM_Map_Asad3_Aget3;
+  std::map<int, int> MM_Map_Asad3_Aget0;
+  std::map<int, int> MM_Map_Asad3_Aget1;
+  std::map<int, std::pair<int, int> > MM_Map_Asad3_Aget2;
+  std::map<int, std::pair<int, int> > MM_Map_Asad3_Aget3;
 
 // Histograms
 private:
   TH1F* hSiEForwardTotal[10];
   TH1F* hSiEForward[10][4];
+  TH1F* hSiEForwardCal[10][4];
   TH1F* hSiTForward[10][4];
 
   TH1F* hSiELeftTotal[8];
   TH1F* hSiELeft[8][4];
+  TH1F* hSiELeftCal[8][4];
   TH1F* hSiTLeft[8][4];
 
   TH1F* hCsIEForward[10];
