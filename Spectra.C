@@ -3,6 +3,8 @@
 
 void Spectra::Loop() {
 
+  if (fChain == 0) return;
+
   InitChannelMap();
 
   bool individualMMHistograms = false;
@@ -10,18 +12,15 @@ void Spectra::Loop() {
   // Read gainFile.dat
   std::ifstream inGainFile("gainFile.dat");
   assert(inGainFile.is_open());
-
   int varI, varJ;
   double varScale;
   double scale[6][128];
   while(inGainFile >> varI >> varJ >> varScale) {
     scale[varI][varJ] = varScale;
   }
-
   inGainFile.close();
 
-  if (fChain == 0) return;
-
+  // Make output file
   TFile* file = new TFile("spectra.root","recreate");
 
   Long64_t nentries = fChain->GetEntriesFast();
@@ -335,9 +334,11 @@ void Spectra::Loop() {
     // Fill Silicon Histograms
     if(siDet<11) {
       hSiEForwardTotal[siDet-1]->Fill(siEnergy);
+      hSiEForward[siDet-1][siQuad-1]->Fill(siEnergy);
     }
     else {
       hSiELeftTotal[siDet-11]->Fill(siEnergy);
+      hSiELeft[siDet-11][siQuad-1]->Fill(siEnergy);
     }
 
     // Sum up rows in central pads
@@ -727,42 +728,42 @@ void Spectra::Loop() {
   // }
 
   for(int i=0; i<10 ; i++) {
-    hSiEForwardTotal[i]->Write();
-    // for(int j=0; j<4; j++) {
-    //   hSiEForward[i][j]->Write();
-    //   hSiTForward[i][j]->Write();
-    // }
+    // hSiEForwardTotal[i]->Write();
+    for(int j=0; j<4; j++) {
+      hSiEForward[i][j]->Write();
+      // hSiTForward[i][j]->Write();
+    }
     // hCsIEForward[i]->Write();
     // hCsITForward[i]->Write();
   }
 
   for(int i=0; i<6 ; i++) {
-    hSiELeftTotal[i]->Write();
-    // for(int j=0; j<4; j++) {
-    //   hSiELeft[i][j]->Write();
-    //   hSiTLeft[i][j]->Write();
-    // }
+    // hSiELeftTotal[i]->Write();
+    for(int j=0; j<4; j++) {
+      hSiELeft[i][j]->Write();
+      // hSiTLeft[i][j]->Write();
+    }
     // hCsIELeft[i]->Write();
     // hCsITLeft[i]->Write();
   }
 
-  hIonizationChamberE->Write();
-  hIonizationChamberT->Write();
+  // hIonizationChamberE->Write();
+  // hIonizationChamberT->Write();
 
-  hMicroMegasCenterCumulative->Write();
+  // hMicroMegasCenterCumulative->Write();
   // hMicroMegasCenterEnergyCumulative->Write();
   // hMicroMegasCenterEnergyAverage->Write();
   // hMicroMegasCenterEnergyAverageScaled->Write();
   // hMicroMegasCenterTimeAverage->Write();
 
-  hdEECenterPad122->Write();
-  hdEECenterPad122Punchthrough->Write();
-  hdEECenterPad->Write();
-  hdEECenterPadPunchthrough->Write();
-  hCenterPadTime->Write();
+  // hdEECenterPad122->Write();
+  // hdEECenterPad122Punchthrough->Write();
+  // hdEECenterPad->Write();
+  // hdEECenterPadPunchthrough->Write();
+  // hCenterPadTime->Write();
 
-  hVertexE->Write();
-  hVertexEPunchthrough->Write();
+  // hVertexE->Write();
+  // hVertexEPunchthrough->Write();
 
   file->Close();
 }
