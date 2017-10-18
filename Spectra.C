@@ -7,6 +7,8 @@ void Spectra::Loop() {
 
   InitChannelMap();
 
+  Initialize();
+
   bool individualMMHistograms = false;
 
   // Read si calibrations
@@ -31,10 +33,14 @@ void Spectra::Loop() {
   }
   inGainFile.close();
 
-  // Make output file
-  TFile* file = new TFile("spectra.root","recreate");
-
   Long64_t nentries = fChain->GetEntriesFast();
+
+  /////////////////
+  // Set up cuts //
+  /////////////////
+  TFile* cutFile = TFile::Open("cuts.root");
+  TCutG* det5_dEE_noPunchthroughCut = (TCutG*)cutFile->Get("det5_dEECut_noPunchthrough");
+  cutFile->Close();
 
   ////////////////
   // Histograms //
@@ -46,6 +52,11 @@ void Spectra::Loop() {
     hSiEForwardTotal[i] = new TH1F(name, name, 1000, 0, 4000);
     hSiEForwardTotal[i]->GetXaxis()->SetTitle("Channels"); hSiEForwardTotal[i]->GetXaxis()->CenterTitle();
     hSiEForwardTotal[i]->GetYaxis()->SetTitle("Counts"); hSiEForwardTotal[i]->GetXaxis()->CenterTitle(); hSiEForwardTotal[i]->GetYaxis()->SetTitleOffset(1.4);
+
+    name = Form("SiTForward_d%d", i+1);
+    hSiTForwardTotal[i] = new TH1F(name, name, 1000, 0, 20000);
+    hSiTForwardTotal[i]->GetXaxis()->SetTitle("Timing [ns]"); hSiTForwardTotal[i]->GetXaxis()->CenterTitle();
+    hSiTForwardTotal[i]->GetYaxis()->SetTitle("Counts"); hSiTForwardTotal[i]->GetXaxis()->CenterTitle(); hSiTForwardTotal[i]->GetYaxis()->SetTitleOffset(1.4);
     for(int j=0; j<4; j++) {
       TString name = Form("SiEForward_d%d_q%d_ch%d", i+1, j+1, siForwardChannel[i][j]);
       hSiEForward[i][j] = new TH1F(name, name, 1000, 0, 4000);
@@ -160,6 +171,17 @@ void Spectra::Loop() {
   hVertexEPunchthroughCal->GetXaxis()->SetTitle("Energy [keV]"); hVertexEPunchthroughCal->GetXaxis()->SetTitleSize(0.05); hVertexEPunchthroughCal->GetXaxis()->CenterTitle();
   hVertexEPunchthroughCal->GetYaxis()->SetTitle("dE [Channels]"); hVertexEPunchthroughCal->GetYaxis()->SetTitleSize(0.05); hVertexEPunchthroughCal->GetYaxis()->CenterTitle(); hVertexEPunchthroughCal->GetYaxis()->SetTitleOffset(1.);
 
+  hCSDet5 = new TH1F("CSDet5", "CSDDet5", 20, 0, 5); hCSDet5->Sumw2();
+  hCSDet5->GetXaxis()->SetTitle("Center of Mass Energy [MeV]"); hCSDet5->GetXaxis()->SetTitleSize(0.05); hCSDet5->GetXaxis()->CenterTitle();
+  hCSDet5->GetYaxis()->SetTitle("Cross Section [b/sr]"); hCSDet5->GetYaxis()->SetTitleSize(0.05); hCSDet5->GetYaxis()->CenterTitle(); hCSDet5->GetYaxis()->SetTitleOffset(1.);
+
+  hCSDet5Counts = new TH1F("CSDet5Counts", "CSDDet5Counts", 20, 0, 5); hCSDet5Counts->Sumw2();
+  hCSDet5Counts->GetXaxis()->SetTitle("Center of Mass Energy [MeV]"); hCSDet5Counts->GetXaxis()->SetTitleSize(0.05); hCSDet5Counts->GetXaxis()->CenterTitle();
+  hCSDet5Counts->GetYaxis()->SetTitle("Counts"); hCSDet5Counts->GetYaxis()->SetTitleSize(0.05); hCSDet5Counts->GetYaxis()->CenterTitle(); hCSDet5Counts->GetYaxis()->SetTitleOffset(1.);
+
+  // Make output file
+  TFile* file = new TFile("spectra.root","recreate");
+
   // For average energy deposited
   std::vector<double> padCumulative[6][128];
   std::vector<double> padCumulativeScaled[6][128];
@@ -173,7 +195,7 @@ void Spectra::Loop() {
     nb = fChain->GetEntry(jentry);   nbytes += nb;
     // if (Cut(ientry) < 0) continue;
 
-    if(jentry!=0 && jentry%2000==0) printf("Processed %lld events\n",jentry);
+    if(jentry!=0 && jentry%5000==0) printf("Processed %lld events\n",jentry);
 
     // Find hit in Si detectors
     std::vector<siDetect> siDetect_;
@@ -383,8 +405,8 @@ void Spectra::Loop() {
     hIonizationChamberE->Fill(icE);
     hIonizationChamberT->Fill(icT);
 
-    // if(icE<1250) continue;
-    // if(icT<5500 || icT>6500) continue;
+    if(icE<1250) continue;
+    if(icT<5500 || icT>6500) continue;
 
     int siDet = siDetect_[0].detect;
     int siQuad = siDetect_[0].quad;
@@ -394,6 +416,8 @@ void Spectra::Loop() {
       siEnergyCal = siDetect_[0].energy*siEForwardCalibration[siDet-1][siQuad-1].first + siEForwardCalibration[siDet-1][siQuad-1].second;
     }
     double siTime = siDetect_[0].time;
+
+    if(siDet<11) hSiTForwardTotal[siDet-1]->Fill(siTime);
 
     // Find if CsI behind Si fired
     bool punchthrough = false;
@@ -462,322 +486,19 @@ void Spectra::Loop() {
       }
     }
 
-    /*
-    for(int i=0; i<mmMul; i++) {
-
-      if(mmChan[i]==11 || mmChan[i]==22 || mmChan[i]==45 || mmChan[i]==56) continue; // Skip FPN Channels
-
-      // Micromegas
-      if(mmCobo[i]==0) {
-        if(mmEnergy[i]<50) continue;
-
-        // Asad0 - Central Pads
-        if(mmAsad[i]==0) {
-          pair<int, int> pad;
-          if(mmAget[i]==0) {
-            pad = MM_Map_Asad0_Aget0[mmChan[i]];
-          }
-          else if(mmAget[i]==1) {
-            pad = MM_Map_Asad0_Aget1[mmChan[i]];
-          }
-          else if(mmAget[i]==2) {
-            pad = MM_Map_Asad0_Aget2[mmChan[i]];
-          }
-          else if(mmAget[i]==3) {
-            pad = MM_Map_Asad0_Aget3[mmChan[i]];
-          }
-
-          hMicroMegasCenterCumulative->Fill(pad.first-3, pad.second);
-          double energyBinBefore = hMicroMegasCenterEnergyCumulative->GetBinContent(pad.first+8, pad.second+1);
-          if(energyBinBefore>0) hMicroMegasCenterEnergyCumulative->SetBinContent(pad.first+8, pad.second+1, energyBinBefore+mmEnergy[i]*scale[pad.first][pad.second]);
-
-          if(individualMMHistograms) {
-            hMicroMegasCenter[jentry]->SetBinContent(pad.first+39, pad.second+1, mmEnergy[i]);
-            hMicroMegas[jentry]->SetBinContent(pad.first*2+65, pad.second+1, mmEnergy[i]);
-            hMicroMegas[jentry]->SetBinContent(pad.first*2+65+1, pad.second+1, mmEnergy[i]);
-          }
-
-          if(mmEnergy[i]>0) padCumulative[pad.first][pad.second].push_back(mmEnergy[i]);
-          if(mmEnergy[i]>0) padCumulativeScaled[pad.first][pad.second].push_back(mmEnergy[i]*scale[pad.first][pad.second]);
-          if(mmTime[i]>0) padCumulativeTime[pad.first][pad.second].push_back(mmTime[i]);
-        }
-
-        // Asad1 - Central Pads
-        else if(mmAsad[i]==1) {
-          pair<int, int> pad;
-          if(mmAget[i]==0) {
-            pad = MM_Map_Asad1_Aget0[mmChan[i]];
-          }
-          else if(mmAget[i]==1) {
-            pad = MM_Map_Asad1_Aget1[mmChan[i]];
-          }
-          else if(mmAget[i]==2) {
-            pad = MM_Map_Asad1_Aget2[mmChan[i]];
-          }
-          else if(mmAget[i]==3) {
-            pad = MM_Map_Asad1_Aget3[mmChan[i]];
-          }
-
-          hMicroMegasCenterCumulative->Fill(pad.first-3, pad.second);
-          double energyBinBefore = hMicroMegasCenterEnergyCumulative->GetBinContent(pad.first+8, pad.second+1);
-          if(energyBinBefore>0) hMicroMegasCenterEnergyCumulative->SetBinContent(pad.first+8, pad.second+1, energyBinBefore+mmEnergy[i]*scale[pad.first][pad.second]);
-
-          if(individualMMHistograms) {
-            hMicroMegasCenter[jentry]->SetBinContent(pad.first+39, pad.second+1, mmEnergy[i]);
-            hMicroMegas[jentry]->SetBinContent(pad.first*2+65, pad.second+1, mmEnergy[i]);
-            hMicroMegas[jentry]->SetBinContent(pad.first*2+65+1, pad.second+1, mmEnergy[i]);
-          }
-
-          if(mmEnergy[i]>0) padCumulative[pad.first][pad.second].push_back(mmEnergy[i]);
-          if(mmEnergy[i]>0) padCumulativeScaled[pad.first][pad.second].push_back(mmEnergy[i]*scale[pad.first][pad.second]);
-          if(mmTime[i]>0) padCumulativeTime[pad.first][pad.second].push_back(mmTime[i]);
-        }
-
-        // Asad2 - Aget0&1 - Strips and Chains. Aget2&3 - Central Pads
-        else if(mmAsad[i]==2) {
-          if(mmAget[i]==0) {
-            int bin = MM_Map_Asad2_Aget0[mmChan[i]];
-            if(Aget_Map[mmChan[i]]<34) {
-              hMicroMegasStrip[jentry]->SetBinContent(bin, mmEnergy[i]);
-              hMicroMegasStripTime[jentry]->SetBinContent(bin, mmTime[i]);
-            }
-            else{
-              hMicroMegasChain[jentry]->SetBinContent(bin, mmEnergy[i]);
-              hMicroMegasChainTime[jentry]->SetBinContent(bin, mmTime[i]);
-            }
-          }
-          else if(mmAget[i]==1) {
-            int bin = MM_Map_Asad2_Aget1[mmChan[i]];
-            if(Aget_Map[mmChan[i]]<34) {
-              hMicroMegasStrip[jentry]->SetBinContent(bin, mmEnergy[i]);
-              hMicroMegasStripTime[jentry]->SetBinContent(bin, mmTime[i]);
-            }
-            else{
-              hMicroMegasChain[jentry]->SetBinContent(bin, mmEnergy[i]);
-              hMicroMegasChainTime[jentry]->SetBinContent(bin, mmTime[i]);
-            }
-          }
-          else if(mmAget[i]==2) {
-            pair<int, int> pad = MM_Map_Asad2_Aget2[mmChan[i]];
-
-            hMicroMegasCenterCumulative->Fill(pad.first-3, pad.second);
-            double energyBinBefore = hMicroMegasCenterEnergyCumulative->GetBinContent(pad.first+8, pad.second+1);
-            if(energyBinBefore>0) hMicroMegasCenterEnergyCumulative->SetBinContent(pad.first+8, pad.second+1, energyBinBefore+mmEnergy[i]*scale[pad.first][pad.second]);
-
-            if(individualMMHistograms) {
-              hMicroMegasCenter[jentry]->SetBinContent(pad.first+39, pad.second+1, mmEnergy[i]);
-              hMicroMegas[jentry]->SetBinContent(pad.first*2+65, pad.second+1, mmEnergy[i]);
-              hMicroMegas[jentry]->SetBinContent(pad.first*2+65+1, pad.second+1, mmEnergy[i]);
-            }
-
-            if(mmEnergy[i]>0) padCumulative[pad.first][pad.second].push_back(mmEnergy[i]);
-            if(mmEnergy[i]>0) padCumulativeScaled[pad.first][pad.second].push_back(mmEnergy[i]*scale[pad.first][pad.second]);
-            if(mmTime[i]>0) padCumulativeTime[pad.first][pad.second].push_back(mmTime[i]);
-          }
-          else if(mmAget[i]==3) {
-            pair<int, int> pad = MM_Map_Asad2_Aget3[mmChan[i]];
-
-            hMicroMegasCenterCumulative->Fill(pad.first-3, pad.second);
-            double energyBinBefore = hMicroMegasCenterEnergyCumulative->GetBinContent(pad.first+8, pad.second+1);
-            if(energyBinBefore>0) hMicroMegasCenterEnergyCumulative->SetBinContent(pad.first+8, pad.second+1, energyBinBefore+mmEnergy[i]*scale[pad.first][pad.second]);
-
-            if(individualMMHistograms) {
-              hMicroMegasCenter[jentry]->SetBinContent(pad.first+39, pad.second+1, mmEnergy[i]);
-              hMicroMegas[jentry]->SetBinContent(pad.first*2+65, pad.second+1, mmEnergy[i]);
-              hMicroMegas[jentry]->SetBinContent(pad.first*2+65+1, pad.second+1, mmEnergy[i]);
-            }
-
-            if(mmEnergy[i]>0) padCumulative[pad.first][pad.second].push_back(mmEnergy[i]);
-            if(mmEnergy[i]>0) padCumulativeScaled[pad.first][pad.second].push_back(mmEnergy[i]*scale[pad.first][pad.second]);
-            if(mmTime[i]>0) padCumulativeTime[pad.first][pad.second].push_back(mmTime[i]);
-          }
-        }
-
-        // Asad3 - Aget0&1 - Strips and Chains. Aget2&3 - Central Pads
-        else if(mmAsad[i]==3) {
-          if(mmAget[i]==0) {
-            int bin = MM_Map_Asad3_Aget0[mmChan[i]];
-            if(Aget_Map[mmChan[i]]<34) {
-              hMicroMegasStrip[jentry]->SetBinContent(bin+64, mmEnergy[i]);
-              hMicroMegasStripTime[jentry]->SetBinContent(bin+64, mmTime[i]);
-            }
-            else{
-              hMicroMegasChain[jentry]->SetBinContent(bin+64, mmEnergy[i]);
-              hMicroMegasChainTime[jentry]->SetBinContent(bin+64, mmTime[i]);
-            }
-          }
-          else if(mmAget[i]==1) {
-            int bin = MM_Map_Asad3_Aget1[mmChan[i]];
-
-            if(Aget_Map[mmChan[i]]<34) {
-
-              hMicroMegasStrip[jentry]->SetBinContent(bin+64, mmEnergy[i]);
-              hMicroMegasStripTime[jentry]->SetBinContent(bin+64, mmTime[i]);
-            }
-            else{
-              hMicroMegasChain[jentry]->SetBinContent(bin+64, mmEnergy[i]);
-              hMicroMegasChainTime[jentry]->SetBinContent(bin+64, mmTime[i]);
-            }
-          }
-          else if(mmAget[i]==2) {
-            pair<int, int> pad = MM_Map_Asad3_Aget2[mmChan[i]];
-
-            hMicroMegasCenterCumulative->Fill(pad.first-3, pad.second);
-            double energyBinBefore = hMicroMegasCenterEnergyCumulative->GetBinContent(pad.first+8, pad.second+1);
-            if(energyBinBefore>0) hMicroMegasCenterEnergyCumulative->SetBinContent(pad.first+8, pad.second+1, energyBinBefore+mmEnergy[i]*scale[pad.first][pad.second]);
-
-            if(individualMMHistograms) {
-              hMicroMegasCenter[jentry]->SetBinContent(pad.first+39, pad.second+1, mmEnergy[i]);
-              hMicroMegas[jentry]->SetBinContent(pad.first*2+65, pad.second+1, mmEnergy[i]);
-              hMicroMegas[jentry]->SetBinContent(pad.first*2+65+1, pad.second+1, mmEnergy[i]);
-            }
-
-            if(mmEnergy[i]>0) padCumulative[pad.first][pad.second].push_back(mmEnergy[i]);
-            if(mmEnergy[i]>0) padCumulativeScaled[pad.first][pad.second].push_back(mmEnergy[i]*scale[pad.first][pad.second]);
-            if(mmTime[i]>0) padCumulativeTime[pad.first][pad.second].push_back(mmTime[i]);
-          }
-          else if(mmAget[i]==3) {
-            pair<int, int> pad = MM_Map_Asad3_Aget3[mmChan[i]];
-
-            hMicroMegasCenterCumulative->Fill(pad.first-3, pad.second);
-            double energyBinBefore = hMicroMegasCenterEnergyCumulative->GetBinContent(pad.first+8, pad.second+1);
-            if(energyBinBefore>0) hMicroMegasCenterEnergyCumulative->SetBinContent(pad.first+8, pad.second+1, energyBinBefore+mmEnergy[i]*scale[pad.first][pad.second]);
-
-            if(individualMMHistograms) {
-              hMicroMegasCenter[jentry]->SetBinContent(pad.first+39, pad.second+1, mmEnergy[i]);
-              hMicroMegas[jentry]->SetBinContent(pad.first*2+65, pad.second+1, mmEnergy[i]);
-              hMicroMegas[jentry]->SetBinContent(pad.first*2+65+1, pad.second+1, mmEnergy[i]);
-            }
-
-            if(mmEnergy[i]>0) padCumulative[pad.first][pad.second].push_back(mmEnergy[i]);
-            if(mmEnergy[i]>0) padCumulativeScaled[pad.first][pad.second].push_back(mmEnergy[i]*scale[pad.first][pad.second]);
-            if(mmTime[i]>0) padCumulativeTime[pad.first][pad.second].push_back(mmTime[i]);
-          }
-        }
-      }
-
-      // Forward Si Detectors
-      if(mmCobo[i]==1 && mmAsad[i]==0 && mmAget[i]==0) {
-        int detect = siForwardMap[mmChan[i]].first;
-        int quad = siForwardMap[mmChan[i]].second;
-        if(detect>0 && quad>0){
-          hSiEForward[siForwardMap[mmChan[i]].first-1][siForwardMap[mmChan[i]].second-1]->Fill(mmEnergy[i]);
-          hSiTForward[siForwardMap[mmChan[i]].first-1][siForwardMap[mmChan[i]].second-1]->Fill(mmTime[i]);
-        }
-      }
-
-      // Beam Left Si Detectors
-      if(mmCobo[i]==1 && mmAsad[i]==0 && mmAget[i]==3) {
-        int detect = siForwardMap[mmChan[i]].first;
-        int quad = siForwardMap[mmChan[i]].second;
-        if(detect>0 && quad>0){
-          hSiELeft[siForwardMap[mmChan[i]].first-1][siForwardMap[mmChan[i]].second-1]->Fill(mmEnergy[i]);
-          hSiTLeft[siForwardMap[mmChan[i]].first-1][siForwardMap[mmChan[i]].second-1]->Fill(mmTime[i]);
-        }
-      }
-
-      // CsI Detectors
-      if(mmCobo[i]==1 && mmAsad[i]==1 && mmAget[i]==3) {
-        int detect = CsIForwardMap[mmChan[i]];
-        if(detect>0) {
-          // Forward CsI Detectors
-          if(mmChan[i]<43) {
-            hCsIEForward[CsIForwardMap[mmChan[i]]-1]->Fill(mmEnergy[i]);
-            hCsITForward[CsIForwardMap[mmChan[i]]-1]->Fill(mmTime[i]);
-          }
-          // Beam Left CsI Detectors
-          else if (mmChan[i]>43){
-            hCsIELeft[CsILeftMap[mmChan[i]]-1]->Fill(mmEnergy[i]);
-            hCsITLeft[CsILeftMap[mmChan[i]]-1]->Fill(mmTime[i]);
-          }
-        }
-      }
-
-      // Ionization Chamber
-      if(mmCobo[i]==1 && mmAsad[i]==1 && mmAget[i]==0 && mmChan[i]==2) {
-        hIonizationChamber->Fill(mmEnergy[i]);
-      }
+    // Simple Cross Section calculation for detector 5
+    if(det5_dEE_noPunchthroughCut->IsInside(siEnergyCal, centerPadEnergydE)) {
+      Double_t massFactor = m1*m2/((m1+m2)*(m1+m2));
+      Double_t factor = 4.*massFactor; // missing cos^2 term but setting to 1 for now
+      Double_t b8Energy = siEnergyCal/factor;
+      Double_t cmEnergy = b8Energy*m2/(m1+m2);
+      hCSDet5->Fill(cmEnergy/1000.);
+      hCSDet5Counts->Fill(cmEnergy/1000.);
     }
-    */
-
-    // // Calculate average energy
-    // double padAverage[6][128];
-    // double padAverageScaled[6][128];
-    // double padAverageTime[6][128];
-    // for(int i=0; i<6; i++) {
-    //   for(int j=0; j<128; j++) {
-    //     if(i==4 && j==0) continue;
-    //     padAverage[i][j] = 0.;
-    //     padAverageScaled[i][j] = 0.;
-    //     padAverageTime[i][j] = 0.;
-    //     for(size_t k=0; k<padCumulative[i][j].size(); k++) {
-    //       padAverage[i][j] += padCumulative[i][j][k];
-    //     }
-    //     for(size_t k=0; k<padCumulativeScaled[i][j].size(); k++) {
-    //       padAverageScaled[i][j] += padCumulativeScaled[i][j][k];
-    //     }
-    //     for(size_t k=0; k<padCumulativeTime[i][j].size(); k++) {
-    //       padAverageTime[i][j] += padCumulativeTime[i][j][k];
-    //     }
-    //     padAverage[i][j] = (padCumulative[i][j].size()>0) ? padAverage[i][j]/padCumulative[i][j].size() : 0.;
-    //     padAverageScaled[i][j] = (padCumulativeScaled[i][j].size()>0) ? padAverageScaled[i][j]/padCumulativeScaled[i][j].size() : 0.;
-    //     padAverageTime[i][j] = (padCumulativeTime[i][j].size()>0) ? padAverageTime[i][j]/padCumulativeTime[i][j].size() : 0.;
-    //     if(padAverage[i][j]>0) hMicroMegasCenterEnergyAverage->SetBinContent(i+8, j+1, padAverage[i][j]);
-    //     if(padAverageScaled[i][j]>0) hMicroMegasCenterEnergyAverageScaled->SetBinContent(i+8, j+1, padAverageScaled[i][j]);
-    //     if(padAverageTime[i][j]>0) hMicroMegasCenterTimeAverage->SetBinContent(i+8, j+1, padAverageTime[i][j]);
-    //   }
-    // }
-
-    // // Gain match all pads
-    // FILE* gainFile = fopen("gainFile.dat", "w");
-    // double padBest = padAverage[2][64];
-    // double rowEnergySlope = 0.01338555;
-    // double rowEnergyIntercept = 7.7997787;
-    // double padBestEnergy = 8.85;
-    // double gainScale[6][128];
-    // for(int i=0; i<6; i++) {
-    //   for(int j=0; j<128; j++) {
-    //     double energyRow = j*rowEnergySlope + rowEnergyIntercept;
-    //     gainScale[i][j] = padBest*energyRow/(padAverage[i][j]*padBestEnergy);
-    //     fprintf(gainFile, "%d %d %f\n", i, j, gainScale[i][j]);
-    //   }
-    // }
-    // fflush(gainFile);
-    // fclose(gainFile);
-
-  //   int i_size_strip = hMicroMegasStrip[jentry]->GetSize();
-  //   int lowBoundStrip = 1000;
-  //   int highBoundStrip = 0;
-  //   std::vector<pair<int, double> > stripEnergy;
-  //   for(int i=1; i<i_size_strip; i++) {
-  //     double binContent = hMicroMegasStrip[jentry]->GetBinContent(i);
-  //     if(binContent<200) continue;
-  //     if(i<lowBoundStrip) lowBoundStrip = i;
-  //     if(i>highBoundStrip) highBoundStrip = i;
-  //     stripEnergy.push_back(make_pair(i, binContent));
-  //   }
-
-  //   int i_size_chain = hMicroMegasChain[jentry]->GetSize();
-  //   int lowBoundChain = 1000;
-  //   int highBoundChain = 0;
-  //   std::vector<pair<int, double> > chainEnergy;
-  //   for(int i=1; i<i_size_chain; i++) {
-  //     double binContent = hMicroMegasChain[jentry]->GetBinContent(i);
-  //     if(binContent<200) continue;
-  //     if(i<lowBoundChain) lowBoundChain = i;
-  //     if(i>highBoundChain) highBoundChain = i;
-  //     chainEnergy.push_back(make_pair(i, binContent));
-  //   }
-
-  //   for(size_t i=0; i<stripEnergy.size(); i++) {
-  //     int stripBin = (stripEnergy[i].first<64) ? stripEnergy[i].first*2 : (stripEnergy[i].first-64)*2;
-  //     for(size_t j=0; j<chainEnergy.size(); j++) {
-  //       int chainBin = (chainEnergy[j].first<64) ? 64-chainEnergy[j].first : chainEnergy[j].first+12;
-  //       hMicroMegas[jentry]->SetBinContent(chainBin+1, stripBin-1, stripEnergy[i].second);
-  //       hMicroMegas[jentry]->SetBinContent(chainBin+1, stripBin, stripEnergy[i].second);
-  //     }
-  //   }
   }
+
+  // Simple Cross Section calculation for detector 5
+  SimpleCrossSection(hCSDet5);
 
   // // Try to fix hMicroMegasCenterEnergyCumulative
   // int i_size_cumulative_x = hMicroMegasCenterCumulative->GetXaxis()->GetNbins();
@@ -802,6 +523,7 @@ void Spectra::Loop() {
 
   for(int i=0; i<10 ; i++) {
     // hSiEForwardTotal[i]->Write();
+    hSiTForwardTotal[i]->Write();
     // for(int j=0; j<4; j++) {
       // hSiEForward[i][j]->Write();
       // hSiEForwardCal[i][j]->Write();
@@ -841,5 +563,112 @@ void Spectra::Loop() {
   hVertexECal->Write();
   hVertexEPunchthroughCal->Write();
 
+  hCSDet5->Write();
+  hCSDet5Counts->Write();
+
   file->Close();
+}
+
+void Spectra::Initialize() {
+  m1 = 8.; // AMU of projectile
+  m2 = 1.; // AMU of target
+  beamEnergy = 56.; // In MeV, after havar window
+  density = 0.00038175; // in g/cm3, from LISE++ (Methane at 435 torr)
+  numberB8 = 174809089.;
+
+  distanceHavarToSilicon = 544.07; // Distance from Havar to Forward Silicon in mm
+
+  // Initialize EnergyLoss
+  boronMethane = new EnergyLoss("b8_methane.dat");
+  protonMethane = new EnergyLoss("proton_methane.dat");
+}
+
+void Spectra::SimpleCrossSection(TH1F *f) {
+  SimpleSolidAngleDet5(f);
+  DivideTargetThickness(f);
+  f->Scale(1./numberB8);
+}
+
+void Spectra::SimpleSolidAngleDet5(TH1F *f) {
+  Int_t i_size = f->GetSize();
+
+  TAxis *xaxis = f->GetXaxis();
+  for(Int_t i=1; i<i_size; i++) {
+    Double_t binCenter = xaxis->GetBinCenter(i);
+    Double_t binContent = f->GetBinContent(i);
+    Double_t binError = f->GetBinError(i);
+    Double_t solidAngle = CalcSimpleSolidAngleDet5(binCenter);
+    if(solidAngle==0.) {
+      f->SetBinContent(i, 0.);
+      f->SetBinError(i, 0.);
+    }
+    else {
+      f->SetBinContent(i, binContent/solidAngle);
+      f->SetBinError(i, binError/solidAngle);
+    }
+
+  }
+}
+
+Double_t Spectra::CalcSimpleSolidAngleDet5(Double_t cmEnergy) {
+  Double_t b8Energy = cmEnergy*(m1+m2)/m2;
+  Double_t dist = boronMethane->CalcRange(beamEnergy, b8Energy);
+
+  Double_t distToSi = distanceHavarToSilicon - dist;
+
+  TH1F* h = new TH1F("h", "h", 360, 0, 180);
+  TH1F* h2 = new TH1F("h2", "h2", 360, 0, 180);
+
+  Double_t angle;
+  Double_t sum = 0;
+  for(Double_t dx=0; dx<25.0; dx+=0.1) {
+    for(Double_t dy=26.8; dy<76.8; dy+=0.1) {
+      Double_t dr = sqrt(dx*dx+dy*dy+distToSi*distToSi);
+      angle = acos(distToSi/dr)/3.14159*180.;
+      Double_t protonEnergy = 4.*m1/(m1+m2)*distToSi*distToSi/(dr*dr)*cmEnergy;
+      Double_t range = protonMethane->CalcRange(protonEnergy, 0.);
+      if(range>=dr) {
+        sum += 0.1*0.1*distToSi/(dr*dr*dr);
+        h->Fill(angle);
+        h2->Fill(180.-2.*angle);
+      }
+    }
+  }
+  sum *= 2.;
+
+  if(sum==0) {
+    delete h;
+    delete h2;
+    return 0.;
+  }
+  else {
+    Double_t aFactor = 4.*cos(h->GetMean()*3.14159/180.);
+    Double_t changeBinContent = sum*aFactor;
+    delete h;
+    delete h2;
+    return changeBinContent;
+  }
+}
+
+void Spectra::DivideTargetThickness(TH1F *f) {
+  Int_t i_size = f->GetSize();
+
+  TAxis *xaxis = f->GetXaxis();
+  for(Int_t i=1; i<i_size; i++) {
+    Double_t binLowEdge = xaxis->GetBinLowEdge(i);
+    Double_t binUpEdge = xaxis->GetBinUpEdge(i);
+    if(binLowEdge==0.) binLowEdge += 0.001;
+    binLowEdge *= (m1+m2)/m2; // From C.M. to Lab frame
+    binUpEdge *= (m1+m2)/m2; // From C.M. to Lab frame
+    Double_t binContent = f->GetBinContent(i);
+    Double_t binError = f->GetBinError(i);
+    Double_t delta_x = boronMethane->CalcRange(binUpEdge, binLowEdge);
+    delta_x /= 10.0;
+    Double_t molarMassMethane = 0.01604;
+    Double_t factor = 4.e-27*density*delta_x*TMath::Na()/molarMassMethane;
+    binContent /= factor;
+    binError /= factor;
+    f->SetBinContent(i, binContent);
+    f->SetBinError(i, binError);
+  }
 }

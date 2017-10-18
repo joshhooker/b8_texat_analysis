@@ -10,10 +10,12 @@
 
 #include <TCanvas.h>
 #include <TChain.h>
+#include <TCutG.h>
 #include <TFile.h>
 #include <TH1.h>
 #include <TH2.h>
 #include <TH3.h>
+#include <TMath.h>
 #include <TROOT.h>
 #include <TStyle.h>
 
@@ -22,6 +24,9 @@
 #include <iostream>
 #include <map>
 #include <sstream>
+
+#include "CubicSpline.h"
+#include "EnergyLoss.h"
 
 typedef struct siDetect {
   int detect;
@@ -83,13 +88,13 @@ public :
   TBranch        *b_mmEnergy;   //!
 
   Spectra(TTree *tree=0);
-  virtual ~Spectra();
-  virtual Int_t    GetEntry(Long64_t entry);
-  virtual Long64_t LoadTree(Long64_t entry);
-  virtual void     Init(TTree *tree);
-  virtual void     Loop();
-  virtual Bool_t   Notify();
-  virtual void     Show(Long64_t entry = -1);
+  ~Spectra();
+  Int_t GetEntry(Long64_t entry);
+  Long64_t LoadTree(Long64_t entry);
+  void Init(TTree *tree);
+  void Loop();
+  Bool_t Notify();
+  void Show(Long64_t entry = -1);
 
 // Channel Map
 private:
@@ -132,6 +137,7 @@ private:
 // Histograms
 private:
   TH1F* hSiEForwardTotal[10];
+  TH1F* hSiTForwardTotal[10];
   TH1F* hSiEForward[10][4];
   TH1F* hSiEForwardCal[10][4];
   TH1F* hSiTForward[10][4];
@@ -146,6 +152,29 @@ private:
 
   TH1F* hCsIELeft[8];
   TH1F* hCsITLeft[8];
+
+  TH1F* hCSDet5;
+  TH1F* hCSDet5Counts;
+
+// General Variables
+private:
+  void Initialize();
+  Double_t m1;
+  Double_t m2;
+  Double_t beamEnergy;
+  Double_t density;
+  Double_t distanceHavarToSilicon;
+  Double_t numberB8;
+  EnergyLoss *boronMethane;
+  EnergyLoss *protonMethane;
+
+// Cross Section
+private:
+  void SimpleCrossSection(TH1F*);
+  void SimpleSolidAngleDet5(TH1F*);
+  Double_t CalcSimpleSolidAngleDet5(Double_t);
+  void DivideTargetThickness(TH1F*);
+
 };
 
 #endif
