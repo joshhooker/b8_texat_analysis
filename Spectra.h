@@ -11,13 +11,23 @@
 #include <TCanvas.h>
 #include <TChain.h>
 #include <TCutG.h>
+#include <TF2.h>
 #include <TFile.h>
+#include <TGraph.h>
+#include <TGraph2D.h>
 #include <TH1.h>
 #include <TH2.h>
 #include <TH3.h>
 #include <TMath.h>
+#include <TMultiGraph.h>
+#include <TPolyLine3D.h>
 #include <TROOT.h>
 #include <TStyle.h>
+
+#include <Fit/Fitter.h>
+
+#include <Math/Functor.h>
+#include <Math/Vector3D.h>
 
 #include <cassert>
 #include <fstream>
@@ -28,9 +38,55 @@
 #include "CubicSpline.h"
 #include "EnergyLoss.h"
 
+// Define the parameteric line equation
+void line(double t, const double *p, double &x, double &y, double &z) {
+  // a parameteric line is define from 6 parameters but 4 are independent
+  // x0,y0,z0,z1,y1,z1 which are the coordinates of two points on the line
+  // can choose z0 = 0 if line not parallel to x-y plane and z1 = 1
+  x = p[0] + p[1]*t;
+  y = p[2] + p[3]*t;
+  z = t;
+}
+
+// Calculate distance line-point
+double distance2(double x, double y, double z, const double *p) {
+  // distance line point is D = | (xp-x0) cross ux |
+  // where ux is direction of line and x0 is a point in the line (like t = 0)
+  ROOT::Math::XYZVector xp(x, y, z);
+  ROOT::Math::XYZVector x0(p[0], p[2], 0);
+  ROOT::Math::XYZVector x1(p[0] + p[1], p[2] + p[3], 1.);
+  ROOT::Math::XYZVector u = (x1-x0).Unit();
+  double d2 = ((xp-x0).Cross(u)).Mag2();
+  return d2;
+}
+
+// function Object to be minimized
+struct SumDistance2 {
+  // the TGraph is a data memeber of the object
+  TGraph2D *fGraph;
+  SumDistance2(TGraph2D *g) : fGraph(g) {}
+
+  // implementation of the function to be minimized
+  double operator() (const double *par) {
+    assert(fGraph != 0);
+    double *x = fGraph->GetX();
+    double *y = fGraph->GetY();
+    double *z = fGraph->GetZ();
+    int npoints = fGraph->GetN();
+    double sum = 0;
+    for(int i = 0; i < npoints ; i++) {
+      double d = distance2(x[i], y[i], z[i], par);
+      sum += d;
+    }
+    return sum;
+  }
+};
+
+
 typedef struct siDetect {
   int detect;
   int quad;
+  int channel;
   double energy;
   double time;
 } siHit;
@@ -47,6 +103,16 @@ typedef struct mmCenter {
   double energy;
   double time;
 } mmCenter;
+
+typedef struct mmCenterTrack {
+  double position;
+  int row;
+  double time;
+  double energy;
+  double height;
+  int total;
+} mmCenterTrack;
+
 
 typedef struct mmStrip {
   int row;
@@ -136,37 +202,48 @@ private:
 
 // Histograms
 private:
+  void InitHistograms();
+
   TH1F* hSiEForwardTotal[10];
+  TH1F* hSiEForwardTotalCal[10];
   TH1F* hSiTForwardTotal[10];
+
   TH1F* hSiEForward[10][4];
   TH1F* hSiEForwardCal[10][4];
   TH1F* hSiTForward[10][4];
 
-  TH1F* hSiELeftTotal[8];
-  TH1F* hSiELeft[8][4];
-  TH1F* hSiELeftCal[8][4];
-  TH1F* hSiTLeft[8][4];
+  TH1F* hSiELeftTotal[6];
+  TH1F* hSiELeftTotalCal[6];
+  TH1F* hSiTLeftTotal[6];
+
+  TH1F* hSiELeft[6][4];
+  TH1F* hSiELeftCal[6][4];
+  TH1F* hSiTLeft[6][4];
 
   TH1F* hCsIEForward[10];
+  TH1F* hCsIEForwardCal[10];
   TH1F* hCsITForward[10];
 
-  TH1F* hCsIELeft[8];
-  TH1F* hCsITLeft[8];
+  TH1F* hCsIELeft[6];
+  TH1F* hCsIELeftCal[6];
+  TH1F* hCsITLeft[6];
 
   TH1F* hCSDet5;
   TH1F* hCSDet5Counts;
 
-// General Variables
+// Silicon Energy Calibration
 private:
-  void Initialize();
-  Double_t m1;
-  Double_t m2;
-  Double_t beamEnergy;
-  Double_t density;
-  Double_t distanceHavarToSilicon;
-  Double_t numberB8;
-  EnergyLoss *boronMethane;
-  EnergyLoss *protonMethane;
+  void InitSiEForwardCalibration();
+  std::pair<double, double> siEForwardCalibration[10][4] = {std::make_pair(0., 0.)};
+
+// Center Pad Gain Match
+private:
+  void InitCentralPadGainMatch();
+  double scale[6][128];
+
+// Beam Average Central Pads
+  void InitAverageBeamEnergy();
+  double averageBeamEnergy[128];
 
 // Cross Section
 private:
@@ -175,8 +252,21 @@ private:
   Double_t CalcSimpleSolidAngleDet5(Double_t);
   void DivideTargetThickness(TH1F*);
 
-};
+// General Variables
+private:
+  void InitVariables();
+  Double_t m1;
+  Double_t m2;
+  Double_t zeroTime;
+  Double_t driftVelocity;
+  Double_t beamEnergy;
+  Double_t density;
+  Double_t distanceHavarToSilicon;
+  Double_t numberB8;
+  EnergyLoss *boronMethane;
+  EnergyLoss *protonMethane;
 
+};
 #endif
 
 #ifdef Spectra_cxx
@@ -260,6 +350,8 @@ inline void Spectra::Show(Long64_t entry) {
 }
 
 inline void Spectra::InitChannelMap() {
+  printf("Initializing Channel Map\n");
+
   //////////////////////////
   // Forward Si Detectors //
   //////////////////////////
@@ -586,14 +678,14 @@ inline void Spectra::InitChannelMap() {
   // Asad2_Aget2
   j=63;
   for(int i=0; i<64; i++) {
-    MM_Map_Asad2_Aget2[Aget_Map[i]] = std::make_pair(0,j);
+    MM_Map_Asad2_Aget2[Aget_Map[i]] = std::make_pair(0, j);
     j--;
   }
 
   // Asad2_Aget3
   j=127;
   for(int i=0; i<64; i++) {
-    MM_Map_Asad2_Aget3[Aget_Map[i]] = std::make_pair(0,j);
+    MM_Map_Asad2_Aget3[Aget_Map[i]] = std::make_pair(0, j);
     j--;
   }
 
@@ -626,19 +718,202 @@ inline void Spectra::InitChannelMap() {
   // Asad3_Aget2
   j=63;
   for(int i=0; i<64; i++) {
-    MM_Map_Asad3_Aget2[Aget_Map[i]] = std::make_pair(5,j);
+    MM_Map_Asad3_Aget2[Aget_Map[i]] = std::make_pair(5, j);
     j--;
   }
 
   // Asad3_Aget3
   j=127;
   for(int i=0; i<64; i++) {
-    MM_Map_Asad3_Aget3[Aget_Map[i]] = std::make_pair(5,j);
+    MM_Map_Asad3_Aget3[Aget_Map[i]] = std::make_pair(5, j);
     j--;
   }
 
-  // Asad3_Aget3
+}
 
+inline void Spectra::InitHistograms() {
+  printf("Initializing Histograms\n");
+
+  // Histograms for the Forward Si Detectors
+  for(unsigned int i=0; i<10; i++) {
+    TString name = Form("siEForward_d%d", i + 1);
+    hSiEForwardTotal[i] = new TH1F(name, name, 500, 0, 4000);
+    hSiEForwardTotal[i]->GetXaxis()->SetTitle("Channels"); hSiEForwardTotal[i]->GetXaxis()->CenterTitle();
+    hSiEForwardTotal[i]->GetYaxis()->SetTitle("Counts"); hSiEForwardTotal[i]->GetYaxis()->CenterTitle();
+    hSiEForwardTotal[i]->GetYaxis()->SetTitleOffset(1.4);
+
+    name = Form("siEForwardCal_d%d", i + 1);
+    hSiEForwardTotalCal[i] = new TH1F(name, name, 2000, 0, 16000);
+    hSiEForwardTotalCal[i]->GetXaxis()->SetTitle("Energy [keV]"); hSiEForwardTotalCal[i]->GetXaxis()->CenterTitle();
+    hSiEForwardTotalCal[i]->GetYaxis()->SetTitle("Counts"); hSiEForwardTotalCal[i]->GetYaxis()->CenterTitle();
+    hSiEForwardTotalCal[i]->GetYaxis()->SetTitleOffset(1.4);
+
+    name = Form("siTForward_d%d", i + 1);
+    hSiTForwardTotal[i] = new TH1F(name, name, 2500, 0, 20000);
+    hSiTForwardTotal[i]->GetXaxis()->SetTitle("Channels"); hSiTForwardTotal[i]->GetXaxis()->CenterTitle();
+    hSiTForwardTotal[i]->GetYaxis()->SetTitle("Counts"); hSiTForwardTotal[i]->GetYaxis()->CenterTitle();
+    hSiTForwardTotal[i]->GetYaxis()->SetTitleOffset(1.4);
+
+    for(unsigned int j=0; j<4; j++) {
+      TString name = Form("siEForward_d%d_q%d_ch_%d", i + 1, j + 1, siForwardChannel[i][j]);
+      hSiEForward[i][j] = new TH1F(name, name, 500, 0, 4000);
+      hSiEForward[i][j]->GetXaxis()->SetTitle("Channels"); hSiEForward[i][j]->GetXaxis()->CenterTitle();
+      hSiEForward[i][j]->GetYaxis()->SetTitle("Counts"); hSiEForward[i][j]->GetYaxis()->CenterTitle();
+      hSiEForward[i][j]->GetYaxis()->SetTitleOffset(1.4);
+
+      name = Form("siEForwardCal_d%d_q%d_ch_%d", i + 1, j + 1, siForwardChannel[i][j]);
+      hSiEForwardCal[i][j] = new TH1F(name, name, 500, 0, 4000);
+      hSiEForwardCal[i][j]->GetXaxis()->SetTitle("Channels"); hSiEForwardCal[i][j]->GetXaxis()->CenterTitle();
+      hSiEForwardCal[i][j]->GetYaxis()->SetTitle("Counts"); hSiEForwardCal[i][j]->GetYaxis()->CenterTitle();
+      hSiEForwardCal[i][j]->GetYaxis()->SetTitleOffset(1.4);
+
+      name = Form("siTForward_d%d_q%d_ch_%d", i + 1, j + 1, siForwardChannel[i][j]);
+      hSiTForward[i][j] = new TH1F(name, name, 500, 0, 4000);
+      hSiTForward[i][j]->GetXaxis()->SetTitle("Channels"); hSiTForward[i][j]->GetXaxis()->CenterTitle();
+      hSiTForward[i][j]->GetYaxis()->SetTitle("Counts"); hSiTForward[i][j]->GetYaxis()->CenterTitle();
+      hSiTForward[i][j]->GetYaxis()->SetTitleOffset(1.4);
+    }
+  }
+
+  // Histograms for the Beam Left Si Detectors
+  for(unsigned int i=0; i<6; i++) {
+    if(i > 7) break;
+    TString name = Form("siELeft_d%d", i + 1);
+    hSiELeftTotal[i] = new TH1F(name, name, 500, 0, 4000);
+    hSiELeftTotal[i]->GetXaxis()->SetTitle("Channels"); hSiELeftTotal[i]->GetXaxis()->CenterTitle();
+    hSiELeftTotal[i]->GetYaxis()->SetTitle("Counts"); hSiELeftTotal[i]->GetYaxis()->CenterTitle();
+    hSiELeftTotal[i]->GetYaxis()->SetTitleOffset(1.4);
+
+    name = Form("siELeftCal_d%d", i + 1);
+    hSiELeftTotalCal[i] = new TH1F(name, name, 2000, 0, 16000);
+    hSiELeftTotalCal[i]->GetXaxis()->SetTitle("Energy [keV]"); hSiELeftTotalCal[i]->GetXaxis()->CenterTitle();
+    hSiELeftTotalCal[i]->GetYaxis()->SetTitle("Counts"); hSiELeftTotalCal[i]->GetYaxis()->CenterTitle();
+    hSiELeftTotalCal[i]->GetYaxis()->SetTitleOffset(1.4);
+
+    name = Form("siTLeft_d%d", i + 1);
+    hSiTLeftTotal[i] = new TH1F(name, name, 2500, 0, 20000);
+    hSiTLeftTotal[i]->GetXaxis()->SetTitle("Channels"); hSiTLeftTotal[i]->GetXaxis()->CenterTitle();
+    hSiTLeftTotal[i]->GetYaxis()->SetTitle("Counts"); hSiTLeftTotal[i]->GetYaxis()->CenterTitle();
+    hSiTLeftTotal[i]->GetYaxis()->SetTitleOffset(1.4);
+
+    for(unsigned int j=0; j<4; j++) {
+      TString name = Form("siELeft_d%d_q%d_ch_%d", i + 1, j + 1, siLeftChannel[i][j]);
+      hSiELeft[i][j] = new TH1F(name, name, 500, 0, 4000);
+      hSiELeft[i][j]->GetXaxis()->SetTitle("Channels"); hSiELeft[i][j]->GetXaxis()->CenterTitle();
+      hSiELeft[i][j]->GetYaxis()->SetTitle("Counts"); hSiELeft[i][j]->GetYaxis()->CenterTitle();
+      hSiELeft[i][j]->GetYaxis()->SetTitleOffset(1.4);
+
+      name = Form("siELeftCal_d%d_q%d_ch_%d", i + 1, j + 1, siLeftChannel[i][j]);
+      hSiELeftCal[i][j] = new TH1F(name, name, 500, 0, 4000);
+      hSiELeftCal[i][j]->GetXaxis()->SetTitle("Channels"); hSiELeftCal[i][j]->GetXaxis()->CenterTitle();
+      hSiELeftCal[i][j]->GetYaxis()->SetTitle("Counts"); hSiELeftCal[i][j]->GetYaxis()->CenterTitle();
+      hSiELeftCal[i][j]->GetYaxis()->SetTitleOffset(1.4);
+
+      name = Form("siTLeft_d%d_q%d_ch_%d", i + 1, j + 1, siLeftChannel[i][j]);
+      hSiTLeft[i][j] = new TH1F(name, name, 500, 0, 4000);
+      hSiTLeft[i][j]->GetXaxis()->SetTitle("Channels"); hSiTLeft[i][j]->GetXaxis()->CenterTitle();
+      hSiTLeft[i][j]->GetYaxis()->SetTitle("Counts"); hSiTLeft[i][j]->GetYaxis()->CenterTitle();
+      hSiTLeft[i][j]->GetYaxis()->SetTitleOffset(1.4);
+    }
+  }
+
+  // Histograms for the Forward CsI Detectors
+  for(unsigned int i=0; i<10; i++) {
+    TString name = Form("CsIEForward_d%d_ch%d", i + 1, csiForwardChannel[i]);
+    hCsIEForward[i] = new TH1F(name, name, 1000, 0, 4000);
+    hCsIEForward[i]->GetXaxis()->SetTitle("Channels"); hCsIEForward[i]->GetXaxis()->CenterTitle();
+    hCsIEForward[i]->GetYaxis()->SetTitle("Counts"); hCsIEForward[i]->GetYaxis()->CenterTitle();
+    hCsIEForward[i]->GetYaxis()->SetTitleOffset(1.4);
+
+    name = Form("CsIEForwardCal_d%d_ch%d", i + 1, csiForwardChannel[i]);
+    hCsIEForwardCal[i] = new TH1F(name, name, 1000, 0, 4000);
+    hCsIEForwardCal[i]->GetXaxis()->SetTitle("Channels"); hCsIEForwardCal[i]->GetXaxis()->CenterTitle();
+    hCsIEForwardCal[i]->GetYaxis()->SetTitle("Counts"); hCsIEForwardCal[i]->GetYaxis()->CenterTitle();
+    hCsIEForwardCal[i]->GetYaxis()->SetTitleOffset(1.4);
+
+    name = Form("CsITForward_d%d_ch%d", i + 1, csiForwardChannel[i]);
+    hCsITForward[i] = new TH1F(name, name, 1000, 0, 20000);
+    hCsITForward[i]->GetXaxis()->SetTitle("Channels"); hCsITForward[i]->GetXaxis()->CenterTitle();
+    hCsITForward[i]->GetYaxis()->SetTitle("Counts"); hCsITForward[i]->GetYaxis()->CenterTitle();
+    hCsITForward[i]->GetYaxis()->SetTitleOffset(1.4);
+  }
+
+  // Histograms for the Beam Left CsI Detectors
+  for(unsigned int i=0; i<6; i++) {
+    TString name = Form("CsIELeft_d%d_ch%d", i + 1, csiLeftChannel[i]);
+    hCsIELeft[i] = new TH1F(name,name,1000,0,4000);
+    hCsIELeft[i]->GetXaxis()->SetTitle("Channels"); hCsIELeft[i]->GetXaxis()->CenterTitle();
+    hCsIELeft[i]->GetYaxis()->SetTitle("Counts"); hCsIELeft[i]->GetYaxis()->CenterTitle();
+    hCsIELeft[i]->GetYaxis()->SetTitleOffset(1.4);
+
+    name = Form("CsIELeftCal_d%d_ch%d", i + 1, csiLeftChannel[i]);
+    hCsIELeftCal[i] = new TH1F(name,name,1000,0,4000);
+    hCsIELeftCal[i]->GetXaxis()->SetTitle("Channels"); hCsIELeftCal[i]->GetXaxis()->CenterTitle();
+    hCsIELeftCal[i]->GetYaxis()->SetTitle("Counts"); hCsIELeftCal[i]->GetYaxis()->CenterTitle();
+    hCsIELeftCal[i]->GetYaxis()->SetTitleOffset(1.4);
+
+    name = Form("CsITLeft_d%d_ch%d", i + 1, csiLeftChannel[i]);
+    hCsITLeft[i] = new TH1F(name,name,1000,0,20000);
+    hCsITLeft[i]->GetXaxis()->SetTitle("Channels"); hCsITLeft[i]->GetXaxis()->CenterTitle();
+    hCsITLeft[i]->GetYaxis()->SetTitle("Counts"); hCsITLeft[i]->GetYaxis()->CenterTitle();
+    hCsITLeft[i]->GetYaxis()->SetTitleOffset(1.4);
+  }
+}
+
+inline void Spectra::InitSiEForwardCalibration() {
+  printf("Reading Si Energy Forward Calibrations File\n");
+  std::ifstream inSiCalFile("siCalibration.dat");
+  assert(inSiCalFile.is_open());
+  int var1, var2, var3;
+  double slope, intercept;
+  while(inSiCalFile >> var1 >> var2 >> var3 >> slope >> intercept) {
+    siEForwardCalibration[var1-1][var2-1] = std::make_pair(slope, intercept);
+  }
+  inSiCalFile.close();
+}
+
+inline void Spectra::InitCentralPadGainMatch() {
+  printf("Reading Central Pad Gain Matching File\n");
+  std::ifstream inGainFile("gainFile.dat");
+  assert(inGainFile.is_open());
+  int varI, varJ;
+  double varScale;
+  while(inGainFile >> varI >> varJ >> varScale) {
+    scale[varI][varJ] = varScale;
+  }
+  inGainFile.close();
+}
+
+inline void Spectra::InitAverageBeamEnergy() {
+  printf("Reading Average Beam Energy File\n");
+  std::ifstream inBeamFile("averageBeamEnergy.out");
+  assert(inBeamFile.is_open());
+  int varJ;
+  double varE;
+  while(inBeamFile >> varJ >> varE) {
+    averageBeamEnergy[varJ] = varE;
+  }
+}
+
+inline void Spectra::InitVariables() {
+  printf("Initializing Variables\n");
+
+  m1 = 8.; // AMU of projectile
+  m2 = 1.; // AMU of target
+
+  // zeroTime = 6081.81; // Time of 0 height in chamber (in ns)
+  zeroTime = 6081.81 - 352.457; // Time of 0 height in chamber (in ns)
+  driftVelocity = 0.05674449; // in mm/ns
+
+  beamEnergy = 56.; // In MeV, after havar window
+  density = 0.00038175; // in g/cm3, from LISE++ (Methane at 435 torr)
+  numberB8 = 174809089.;
+
+  distanceHavarToSilicon = 544.07; // Distance from Havar to Forward Silicon in mm
+
+  // Initialize EnergyLoss
+  boronMethane = new EnergyLoss("b8_methane.dat");
+  protonMethane = new EnergyLoss("proton_methane.dat");
 }
 
 #endif // #ifdef Spectra_cxx

@@ -6,32 +6,15 @@ void Spectra::Loop() {
   if (fChain == 0) return;
 
   InitChannelMap();
+  InitHistograms();
+  InitVariables();
 
-  Initialize();
+  InitSiEForwardCalibration();
+
+  InitCentralPadGainMatch();
+  InitAverageBeamEnergy();
 
   bool individualMMHistograms = false;
-
-  // Read si calibrations
-  std::pair<double, double> siEForwardCalibration[10][4] = {std::make_pair(0., 0.)};
-  std::ifstream inSiCalFile("siCalibration.dat");
-  assert(inSiCalFile.is_open());
-  int var1, var2, var3;
-  double slope, intercept;
-  while(inSiCalFile >> var1 >> var2 >> var3 >> slope >> intercept) {
-    siEForwardCalibration[var1-1][var2-1] = std::make_pair(slope, intercept);
-  }
-  inSiCalFile.close();
-
-  // Read gainFile.dat
-  std::ifstream inGainFile("gainFile.dat");
-  assert(inGainFile.is_open());
-  int varI, varJ;
-  double varScale;
-  double scale[6][128];
-  while(inGainFile >> varI >> varJ >> varScale) {
-    scale[varI][varJ] = varScale;
-  }
-  inGainFile.close();
 
   Long64_t nentries = fChain->GetEntriesFast();
 
@@ -40,90 +23,12 @@ void Spectra::Loop() {
   /////////////////
   TFile* cutFile = TFile::Open("cuts.root");
   TCutG* det5_dEE_noPunchthroughCut = (TCutG*)cutFile->Get("det5_dEECut_noPunchthrough");
+  TCutG* det56_dEECut = (TCutG*)cutFile->Get("det56_dEECut");
   cutFile->Close();
 
   ////////////////
   // Histograms //
   ////////////////
-
-  // Histograms for the Forward Si Detectors
-  for(int i=0; i<10; i++) {
-    TString name = Form("SiEForward_d%d", i+1);
-    hSiEForwardTotal[i] = new TH1F(name, name, 1000, 0, 4000);
-    hSiEForwardTotal[i]->GetXaxis()->SetTitle("Channels"); hSiEForwardTotal[i]->GetXaxis()->CenterTitle();
-    hSiEForwardTotal[i]->GetYaxis()->SetTitle("Counts"); hSiEForwardTotal[i]->GetXaxis()->CenterTitle(); hSiEForwardTotal[i]->GetYaxis()->SetTitleOffset(1.4);
-
-    name = Form("SiTForward_d%d", i+1);
-    hSiTForwardTotal[i] = new TH1F(name, name, 1000, 0, 20000);
-    hSiTForwardTotal[i]->GetXaxis()->SetTitle("Timing [ns]"); hSiTForwardTotal[i]->GetXaxis()->CenterTitle();
-    hSiTForwardTotal[i]->GetYaxis()->SetTitle("Counts"); hSiTForwardTotal[i]->GetXaxis()->CenterTitle(); hSiTForwardTotal[i]->GetYaxis()->SetTitleOffset(1.4);
-    for(int j=0; j<4; j++) {
-      TString name = Form("SiEForward_d%d_q%d_ch%d", i+1, j+1, siForwardChannel[i][j]);
-      hSiEForward[i][j] = new TH1F(name, name, 1000, 0, 4000);
-      hSiEForward[i][j]->GetXaxis()->SetTitle("Channels"); hSiEForward[i][j]->GetXaxis()->CenterTitle();
-      hSiEForward[i][j]->GetYaxis()->SetTitle("Counts"); hSiEForward[i][j]->GetYaxis()->CenterTitle(); hSiEForward[i][j]->GetYaxis()->SetTitleOffset(1.4);
-
-      name = Form("SiEForwardCal_d%d_q%d_ch%d", i+1, j+1, siForwardChannel[i][j]);
-      hSiEForwardCal[i][j] = new TH1F(name, name, 1000, 0, 20000);
-      hSiEForwardCal[i][j]->GetXaxis()->SetTitle("Energy [keV]"); hSiEForwardCal[i][j]->GetXaxis()->CenterTitle();
-      hSiEForwardCal[i][j]->GetYaxis()->SetTitle("Counts"); hSiEForwardCal[i][j]->GetYaxis()->CenterTitle(); hSiEForwardCal[i][j]->GetYaxis()->SetTitleOffset(1.4);
-
-      name = Form("SiTForward_d%d_q%d_ch%d", i+1, j+1, siForwardChannel[i][j]);
-      hSiTForward[i][j] = new TH1F(name, name, 1000, 0, 20000);
-      hSiTForward[i][j]->GetXaxis()->SetTitle("Channels"); hSiTForward[i][j]->GetXaxis()->CenterTitle();
-      hSiTForward[i][j]->GetYaxis()->SetTitle("Counts"); hSiTForward[i][j]->GetYaxis()->CenterTitle(); hSiTForward[i][j]->GetYaxis()->SetTitleOffset(1.4);
-    }
-  }
-
-  // Histograms for the Beam Left Si Detectors
-  for(int i=0; i<8; i++) {
-    TString name = Form("SiELeft_d%d", i+1);
-    hSiELeftTotal[i] = new TH1F(name, name, 1000, 0, 4000);
-    hSiELeftTotal[i]->GetXaxis()->SetTitle("Channels"); hSiELeftTotal[i]->GetXaxis()->CenterTitle();
-    hSiELeftTotal[i]->GetYaxis()->SetTitle("Counts"); hSiELeftTotal[i]->GetYaxis()->CenterTitle(); hSiELeftTotal[i]->GetYaxis()->SetTitleOffset(1.4);
-    for(int j=0; j<4; j++) {
-      TString name = Form("SiELeft_d%d_q%d_ch%d", i+1, j+1, siLeftChannel[i][j]);
-      hSiELeft[i][j] = new TH1F(name, name, 1000, 0, 4000);
-      hSiELeft[i][j]->GetXaxis()->SetTitle("Channels"); hSiELeft[i][j]->GetXaxis()->CenterTitle();
-      hSiELeft[i][j]->GetYaxis()->SetTitle("Counts"); hSiELeft[i][j]->GetYaxis()->CenterTitle(); hSiELeft[i][j]->GetYaxis()->SetTitleOffset(1.4);
-
-      name = Form("SiELeftCal_d%d_q%d_ch%d", i+1, j+1, siLeftChannel[i][j]);
-      hSiELeftCal[i][j] = new TH1F(name, name, 1000, 0, 4000);
-      hSiELeftCal[i][j]->GetXaxis()->SetTitle("Channels"); hSiELeftCal[i][j]->GetXaxis()->CenterTitle();
-      hSiELeftCal[i][j]->GetYaxis()->SetTitle("Counts"); hSiELeftCal[i][j]->GetYaxis()->CenterTitle(); hSiELeftCal[i][j]->GetYaxis()->SetTitleOffset(1.4);
-
-      name = Form("SiTLeft_d%d_q%d_ch%d", i+1, j+1, siLeftChannel[i][j]);
-      hSiTLeft[i][j] = new TH1F(name, name, 1000, 0, 20000);
-      hSiTLeft[i][j]->GetXaxis()->SetTitle("Channels"); hSiTLeft[i][j]->GetXaxis()->CenterTitle();
-      hSiTLeft[i][j]->GetYaxis()->SetTitle("Counts"); hSiTLeft[i][j]->GetYaxis()->CenterTitle(); hSiTLeft[i][j]->GetYaxis()->SetTitleOffset(1.4);
-    }
-  }
-
-  // Histograms for the Forward CsI Detectors
-  for(int i=0; i<10; i++) {
-    TString name = Form("CsIEForward_d%d_ch%d", i+1, csiForwardChannel[i]);
-    hCsIEForward[i] = new TH1F(name, name, 1000, 0, 4000);
-    hCsIEForward[i]->GetXaxis()->SetTitle("Channels"); hCsIEForward[i]->GetXaxis()->CenterTitle();
-    hCsIEForward[i]->GetYaxis()->SetTitle("Counts"); hCsIEForward[i]->GetYaxis()->CenterTitle(); hCsIEForward[i]->GetYaxis()->SetTitleOffset(1.4);
-
-    name = Form("CsITForward_d%d_ch%d", i+1, csiForwardChannel[i]);
-    hCsITForward[i] = new TH1F(name, name, 1000, 0, 20000);
-    hCsITForward[i]->GetXaxis()->SetTitle("Channels"); hCsITForward[i]->GetXaxis()->CenterTitle();
-    hCsITForward[i]->GetYaxis()->SetTitle("Counts"); hCsITForward[i]->GetYaxis()->CenterTitle(); hCsITForward[i]->GetYaxis()->SetTitleOffset(1.4);
-  }
-
-  // Histograms for the Beam Left CsI Detectors
-  for(int i=0; i<8; i++) {
-    TString name = Form("CsIELeft_d%d_ch%d", i+1, csiLeftChannel[i]);
-    hCsIELeft[i] = new TH1F(name,name,1000,0,4000);
-    hCsIELeft[i]->GetXaxis()->SetTitle("Channels"); hCsIELeft[i]->GetXaxis()->CenterTitle();
-    hCsIELeft[i]->GetYaxis()->SetTitle("Counts"); hCsIELeft[i]->GetYaxis()->CenterTitle(); hCsIELeft[i]->GetYaxis()->SetTitleOffset(1.4);
-
-    name = Form("CsITLeft_d%d_ch%d", i+1, csiLeftChannel[i]);
-    hCsITLeft[i] = new TH1F(name,name,1000,0,20000);
-    hCsITLeft[i]->GetXaxis()->SetTitle("Channels"); hCsITLeft[i]->GetXaxis()->CenterTitle();
-    hCsITLeft[i]->GetYaxis()->SetTitle("Counts"); hCsITLeft[i]->GetYaxis()->CenterTitle(); hCsITLeft[i]->GetYaxis()->SetTitleOffset(1.4);
-  }
 
   TH2F* hMicroMegasCenterCumulative = new TH2F("MM_Center_Cumulative", "MM_Center_Cumulative", 82, -41, 41, 128, 0, 128);
   TH2F* hMicroMegasCenterEnergyCumulative = new TH2F("MM_Center_Energy_Cumulative", "MM_Center_Energy_Cumulative", 20, -10, 10, 128, 0, 128);
@@ -139,6 +44,11 @@ void Spectra::Loop() {
 
   TH1F* hIonizationChamberE = new TH1F("icE", "icE", 500, 0, 4000);
   TH1F* hIonizationChamberT = new TH1F("icT", "icT", 500, 0, 20000);
+
+  TH1F* hRow116TimeDet5 = new TH1F("row116_time_det5", "row116_time_det5", 100, 0, 10000);
+  TH1F* hRow116TimeDet6 = new TH1F("row116_time_det6", "row116_time_det6", 100, 0, 10000);
+  TH1F* hRow123TimeDet5 = new TH1F("row123_time_det5", "row123_time_det5", 100, 0, 10000);
+  TH1F* hRow123TimeDet6 = new TH1F("row123_time_det6", "row123_time_det6", 100, 0, 10000);
 
   // dE plots
   TH2F* hdEECenterPad = new TH2F("dEECenterPad", "dEECenterPad", 500, 0, 4000, 500, 0, 25000);
@@ -159,23 +69,23 @@ void Spectra::Loop() {
 
   // Vertex vs E plots
   TH2F* hVertexE = new TH2F("vertexE", "vertexE", 128, 0, 128, 500, 0, 4000);
-  hVertexE->GetXaxis()->SetTitle("Energy [keV]"); hVertexE->GetXaxis()->SetTitleSize(0.05); hVertexE->GetXaxis()->CenterTitle();
-  hVertexE->GetYaxis()->SetTitle("dE [Channels]"); hVertexE->GetYaxis()->SetTitleSize(0.05); hVertexE->GetYaxis()->CenterTitle(); hVertexE->GetYaxis()->SetTitleOffset(1.);
+  hVertexE->GetXaxis()->SetTitle("Vertex [pad #]"); hVertexE->GetXaxis()->SetTitleSize(0.05); hVertexE->GetXaxis()->CenterTitle();
+  hVertexE->GetYaxis()->SetTitle("Energy [Channels]"); hVertexE->GetYaxis()->SetTitleSize(0.05); hVertexE->GetYaxis()->CenterTitle(); hVertexE->GetYaxis()->SetTitleOffset(1.);
   TH2F* hVertexEPunchthrough = new TH2F("vertexEPunchthrough", "vertexEPunchthrough", 128, 0, 128, 500, 0, 4000);
-  hVertexEPunchthrough->GetXaxis()->SetTitle("Energy [keV]"); hVertexEPunchthrough->GetXaxis()->SetTitleSize(0.05); hVertexEPunchthrough->GetXaxis()->CenterTitle();
-  hVertexEPunchthrough->GetYaxis()->SetTitle("dE [Channels]"); hVertexEPunchthrough->GetYaxis()->SetTitleSize(0.05); hVertexEPunchthrough->GetYaxis()->CenterTitle(); hVertexEPunchthrough->GetYaxis()->SetTitleOffset(1.);
+  hVertexEPunchthrough->GetXaxis()->SetTitle("Vertex [pad #]"); hVertexEPunchthrough->GetXaxis()->SetTitleSize(0.05); hVertexEPunchthrough->GetXaxis()->CenterTitle();
+  hVertexEPunchthrough->GetYaxis()->SetTitle("Energy [Channels]"); hVertexEPunchthrough->GetYaxis()->SetTitleSize(0.05); hVertexEPunchthrough->GetYaxis()->CenterTitle(); hVertexEPunchthrough->GetYaxis()->SetTitleOffset(1.);
   TH2F* hVertexECal = new TH2F("vertexECal", "vertexECal", 128, 0, 128, 500, 0, 20000);
-  hVertexECal->GetXaxis()->SetTitle("Energy [keV]"); hVertexECal->GetXaxis()->SetTitleSize(0.05); hVertexECal->GetXaxis()->CenterTitle();
-  hVertexECal->GetYaxis()->SetTitle("dE [Channels]"); hVertexECal->GetYaxis()->SetTitleSize(0.05); hVertexECal->GetYaxis()->CenterTitle(); hVertexECal->GetYaxis()->SetTitleOffset(1.);
+  hVertexECal->GetXaxis()->SetTitle("Vertex [pad #]"); hVertexECal->GetXaxis()->SetTitleSize(0.05); hVertexECal->GetXaxis()->CenterTitle();
+  hVertexECal->GetYaxis()->SetTitle("Energy [keV]"); hVertexECal->GetYaxis()->SetTitleSize(0.05); hVertexECal->GetYaxis()->CenterTitle(); hVertexECal->GetYaxis()->SetTitleOffset(1.);
   TH2F* hVertexEPunchthroughCal = new TH2F("vertexEPunchthroughCal", "vertexEPunchthroughCal", 128, 0, 128, 500, 0, 20000);
-  hVertexEPunchthroughCal->GetXaxis()->SetTitle("Energy [keV]"); hVertexEPunchthroughCal->GetXaxis()->SetTitleSize(0.05); hVertexEPunchthroughCal->GetXaxis()->CenterTitle();
-  hVertexEPunchthroughCal->GetYaxis()->SetTitle("dE [Channels]"); hVertexEPunchthroughCal->GetYaxis()->SetTitleSize(0.05); hVertexEPunchthroughCal->GetYaxis()->CenterTitle(); hVertexEPunchthroughCal->GetYaxis()->SetTitleOffset(1.);
+  hVertexEPunchthroughCal->GetXaxis()->SetTitle("Vertex [pad #]"); hVertexEPunchthroughCal->GetXaxis()->SetTitleSize(0.05); hVertexEPunchthroughCal->GetXaxis()->CenterTitle();
+  hVertexEPunchthroughCal->GetYaxis()->SetTitle("Energy [keV]"); hVertexEPunchthroughCal->GetYaxis()->SetTitleSize(0.05); hVertexEPunchthroughCal->GetYaxis()->CenterTitle(); hVertexEPunchthroughCal->GetYaxis()->SetTitleOffset(1.);
 
-  hCSDet5 = new TH1F("CSDet5", "CSDDet5", 20, 0, 5); hCSDet5->Sumw2();
-  hCSDet5->GetXaxis()->SetTitle("Center of Mass Energy [MeV]"); hCSDet5->GetXaxis()->SetTitleSize(0.05); hCSDet5->GetXaxis()->CenterTitle();
-  hCSDet5->GetYaxis()->SetTitle("Cross Section [b/sr]"); hCSDet5->GetYaxis()->SetTitleSize(0.05); hCSDet5->GetYaxis()->CenterTitle(); hCSDet5->GetYaxis()->SetTitleOffset(1.);
+  hCSDet5 = new TH1F("CSDet5", "CSDDet5", 40, 0, 5); hCSDet5->Sumw2();
+  hCSDet5->GetXaxis()->SetTitle("Center of Mass Energy [MeV]"); hCSDet5->GetXaxis()->SetTitleSize(0.05); hCSDet5->GetXaxis()->CenterTitle(); hCSDet5->GetXaxis()->SetTitleOffset(0.95);
+  hCSDet5->GetYaxis()->SetTitle("Cross Section [b/sr]"); hCSDet5->GetYaxis()->SetTitleSize(0.05); hCSDet5->GetYaxis()->CenterTitle(); hCSDet5->GetYaxis()->SetTitleOffset(0.95);
 
-  hCSDet5Counts = new TH1F("CSDet5Counts", "CSDDet5Counts", 20, 0, 5); hCSDet5Counts->Sumw2();
+  hCSDet5Counts = new TH1F("CSDet5Counts", "CSDDet5Counts", 40, 0, 5); hCSDet5Counts->Sumw2();
   hCSDet5Counts->GetXaxis()->SetTitle("Center of Mass Energy [MeV]"); hCSDet5Counts->GetXaxis()->SetTitleSize(0.05); hCSDet5Counts->GetXaxis()->CenterTitle();
   hCSDet5Counts->GetYaxis()->SetTitle("Counts"); hCSDet5Counts->GetYaxis()->SetTitleSize(0.05); hCSDet5Counts->GetYaxis()->CenterTitle(); hCSDet5Counts->GetYaxis()->SetTitleOffset(1.);
 
@@ -185,7 +95,10 @@ void Spectra::Loop() {
   // For average energy deposited
   std::vector<double> padCumulative[6][128];
   std::vector<double> padCumulativeScaled[6][128];
+  std::vector<double> rowCumulativeScaled[128];
   std::vector<double> padCumulativeTime[6][128];
+
+  printf("Starting Main Loop\n");
 
   Long64_t nbytes = 0, nb = 0;
   // for (Long64_t jentry=0; jentry<10; jentry++) {
@@ -195,7 +108,7 @@ void Spectra::Loop() {
     nb = fChain->GetEntry(jentry);   nbytes += nb;
     // if (Cut(ientry) < 0) continue;
 
-    if(jentry!=0 && jentry%5000==0) printf("Processed %lld events\n",jentry);
+    // if(jentry!=0 && jentry%200==0) printf("Processed %lld events\n",jentry);
 
     // Find hit in Si detectors
     std::vector<siDetect> siDetect_;
@@ -361,8 +274,9 @@ void Spectra::Loop() {
           if(mmAget[i]==0) {
             int detect = siForwardMap[mmChan[i]].first;
             int quad = siForwardMap[mmChan[i]].second;
+            int channel = mmChan[i];
             if(detect>0 && quad>0){
-              siDetect siHit = {detect, quad, mmEnergy[i], mmTime[i]};
+              siDetect siHit = {detect, quad, channel, mmEnergy[i], mmTime[i]};
               siDetect_.push_back(siHit);
             }
           }
@@ -370,8 +284,9 @@ void Spectra::Loop() {
           else if(mmAget[i]==3) {
             int detect = siLeftMap[mmChan[i]].first;
             int quad = siLeftMap[mmChan[i]].second;
+            int channel = mmChan[i];
             if(detect>0 && quad>0){
-              siDetect siHit = {detect+10, quad, mmEnergy[i], mmTime[i]};
+              siDetect siHit = {detect+10, quad, channel, mmEnergy[i], mmTime[i]};
               siDetect_.push_back(siHit);
             }
           }
@@ -405,11 +320,13 @@ void Spectra::Loop() {
     hIonizationChamberE->Fill(icE);
     hIonizationChamberT->Fill(icT);
 
-    if(icE<1250) continue;
-    if(icT<5500 || icT>6500) continue;
+    // if(icE<1250) continue;
+    if(icE < 1500 || icE > 1900) continue;
+    // if(icT<5500 || icT>6500) continue;
 
     int siDet = siDetect_[0].detect;
     int siQuad = siDetect_[0].quad;
+    int siChannel = siDetect_[0].channel;
     double siEnergy = siDetect_[0].energy;
     double siEnergyCal = 0.;
     if(siDet<11) {
@@ -428,17 +345,20 @@ void Spectra::Loop() {
     // Fill Silicon Histograms
     if(siDet<11) {
       hSiEForwardTotal[siDet-1]->Fill(siEnergy);
+      hSiEForwardTotalCal[siDet-1]->Fill(siEnergyCal);
       hSiEForward[siDet-1][siQuad-1]->Fill(siEnergy);
       hSiEForwardCal[siDet-1][siQuad-1]->Fill(siEnergyCal);
     }
     else {
       hSiELeftTotal[siDet-11]->Fill(siEnergy);
+      hSiELeftTotalCal[siDet-11]->Fill(siEnergyCal);
       hSiELeft[siDet-11][siQuad-1]->Fill(siEnergy);
       hSiELeftCal[siDet-1][siQuad-1]->Fill(siEnergyCal);
     }
 
     // Sum up rows in central pads
     float centerPadEnergy[128];
+    float centerdEPadEnergy[6][4];
     for(size_t i=0; i<128; i++) {
       centerPadEnergy[i] = 0.;
     }
@@ -449,81 +369,326 @@ void Spectra::Loop() {
       hMicroMegasCenterCumulative->Fill(mmCenterMatched_[i].column-3, mmCenterMatched_[i].row);
       hCenterPadTime->Fill(mmCenterMatched_[i].time);
 
-      if(mmCenterMatched_[i].time>4000 && mmCenterMatched_[i].time<7000) centerPadEnergy[mmCenterMatched_[i].row] += mmCenterMatched_[i].energy;
+      padCumulativeScaled[mmCenterMatched_[i].column][mmCenterMatched_[i].row].push_back(mmCenterMatched_[i].energy);
+      padCumulativeTime[mmCenterMatched_[i].column][mmCenterMatched_[i].row].push_back(mmCenterMatched_[i].time);
+
+      if(mmCenterMatched_[i].time>4000 && mmCenterMatched_[i].time<7000 && mmCenterMatched_[i].column!=0 && mmCenterMatched_[i].column!=5) centerPadEnergy[mmCenterMatched_[i].row] += mmCenterMatched_[i].energy;
 
       if(mmCenterMatched_[i].row>117 && mmCenterMatched_[i].row<124 && mmCenterMatched_[i].column!=0 && mmCenterMatched_[i].column!=5) {
         if(mmCenterMatched_[i].time>4000 && mmCenterMatched_[i].time<7000) centerPadEnergydE += mmCenterMatched_[i].energy;
       }
     }
 
-    // Make dE plots
-    if(siDet==5 && !punchthrough && centerPadEnergydE>100) {
-      hdEECenterPad->Fill(siEnergy, centerPadEnergydE);
-      hdEECenterPadCal->Fill(siEnergyCal, centerPadEnergydE);
-    }
-    if(siDet==5 && centerPadEnergydE>100) {
-      hdEECenterPadPunchthrough->Fill(siEnergy, centerPadEnergydE);
-      hdEECenterPadPunchthroughCal->Fill(siEnergyCal, centerPadEnergydE);
+    double padNumber[112];
+    double centerPadEnergySubtracted[112];
+    for(unsigned int i=0; i<112; i++) {
+      padNumber[i] = i;
+      if(centerPadEnergy[i] > 0) {
+        centerPadEnergySubtracted[i] = centerPadEnergy[i] - averageBeamEnergy[i];
+      }
+      else {
+        centerPadEnergySubtracted[i] = 0.;
+      }
     }
 
-    // Make sure the reaction happened over the micromegas and not before
-    if(centerPadEnergy[0]>0) {
-      float maxEnergy = 0;
-      int maxRow = 0;
-      for(size_t i=0; i<110; i++) {
-        if(centerPadEnergy[i]>maxEnergy) {
-          maxEnergy = centerPadEnergy[i];
-          maxRow = i;
+    // Find point where centerPadEnergySubtracted goes over 200 (or else find the maximum)
+    int vertexRow = -1;
+    if(siDet == 5 && centerPadEnergydE<20000) {
+      if(centerPadEnergy[0] == 0 || centerPadEnergy[1] == 0 || centerPadEnergy[2] == 0) continue;
+      bool found = false;
+      for(unsigned int i=0; i<112; i++) {
+        if(centerPadEnergySubtracted[i] > 200 && !found) {
+          vertexRow = i;
+          found = true;
         }
       }
-      if(siDet==5 && centerPadEnergydE<20000 && !punchthrough) {
-        hVertexE->Fill(maxRow, siEnergy);
-        hVertexECal->Fill(maxRow, siEnergyCal);
+
+      if(vertexRow == -1) { // did not find a point above 200, not find the maximum
+        double maxEnergy = -1000.;
+        for(unsigned int i=0; i<112; i++) {
+          if(centerPadEnergySubtracted[i] > maxEnergy) {
+            maxEnergy = centerPadEnergySubtracted[i];
+            vertexRow = i;
+          }
+        }
       }
-      if(siDet==5 && centerPadEnergydE<20000) {
-        hVertexEPunchthrough->Fill(maxRow, siEnergy);
-        hVertexEPunchthroughCal->Fill(maxRow, siEnergyCal);
+      hVertexECal->Fill(vertexRow, siEnergyCal);
+    }
+
+    if(vertexRow == -1) continue;
+
+    // Reduce MM Center to one entry per row
+    std::map<int, double> centralPadPosition;
+    std::map<int, double> centralPadTotalEnergy;
+    std::map<int, double> centralPadTime;
+    std::map<int, int> centralPadTotal;
+    for(unsigned int i=0; i<128; i++) {
+      centralPadTotal[i] = 0;
+    }
+    for(size_t i=0; i<mmCenterMatched_.size(); i++) {
+      if(mmCenterMatched_[i].time>4000 && mmCenterMatched_[i].time<7000) {
+        if(centralPadTotal[mmCenterMatched_[i].row] == 0) {
+          centralPadPosition[mmCenterMatched_[i].row] = (mmCenterMatched_[i].column*3.0-7.5)*mmCenterMatched_[i].energy;
+          centralPadTotalEnergy[mmCenterMatched_[i].row] = mmCenterMatched_[i].energy;
+          centralPadTime[mmCenterMatched_[i].row] = mmCenterMatched_[i].time;
+        }
+        else {
+          centralPadPosition[mmCenterMatched_[i].row] += (mmCenterMatched_[i].column*3.0-7.5)*mmCenterMatched_[i].energy;
+          centralPadTotalEnergy[mmCenterMatched_[i].row] += mmCenterMatched_[i].energy;
+          centralPadTime[mmCenterMatched_[i].row] += mmCenterMatched_[i].time;
+        }
+        centralPadTotal[mmCenterMatched_[i].row]++;
       }
     }
 
-    // Simple Cross Section calculation for detector 5
-    if(det5_dEE_noPunchthroughCut->IsInside(siEnergyCal, centerPadEnergydE)) {
-      Double_t massFactor = m1*m2/((m1+m2)*(m1+m2));
-      Double_t factor = 4.*massFactor; // missing cos^2 term but setting to 1 for now
-      Double_t b8Energy = siEnergyCal/factor;
-      Double_t cmEnergy = b8Energy*m2/(m1+m2);
-      hCSDet5->Fill(cmEnergy/1000.);
-      hCSDet5Counts->Fill(cmEnergy/1000.);
+    std::vector<mmCenterTrack> mmCenterBeam;
+    std::vector<mmCenterTrack> mmCenterProton;
+    std::map<int, double>::iterator it;
+    for(it = centralPadPosition.begin(); it != centralPadPosition.end(); it++) {
+      int row = it->first;
+      // std::cout << it->first << " : " << it->second << std::endl;
+      if(row < 112) { // beam
+        mmCenterTrack hit = {0., 0, 0., 0., 0., 0};
+        hit.position = centralPadPosition[row]/centralPadTotalEnergy[row];
+        hit.row = row;
+        hit.time = centralPadTime[row]/centralPadTotal[row];
+        hit.energy = centralPadTotalEnergy[row];
+        hit.height = (zeroTime - hit.time)*driftVelocity;
+        hit.total = centralPadTotal[row];
+        mmCenterBeam.push_back(hit);
+      }
+      else if((row == 116) || (row > 117 && row<124)) { // proton
+        mmCenterTrack hit = {0., 0, 0., 0., 0., 0};
+        hit.position = centralPadPosition[row]/centralPadTotalEnergy[row];
+        hit.row = row;
+        hit.time = centralPadTime[row]/centralPadTotal[row];
+        hit.energy = centralPadTotalEnergy[row];
+        hit.height = (zeroTime - hit.time)*driftVelocity;
+        hit.total = centralPadTotal[row];
+        mmCenterProton.push_back(hit);
+      }
     }
+
+    // Find point on beamline corresponding to the vertex row
+    for(size_t i=0; i<mmCenterBeam.size(); i++) {
+      if(mmCenterBeam[i].row == vertexRow) {
+        mmCenterProton.push_back(mmCenterBeam[i]);
+      }
+    }
+
+    // // Plot event by event for vertex
+    // if(det5_dEE_noPunchthroughCut->IsInside(siEnergyCal, centerPadEnergydE)) {
+    //   TString name = Form("Vertex_Event_%lld", jentry);
+    //   TGraph *gr = new TGraph(112, padNumber, centerPadEnergySubtracted);
+    //   gr->SetName(name);
+    //   gr->Write();
+    //   delete gr;
+    // }
+
+    // for(unsigned int i=0; i<128; i++) {
+    //   if(centerPadEnergy[i] > 5) {
+    //     rowCumulativeScaled[i].push_back(centerPadEnergy[i]);
+    //   }
+    // }
+
+    // // Make dE plots
+    // if((siDet==5 || siDet==6) && !punchthrough && centerPadEnergydE>100) {
+    //   hdEECenterPad->Fill(siEnergy, centerPadEnergydE);
+    //   hdEECenterPadCal->Fill(siEnergyCal, centerPadEnergydE);
+    // }
+    // if((siDet==5 || siDet==6) && centerPadEnergydE>100) {
+    //   hdEECenterPadPunchthrough->Fill(siEnergy, centerPadEnergydE);
+    //   hdEECenterPadPunchthroughCal->Fill(siEnergyCal, centerPadEnergydE);
+    // }
+
+    // // Make sure the reaction happened over the micromegas and not before
+    // float maxEnergy = 0;
+    // int maxRow = 0;
+    // if(centerPadEnergy[0]>0 && centerPadEnergy[1]>0 && centerPadEnergy[2]>0) {
+    //   for(size_t i=0; i<110; i++) {
+    //     if(centerPadEnergy[i]>maxEnergy) {
+    //       maxEnergy = centerPadEnergy[i];
+    //       maxRow = i;
+    //     }
+    //   }
+    //   // Skip events with no maximum in micromegas
+    //   if(maxRow==0) continue;
+
+    //   if(siDet==5 && centerPadEnergydE<20000 && !punchthrough) {
+    //     hVertexE->Fill(maxRow, siEnergy);
+    //     // hVertexECal->Fill(maxRow, siEnergyCal);
+    //   }
+    //   if(siDet==5 && centerPadEnergydE<20000) {
+    //     hVertexEPunchthrough->Fill(maxRow, siEnergy);
+    //     hVertexEPunchthroughCal->Fill(maxRow, siEnergyCal);
+    //   }
+    // }
+
+    // // Skip events with no maximum in micromegas
+    // if(maxRow==0) continue;
+
+    // // For events scattering over the micromegas, make 3d histogram (TH3F)
+    // if(det5_dEE_noPunchthroughCut->IsInside(siEnergyCal, centerPadEnergydE)) {
+    //   TString name = Form("Track_Event_%lld", jentry);
+    //   TH3F *h_3d_track= new TH3F(name, name, 10, -5, 5, 128, 0, 128, 400, 2000, 10000);
+    //   for(size_t i=0; i<mmCenterMatched_.size(); i++) {
+    //     double xPosition = mmCenterMatched_
+    //     h_3d_track->Fill(mmCenterMatched_[i].column-3, mmCenterMatched_[i].row, mmCenterMatched_[i].time);
+    //   }
+    //   h_3d_track->Write();
+    //   delete h_3d_track;
+    // }
+
+    // For events scattering over the micromegas, make 3d graph (TGraph2D)
+    if(det5_dEE_noPunchthroughCut->IsInside(siEnergyCal, centerPadEnergydE)) {
+      // Loop over beam particles
+      int N = 0;
+      TString name = Form("Track_Event_%lld_Beam", jentry);
+      TGraph2D *h_3d_track_beam= new TGraph2D();
+      h_3d_track_beam->SetMarkerStyle(20);
+      h_3d_track_beam->SetMarkerColor(2);
+      for(size_t i=0; i<mmCenterBeam.size(); i++) {
+        mmCenterTrack hit = mmCenterBeam[i];
+        // h_3d_track_beam->SetPoint(i, hit.position, hit.row, hit.time);
+        h_3d_track_beam->SetPoint(i, hit.position, hit.row, hit.height);
+      }
+      h_3d_track_beam->SetName(name);
+      h_3d_track_beam->Write();
+      delete h_3d_track_beam;
+
+      // Loop over proton particles
+      name = Form("Track_Event_%lld_Proton", jentry);
+      TGraph2D *h_3d_track_proton= new TGraph2D();
+      h_3d_track_proton->SetMarkerStyle(8);
+      h_3d_track_proton->SetMarkerColor(4);
+      for(size_t i=0; i<mmCenterProton.size(); i++) {
+        mmCenterTrack hit = mmCenterProton[i];
+        // h_3d_track_proton->SetPoint(i, hit.position, hit.row, hit.time);
+        h_3d_track_proton->SetPoint(i, hit.position, hit.row, hit.height);
+      }
+
+      // Fit proton track
+      double p0[4] = {10, 20, 1, 2};
+      ROOT::Fit::Fitter fitter;
+      SumDistance2 sdist(h_3d_track_proton);
+      ROOT::Math::Functor fcn(sdist, 4);
+      double pStart[4] = {1, 1, 1, 1};
+      fitter.SetFCN(fcn, pStart);
+      for(int i = 0; i < 4; i++) {
+        fitter.Config().ParSettings(i).SetStepSize(0.01);
+      }
+      bool ok = fitter.FitFCN();
+      if(!ok) {
+        Error("line3Dfit", "Line3D Fit failed");
+        continue;
+      }
+      const ROOT::Fit::FitResult &result = fitter.Result();
+      const double *parFit = result.GetParams();
+      h_3d_track_proton->SetName(name);
+      h_3d_track_proton->Write();
+      delete h_3d_track_proton;
+
+      // Draw fitted line
+      int n = 1000;
+      double t0 = -100;
+      double dt = 200;
+      TGraph2D *l_proton = new TGraph2D(n);
+      for(int i = 0; i < n; i++) {
+        double t = t0 + dt*i/n;
+        double x, y, z;
+        line(t, parFit, x, y, z);
+        std::cout << x << " " << y << " " << z << std::endl;
+        l_proton->SetPoint(i, x, y, z);
+      }
+      l_proton->SetLineColor(kGreen);
+      name = Form("Fit_Event_%lld_Proton", jentry);
+      l_proton->SetName(name);
+      l_proton->Write();
+      delete l_proton;
+
+      // TGraph2D boundaries
+      TGraph2D *h_3d_track_bound = new TGraph2D();
+      h_3d_track_bound->SetMarkerStyle(8);
+      h_3d_track_bound->SetMarkerColor(5);
+      h_3d_track_bound->SetPoint(0, -30, 0, -100);
+      h_3d_track_bound->SetPoint(1, 30, 128, 100);
+      h_3d_track_bound->SetName(Form("Track_Event_%lld_Bound", jentry));
+      h_3d_track_bound->Write();
+      delete h_3d_track_bound;
+
+      printf("Entry: %lld Si Det: %d Si Quad: %d Si Chan: %d Vertex Row: %d\n", jentry, siDet, siQuad, siChannel, vertexRow);
+    }
+
+    // // Simple Cross Section calculation for detector 5
+    // if(det5_dEE_noPunchthroughCut->IsInside(siEnergyCal, centerPadEnergydE)) {
+    //   Double_t massFactor = m1*m2/((m1+m2)*(m1+m2));
+    //   Double_t factor = 4.*massFactor; // missing cos^2 term but setting to 1 for now
+    //   Double_t b8Energy = siEnergyCal/factor;
+    //   Double_t cmEnergy = b8Energy*m2/(m1+m2);
+    //   hCSDet5->Fill(cmEnergy/1000.);
+    //   hCSDet5Counts->Fill(cmEnergy/1000.);
+    //   if(maxRow>80 && siEnergyCal<1800) {
+    //     printf("Event: %lld Row: %d Energy: %f SiEnergy: %f\n", jentry, maxRow, maxEnergy, siEnergyCal);
+    //     TString name = Form("vertexEvent_%lld", jentry);
+    //     TH1F* hVertexEvent = new TH1F(name, name, 115, 0, 115);
+    //     for(size_t row=0; row<110; row++) {
+    //       hVertexEvent->SetBinContent(row+1, centerPadEnergy[row]);
+    //     }
+    //     hVertexEvent->Write();
+    //     delete hVertexEvent;
+    //   }
+    // }
+
+    //  ** End of event by event analysis ** //
   }
 
-  // Simple Cross Section calculation for detector 5
-  SimpleCrossSection(hCSDet5);
-
-  // // Try to fix hMicroMegasCenterEnergyCumulative
-  // int i_size_cumulative_x = hMicroMegasCenterCumulative->GetXaxis()->GetNbins();
-  // int i_size_cumulative_y = hMicroMegasCenterCumulative->GetYaxis()->GetNbins();
-  // for(int i=0; i<i_size_cumulative_x; i++) {
-  //   for(int j=0; j<i_size_cumulative_y; j++) {
-  //     double binContent = hMicroMegasCenterCumulative->GetBinContent(i, j);
-  //     if(binContent<0) hMicroMegasCenterCumulative->SetBinContent(i, j, 0.);
-  //   }
+  // For beam average
+  // FILE* averageBeamEnergyFile = fopen("averageBeamEnergy.out", "w");
+  // FILE* averageBeamTimeFile = fopen("averageBeamTime.out", "w");
+  // Loop over rows
+  // for(unsigned int j=0; j<128; j++) {
+    // double averageEnergy = 0.;
+    // double averageTime = 0.;
+    // Loop over rows
+    // for(size_t k=0; k<rowCumulativeScaled[j].size(); k++) {
+      // averageEnergy += rowCumulativeScaled[j][k];
+      // averageTime += padCumulativeTime[i][j][k];
+    // }
+    // if(rowCumulativeScaled[j].size() == 0) {
+      // averageEnergy = 0.;
+      // averageTime = 0.;
+    // }
+    // else {
+      // averageEnergy /= rowCumulativeScaled[j].size();
+      // averageTime /= padCumulativeScaled[i][j].size();
+    // }
+    // fprintf(averageBeamEnergyFile, "%d %f\n", j, averageEnergy);
+    // fprintf(averageBeamTimeFile, "%d %f\n", j, averageTime);
   // }
+  // fflush(averageBeamEnergyFile);
+  // fflush(averageBeamTimeFile);
+  // fclose(averageBeamEnergyFile);
+  // fclose(averageBeamTimeFile);
 
-  // for(Long64_t i=0; i<nentries; i++) {
-  //   if(hMicroMegasCenter[i]->GetEntries()>1) {
-  //     hMicroMegasCenter[i]->Write();
-  //     hMicroMegas[i]->Write();
-  //     if(hMicroMegasStrip[i]->GetEntries()>0) hMicroMegasStrip[i]->Write();
-  //     if(hMicroMegasStripTime[i]->GetEntries()>0) hMicroMegasStripTime[i]->Write();
-  //     if(hMicroMegasChain[i]->GetEntries()>0) hMicroMegasChain[i]->Write();
-  //     if(hMicroMegasChainTime[i]->GetEntries()>0) hMicroMegasChainTime[i]->Write();
-  //   }
+  // // Simple Cross Section calculation for detector 5
+  // SimpleCrossSection(hCSDet5);
+
+  // FILE* cmCSFile;
+  // cmCSFile = fopen("testCS.out", "w");
+  // int i_size = hCSDet5->GetSize();
+  // TAxis *xaxis = hCSDet5->GetXaxis();
+  // for(int i=1; i<i_size; i++) {
+  //   float binCenter = xaxis->GetBinCenter(i);
+  //   float binContent = hCSDet5->GetBinContent(i);
+  //   float binError = hCSDet5->GetBinError(i);
+  //   fprintf(cmCSFile, "%f %f %f\n", binCenter, binContent, binError);
   // }
+  // fflush(cmCSFile);
+  // fclose(cmCSFile);
 
-  for(int i=0; i<10 ; i++) {
+  // for(int i=0; i<10 ; i++) {
     // hSiEForwardTotal[i]->Write();
-    hSiTForwardTotal[i]->Write();
+    // hSiTForwardTotal[i]->Write();
     // for(int j=0; j<4; j++) {
       // hSiEForward[i][j]->Write();
       // hSiEForwardCal[i][j]->Write();
@@ -531,7 +696,7 @@ void Spectra::Loop() {
     // }
     // hCsIEForward[i]->Write();
     // hCsITForward[i]->Write();
-  }
+  // }
 
   // for(int i=0; i<6 ; i++) {
     // hSiELeftTotal[i]->Write();
@@ -554,33 +719,24 @@ void Spectra::Loop() {
 
   // hdEECenterPad->Write();
   // hdEECenterPadPunchthrough->Write();
-  hdEECenterPadCal->Write();
-  hdEECenterPadPunchthroughCal->Write();
+  // hdEECenterPadCal->Write();
+  // hdEECenterPadPunchthroughCal->Write();
   // hCenterPadTime->Write();
 
   // hVertexE->Write();
   // hVertexEPunchthrough->Write();
-  hVertexECal->Write();
-  hVertexEPunchthroughCal->Write();
+  // hVertexECal->Write();
+  // hVertexEPunchthroughCal->Write();
 
-  hCSDet5->Write();
-  hCSDet5Counts->Write();
+  // hCSDet5->Write();
+  // hCSDet5Counts->Write();
+
+  // hRow116TimeDet5->Write();
+  // hRow116TimeDet6->Write();
+  // hRow123TimeDet5->Write();
+  // hRow123TimeDet6->Write();
 
   file->Close();
-}
-
-void Spectra::Initialize() {
-  m1 = 8.; // AMU of projectile
-  m2 = 1.; // AMU of target
-  beamEnergy = 56.; // In MeV, after havar window
-  density = 0.00038175; // in g/cm3, from LISE++ (Methane at 435 torr)
-  numberB8 = 174809089.;
-
-  distanceHavarToSilicon = 544.07; // Distance from Havar to Forward Silicon in mm
-
-  // Initialize EnergyLoss
-  boronMethane = new EnergyLoss("b8_methane.dat");
-  protonMethane = new EnergyLoss("proton_methane.dat");
 }
 
 void Spectra::SimpleCrossSection(TH1F *f) {
