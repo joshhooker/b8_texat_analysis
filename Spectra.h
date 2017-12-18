@@ -43,9 +43,12 @@ void line(double t, const double *p, double &x, double &y, double &z) {
   // a parameteric line is define from 6 parameters but 4 are independent
   // x0,y0,z0,z1,y1,z1 which are the coordinates of two points on the line
   // can choose z0 = 0 if line not parallel to x-y plane and z1 = 1
+  // x = p[0] + p[1]*t;
+  // y = p[2] + p[3]*t;
+  // z = t;
   x = p[0] + p[1]*t;
-  y = p[2] + p[3]*t;
-  z = t;
+  y = t;
+  z = p[2] + p[3]*t;
 }
 
 // Calculate distance line-point
@@ -53,8 +56,10 @@ double distance2(double x, double y, double z, const double *p) {
   // distance line point is D = | (xp-x0) cross ux |
   // where ux is direction of line and x0 is a point in the line (like t = 0)
   ROOT::Math::XYZVector xp(x, y, z);
-  ROOT::Math::XYZVector x0(p[0], p[2], 0);
-  ROOT::Math::XYZVector x1(p[0] + p[1], p[2] + p[3], 1.);
+  // ROOT::Math::XYZVector x0(p[0], p[2], 0);
+  // ROOT::Math::XYZVector x1(p[0] + p[1], p[2] + p[3], 1.);
+  ROOT::Math::XYZVector x0(p[0], 0., p[2]);
+  ROOT::Math::XYZVector x1(p[0] + p[1], 1., p[2] + p[3]);
   ROOT::Math::XYZVector u = (x1-x0).Unit();
   double d2 = ((xp-x0).Cross(u)).Mag2();
   return d2;

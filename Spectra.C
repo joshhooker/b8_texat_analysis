@@ -441,12 +441,14 @@ void Spectra::Loop() {
       }
     }
 
+    std::vector<mmCenterTrack> mmCenterBeamTotal;
     std::vector<mmCenterTrack> mmCenterBeam;
     std::vector<mmCenterTrack> mmCenterProton;
+    std::vector<mmCenterTrack> mmCenterScatteredBeam;
+    std::vector<mmCenterTrack> mmCenterVertex;
     std::map<int, double>::iterator it;
     for(it = centralPadPosition.begin(); it != centralPadPosition.end(); it++) {
       int row = it->first;
-      // std::cout << it->first << " : " << it->second << std::endl;
       if(row < 112) { // beam
         mmCenterTrack hit = {0., 0, 0., 0., 0., 0};
         hit.position = centralPadPosition[row]/centralPadTotalEnergy[row];
@@ -455,7 +457,7 @@ void Spectra::Loop() {
         hit.energy = centralPadTotalEnergy[row];
         hit.height = (zeroTime - hit.time)*driftVelocity;
         hit.total = centralPadTotal[row];
-        mmCenterBeam.push_back(hit);
+        mmCenterBeamTotal.push_back(hit);
       }
       else if((row == 116) || (row > 117 && row<124)) { // proton
         mmCenterTrack hit = {0., 0, 0., 0., 0., 0};
@@ -470,9 +472,39 @@ void Spectra::Loop() {
     }
 
     // Find point on beamline corresponding to the vertex row
-    for(size_t i=0; i<mmCenterBeam.size(); i++) {
-      if(mmCenterBeam[i].row == vertexRow) {
-        mmCenterProton.push_back(mmCenterBeam[i]);
+    for(size_t i=0; i<mmCenterBeamTotal.size(); i++) {
+      if(mmCenterBeamTotal[i].row == vertexRow) {
+        mmCenterVertex.push_back(mmCenterBeamTotal[i]);
+        mmCenterProton.push_back(mmCenterBeamTotal[i]);
+      }
+    }
+
+    // Make scattered beam particle track
+    int maxRowScatteredBeam = 0;
+    for(it = centralPadPosition.begin(); it != centralPadPosition.end(); it++) {
+      int row = it->first;
+      if(row < 112 && row > vertexRow) {
+        if(row > maxRowScatteredBeam) {
+          maxRowScatteredBeam = row;
+        }
+        mmCenterTrack hit = {0., 0, 0., 0., 0., 0};
+        hit.position = centralPadPosition[row]/centralPadTotalEnergy[row];
+        hit.row = row;
+        hit.time = centralPadTime[row]/centralPadTotal[row];
+        hit.energy = centralPadTotalEnergy[row];
+        hit.height = (zeroTime - hit.time)*driftVelocity;
+        hit.total = centralPadTotal[row];
+        mmCenterScatteredBeam.push_back(hit);
+      }
+      else if (row < 112 && row <= vertexRow) {
+        mmCenterTrack hit = {0., 0, 0., 0., 0., 0};
+        hit.position = centralPadPosition[row]/centralPadTotalEnergy[row];
+        hit.row = row;
+        hit.time = centralPadTime[row]/centralPadTotal[row];
+        hit.energy = centralPadTotalEnergy[row];
+        hit.height = (zeroTime - hit.time)*driftVelocity;
+        hit.total = centralPadTotal[row];
+        mmCenterBeam.push_back(hit);
       }
     }
 
@@ -541,27 +573,126 @@ void Spectra::Loop() {
 
     // For events scattering over the micromegas, make 3d graph (TGraph2D)
     if(det5_dEE_noPunchthroughCut->IsInside(siEnergyCal, centerPadEnergydE)) {
-      // Loop over beam particles
+      // Loop over all beam particles
       int N = 0;
-      TString name = Form("Track_Event_%lld_Beam", jentry);
-      TGraph2D *h_3d_track_beam= new TGraph2D();
+      TString name = Form("Track_Event_%lld_Beam_Total", jentry);
+      TGraph2D *h_3d_track_beam_total = new TGraph2D();
+      h_3d_track_beam_total->SetMarkerStyle(20);
+      h_3d_track_beam_total->SetMarkerColor(2);
+      for(size_t i=0; i<mmCenterBeamTotal.size(); i++) {
+        mmCenterTrack hit = mmCenterBeamTotal[i];
+        // h_3d_track_beam->SetPoint(i, hit.position, hit.row, hit.time);
+        h_3d_track_beam_total->SetPoint(i, hit.position, hit.row, hit.height);
+      }
+      h_3d_track_beam_total->SetName(name);
+      h_3d_track_beam_total->Write();
+      delete h_3d_track_beam_total;
+
+      // Loop over pre-scattered beam particles
+      name = Form("Track_Event_%lld_Beam", jentry);
+      TGraph2D *h_3d_track_beam = new TGraph2D();
       h_3d_track_beam->SetMarkerStyle(20);
       h_3d_track_beam->SetMarkerColor(2);
-      for(size_t i=0; i<mmCenterBeam.size(); i++) {
+      for(size_t i = 0; i < mmCenterBeam.size(); i++) {
         mmCenterTrack hit = mmCenterBeam[i];
-        // h_3d_track_beam->SetPoint(i, hit.position, hit.row, hit.time);
         h_3d_track_beam->SetPoint(i, hit.position, hit.row, hit.height);
       }
+
+      // Fit pre-scattered beam track
+      double p0_beam[4] = {10, 20, 1, 2};
+      ROOT::Fit::Fitter fitter_beam;
+      SumDistance2 sdist_beam(h_3d_track_beam);
+      ROOT::Math::Functor fcn_beam(sdist_beam, 4);
+      double pStart_beam[4] = {1, 1, 1, 1};
+      fitter_beam.SetFCN(fcn_beam, pStart_beam);
+      for(int i = 0; i < 4; i++) {
+        fitter_beam.Config().ParSettings(i).SetStepSize(0.01);
+      }
+      bool ok_beam = fitter_beam.FitFCN();
+      if(!ok_beam) {
+        Error("line3Dfit", "Line3D Fit failed beam");
+        continue;
+      }
+      const ROOT::Fit::FitResult &result_beam = fitter_beam.Result();
+      const double *parFit_beam = result_beam.GetParams();
       h_3d_track_beam->SetName(name);
       h_3d_track_beam->Write();
       delete h_3d_track_beam;
 
+      // Draw fitted beam line
+      int n_beam = 1000;
+      double t0_beam = 0;
+      double dt_beam = vertexRow + 1;
+      TGraph2D *l_beam = new TGraph2D(n_beam);
+      for(int i = 0; i < n_beam; i++) {
+        double t = t0_beam + dt_beam*i/n_beam;
+        double x, y, z;
+        line(t, parFit_beam, x, y, z);
+        l_beam->SetPoint(i, x, y, z);
+      }
+      l_beam->SetMarkerStyle(8);
+      l_beam->SetMarkerColor(2);
+      name = Form("Fit_Event_%lld_Beam", jentry);
+      l_beam->SetName(name);
+      l_beam->Write();
+      delete l_beam;
+
+      // Loop over scattered beam particles
+      name = Form("Track_Event_%lld_Beam_Scattered", jentry);
+      TGraph2D *h_3d_track_beam_scattered = new TGraph2D();
+      h_3d_track_beam_scattered->SetMarkerStyle(20);
+      h_3d_track_beam_scattered->SetMarkerColor(6);
+      for(size_t i=0; i<mmCenterScatteredBeam.size(); i++) {
+        mmCenterTrack hit = mmCenterScatteredBeam[i];
+        h_3d_track_beam_scattered->SetPoint(i, hit.position, hit.row, hit.height);
+      }
+
+      // Fit scattered beam track
+      double p0_scattered[4] = {10, 20, 1, 2};
+      ROOT::Fit::Fitter fitter_scattered;
+      SumDistance2 sdist_scattered(h_3d_track_beam_scattered);
+      ROOT::Math::Functor fcn_scattered(sdist_scattered, 4);
+      double pStart_scattered[4] = {1, 1, 1, 1};
+      fitter_scattered.SetFCN(fcn_scattered, pStart_scattered);
+      for(int i = 0; i < 4; i++) {
+        fitter_scattered.Config().ParSettings(i).SetStepSize(0.01);
+      }
+      bool ok_scattered = fitter_scattered.FitFCN();
+      if(!ok_scattered) {
+        Error("line3Dfit", "Line3D Fit failed scattered beam");
+        continue;
+      }
+      const ROOT::Fit::FitResult &result_scattered = fitter_scattered.Result();
+      const double *parFit_scattered = result_scattered.GetParams();
+      h_3d_track_beam_scattered->SetName(name);
+      h_3d_track_beam_scattered->Write();
+      delete h_3d_track_beam_scattered;
+
+      // Draw fitted scattered beam line
+      int n_scattered = 1000;
+      double t0_scattered = vertexRow;
+      double dt_scattered = maxRowScatteredBeam - t0_scattered;
+      TGraph2D *l_scattered = new TGraph2D(n_scattered);
+      for(int i = 0; i < n_scattered; i++) {
+        double t = t0_scattered + dt_scattered*i/n_scattered;
+        double x, y, z;
+        line(t, parFit_scattered, x, y, z);
+        // std::cout << i << " " << y << " " << x << " " << z << std::endl;
+        l_scattered->SetPoint(i, x, y, z);
+      }
+      l_scattered->SetMarkerStyle(8);
+      l_scattered->SetMarkerColor(7);
+      name = Form("Fit_Event_%lld_Beam_Scattered", jentry);
+      l_scattered->SetName(name);
+      l_scattered->Write();
+      delete l_scattered;
+
       // Loop over proton particles
       name = Form("Track_Event_%lld_Proton", jentry);
-      TGraph2D *h_3d_track_proton= new TGraph2D();
+      TGraph2D *h_3d_track_proton = new TGraph2D();
       h_3d_track_proton->SetMarkerStyle(8);
       h_3d_track_proton->SetMarkerColor(4);
-      for(size_t i=0; i<mmCenterProton.size(); i++) {
+      for(size_t i = 0; i < mmCenterProton.size(); i++) {
         mmCenterTrack hit = mmCenterProton[i];
         // h_3d_track_proton->SetPoint(i, hit.position, hit.row, hit.time);
         h_3d_track_proton->SetPoint(i, hit.position, hit.row, hit.height);
@@ -588,23 +719,33 @@ void Spectra::Loop() {
       h_3d_track_proton->Write();
       delete h_3d_track_proton;
 
-      // Draw fitted line
+      // Draw fitted proton line
       int n = 1000;
-      double t0 = -100;
-      double dt = 200;
+      double t0 = vertexRow;
+      double dt = 128 - vertexRow;
       TGraph2D *l_proton = new TGraph2D(n);
       for(int i = 0; i < n; i++) {
         double t = t0 + dt*i/n;
         double x, y, z;
         line(t, parFit, x, y, z);
-        std::cout << x << " " << y << " " << z << std::endl;
         l_proton->SetPoint(i, x, y, z);
       }
-      l_proton->SetLineColor(kGreen);
+      l_proton->SetMarkerStyle(8);
+      l_proton->SetMarkerColor(3);
       name = Form("Fit_Event_%lld_Proton", jentry);
       l_proton->SetName(name);
       l_proton->Write();
       delete l_proton;
+
+      // Draw vertex location
+      TGraph2D *h_3d_track_vertex = new TGraph2D(1);
+      h_3d_track_vertex->SetMarkerStyle(20);
+      h_3d_track_vertex->SetMarkerColor(4);
+      h_3d_track_vertex->SetPoint(0, mmCenterVertex[0].position, mmCenterVertex[0].row, mmCenterVertex[0].height);
+      name = Form("Track_Event_%lld_Vertex", jentry);
+      h_3d_track_vertex->SetName(name);
+      h_3d_track_vertex->Write();
+      delete h_3d_track_vertex;
 
       // TGraph2D boundaries
       TGraph2D *h_3d_track_bound = new TGraph2D();
@@ -616,7 +757,7 @@ void Spectra::Loop() {
       h_3d_track_bound->Write();
       delete h_3d_track_bound;
 
-      printf("Entry: %lld Si Det: %d Si Quad: %d Si Chan: %d Vertex Row: %d\n", jentry, siDet, siQuad, siChannel, vertexRow);
+      printf("Entry: %lld Si Det: %d Si Quad: %d Si Chan: %d Vertex Row: %d MaxBeam: %d\n", jentry, siDet, siQuad, siChannel, vertexRow, maxRowScatteredBeam);
     }
 
     // // Simple Cross Section calculation for detector 5
