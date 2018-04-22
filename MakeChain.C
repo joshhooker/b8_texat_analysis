@@ -2,12 +2,12 @@
   TChain *chain = new TChain("mfmData");
 
   // Home Mac
-  // TString PathToFiles = "/hd3/research/data/run0817a/rootM2R-MaxModule/run";
+  TString PathToFiles = "/hd3/research/data/run0817a/rootM2R-MaxModule/run";
 
   // Laptop
-  TString PathToFiles = "/Users/joshhooker/Desktop/data/run0817a/run";
+  // TString PathToFiles = "/Users/joshhooker/Desktop/data/run0817a/run";
 
-  chain->Add(PathToFiles+"172.root");
+  // chain->Add(PathToFiles+"172.root");
   // chain->Add(PathToFiles+"175.root");
   // chain->Add(PathToFiles+"178.root");
   // chain->Add(PathToFiles+"180.root");
@@ -52,4 +52,7 @@
   // chain->Add(PathToFiles+"221.root");
   // chain->Add(PathToFiles+"223.root");
   // chain->Add(PathToFiles+"224.root");
+
+  // Si Calibration Run
+  chain->Add(PathToFiles+"230.root");
 }

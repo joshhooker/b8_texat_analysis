@@ -5,8 +5,8 @@
 // found on file: run1_0.root
 //////////////////////////////////////////////////////////
 
-#ifndef Spectra_h
-#define Spectra_h
+#ifndef SPECTRA_H
+#define SPECTRA_H
 
 #include <TCanvas.h>
 #include <TChain.h>
@@ -37,99 +37,28 @@
 
 #include "CubicSpline.h"
 #include "EnergyLoss.h"
+#include "FitTrack.h"
+#include "Hough2D.h"
+#include "TypeDef.h"
 
 // Define the parameteric line equation
-void line(double t, const double *p, double &x, double &y, double &z) {
-  // a parameteric line is define from 6 parameters but 4 are independent
-  // x0,y0,z0,z1,y1,z1 which are the coordinates of two points on the line
-  // can choose z0 = 0 if line not parallel to x-y plane and z1 = 1
-  // x = p[0] + p[1]*t;
-  // y = p[2] + p[3]*t;
-  // z = t;
+void line(Double_t t, std::vector<Double_t> p, Double_t &x, Double_t &y, Double_t &z) {
   x = p[0] + p[1]*t;
   y = t;
   z = p[2] + p[3]*t;
 }
 
-// Calculate distance line-point
-double distance2(double x, double y, double z, const double *p) {
-  // distance line point is D = | (xp-x0) cross ux |
-  // where ux is direction of line and x0 is a point in the line (like t = 0)
-  ROOT::Math::XYZVector xp(x, y, z);
-  // ROOT::Math::XYZVector x0(p[0], p[2], 0);
-  // ROOT::Math::XYZVector x1(p[0] + p[1], p[2] + p[3], 1.);
-  ROOT::Math::XYZVector x0(p[0], 0., p[2]);
-  ROOT::Math::XYZVector x1(p[0] + p[1], 1., p[2] + p[3]);
-  ROOT::Math::XYZVector u = (x1-x0).Unit();
-  double d2 = ((xp-x0).Cross(u)).Mag2();
-  return d2;
-}
-
-// function Object to be minimized
-struct SumDistance2 {
-  // the TGraph is a data memeber of the object
-  TGraph2D *fGraph;
-  SumDistance2(TGraph2D *g) : fGraph(g) {}
-
-  // implementation of the function to be minimized
-  double operator() (const double *par) {
-    assert(fGraph != 0);
-    double *x = fGraph->GetX();
-    double *y = fGraph->GetY();
-    double *z = fGraph->GetZ();
-    int npoints = fGraph->GetN();
-    double sum = 0;
-    for(int i = 0; i < npoints ; i++) {
-      double d = distance2(x[i], y[i], z[i], par);
-      sum += d;
-    }
-    return sum;
+struct sortByRowMMTrack {
+  inline Bool_t operator() (const mmTrack& struct1, const mmTrack& struct2) {
+    return (struct1.row < struct2.row);
   }
 };
 
-
-typedef struct siDetect {
-  int detect;
-  int quad;
-  int channel;
-  double energy;
-  double time;
-} siHit;
-
-typedef struct csiDetect {
-  int detect;
-  double energy;
-  double time;
-} csiHit;
-
-typedef struct mmCenter {
-  int column;
-  int row;
-  double energy;
-  double time;
-} mmCenter;
-
-typedef struct mmCenterTrack {
-  double position;
-  int row;
-  double time;
-  double energy;
-  double height;
-  int total;
-} mmCenterTrack;
-
-
-typedef struct mmStrip {
-  int row;
-  double energy;
-  double time;
-} mmStrip;
-
-typedef struct mmChain {
-  int column;
-  double energy;
-  double time;
-} mmChain;
+struct sortByRowMMStripChain {
+  inline Bool_t operator() (const mmStripChain& struct1, const mmStripChain& struct2) {
+    return (struct1.row < struct2.row);
+  }
+};
 
 // Header file for the classes stored in the TTree if any.
 
@@ -171,39 +100,39 @@ public :
 private:
   void InitChannelMap();
 
-  std::map<int, std::pair<int, int> > siForwardMap;
-  int siForwardChannel[10][4];
+  std::map<Int_t, std::pair<Int_t, Int_t> > siForwardMap;
+  Int_t siForwardChannel[10][4];
 
-  std::map<int, std::pair<int, int> > siLeftMap;
-  int siLeftChannel[6][4];
+  std::map<Int_t, std::pair<Int_t, Int_t> > siLeftMap;
+  Int_t siLeftChannel[6][4];
 
-  std::map<int, int> csiForwardMap;
-  int csiForwardChannel[10];
+  std::map<Int_t, Int_t> csiForwardMap;
+  Int_t csiForwardChannel[10];
 
-  std::map<int, int> csiLeftMap;
-  int csiLeftChannel[6];
+  std::map<Int_t, Int_t> csiLeftMap;
+  Int_t csiLeftChannel[6];
 
-  std::map<int, int> Aget_Map;
+  std::map<Int_t, Int_t> Aget_Map;
 
-  std::map<int, std::pair<int, int> > MM_Map_Asad0_Aget0;
-  std::map<int, std::pair<int, int> > MM_Map_Asad0_Aget1;
-  std::map<int, std::pair<int, int> > MM_Map_Asad0_Aget2;
-  std::map<int, std::pair<int, int> > MM_Map_Asad0_Aget3;
+  std::map<Int_t, std::pair<Int_t, Int_t> > MM_Map_Asad0_Aget0;
+  std::map<Int_t, std::pair<Int_t, Int_t> > MM_Map_Asad0_Aget1;
+  std::map<Int_t, std::pair<Int_t, Int_t> > MM_Map_Asad0_Aget2;
+  std::map<Int_t, std::pair<Int_t, Int_t> > MM_Map_Asad0_Aget3;
 
-  std::map<int, std::pair<int, int> > MM_Map_Asad1_Aget0;
-  std::map<int, std::pair<int, int> > MM_Map_Asad1_Aget1;
-  std::map<int, std::pair<int, int> > MM_Map_Asad1_Aget2;
-  std::map<int, std::pair<int, int> > MM_Map_Asad1_Aget3;
+  std::map<Int_t, std::pair<Int_t, Int_t> > MM_Map_Asad1_Aget0;
+  std::map<Int_t, std::pair<Int_t, Int_t> > MM_Map_Asad1_Aget1;
+  std::map<Int_t, std::pair<Int_t, Int_t> > MM_Map_Asad1_Aget2;
+  std::map<Int_t, std::pair<Int_t, Int_t> > MM_Map_Asad1_Aget3;
 
-  std::map<int, int> MM_Map_Asad2_Aget0;
-  std::map<int, int> MM_Map_Asad2_Aget1;
-  std::map<int, std::pair<int, int> > MM_Map_Asad2_Aget2;
-  std::map<int, std::pair<int, int> > MM_Map_Asad2_Aget3;
+  std::map<Int_t, Int_t> MM_Map_Asad2_Aget0;
+  std::map<Int_t, Int_t> MM_Map_Asad2_Aget1;
+  std::map<Int_t, std::pair<Int_t, Int_t> > MM_Map_Asad2_Aget2;
+  std::map<Int_t, std::pair<Int_t, Int_t> > MM_Map_Asad2_Aget3;
 
-  std::map<int, int> MM_Map_Asad3_Aget0;
-  std::map<int, int> MM_Map_Asad3_Aget1;
-  std::map<int, std::pair<int, int> > MM_Map_Asad3_Aget2;
-  std::map<int, std::pair<int, int> > MM_Map_Asad3_Aget3;
+  std::map<Int_t, Int_t> MM_Map_Asad3_Aget0;
+  std::map<Int_t, Int_t> MM_Map_Asad3_Aget1;
+  std::map<Int_t, std::pair<Int_t, Int_t> > MM_Map_Asad3_Aget2;
+  std::map<Int_t, std::pair<Int_t, Int_t> > MM_Map_Asad3_Aget3;
 
 // Histograms
 private:
@@ -233,6 +162,9 @@ private:
   TH1F* hCsIELeftCal[6];
   TH1F* hCsITLeft[6];
 
+  TH2F* hSiCsIForward[10];
+  TH2F* hSiCsILeft[6];
+
   TH1F* hCSDet5;
   TH1F* hCSDet5Counts;
 
@@ -244,32 +176,66 @@ private:
 // Center Pad Gain Match
 private:
   void InitCentralPadGainMatch();
-  double scale[6][128];
+  Double_t scale[6][128];
 
 // Beam Average Central Pads
   void InitAverageBeamEnergy();
-  double averageBeamEnergy[128];
+  Double_t averageBeamEnergy[128];
 
-// Cross Section
-private:
-  void SimpleCrossSection(TH1F*);
-  void SimpleSolidAngleDet5(TH1F*);
-  Double_t CalcSimpleSolidAngleDet5(Double_t);
-  void DivideTargetThickness(TH1F*);
+// Strip and Chain Matching
+  void StripChainMatch(std::vector<mmTrack> &stripChainMatched, std::vector<mmTrack> &stripChainRaw, std::vector<mmStripChain> chain_,
+                       std::vector<mmStripChain> strip_, Bool_t leftSide, Double_t siTime);
+  size_t StripChainTime0TimeBuckets(std::vector<mmTrack> matched);
+  size_t StripChainNumberTimeBuckets(std::vector<mmStripChain> chain, std::vector<mmStripChain> strip);
+  void StripChainMatchingOutward(std::vector<mmTrack> &stripChainMatched, std::vector<mmStripChain> chain,
+                                 std::vector<mmStripChain> strip, Bool_t leftSide, Double_t siTime);
+  void StripChainMatchingBox(std::vector<mmTrack> &stripChainMatched, std::vector<mmStripChain> chain,
+                             std::vector<mmStripChain> strip, Bool_t leftSide, Double_t siTime);
+  void StripChainMatchingBoxTime0(std::vector<mmTrack> &stripChainMatched, std::vector<mmTrack> time0);
+  void StripChainMatchingTime(std::vector<mmTrack> &stripChainMatched, std::vector<mmStripChain> chain,
+                              std::vector<mmStripChain> strip, Bool_t leftSide, Double_t siTime, Int_t timeWindow);
+  void StripChainMatchingTimeSlopeFit(std::vector<mmTrack> &stripChainMatched, std::vector<mmStripChain> chain,
+                                   std::vector<mmStripChain> strip, Bool_t leftSide, Double_t siTime,
+                                   Double_t timeWindow);
+  void StripChainMatchingTimeSlopeHough(std::vector<mmTrack> &stripChainMatched, std::vector<mmStripChain> chain,
+                                   std::vector<mmStripChain> strip, Bool_t leftSide, Double_t siTime,
+                                   Double_t timeWindow);
 
 // General Variables
 private:
   void InitVariables();
+  TFile *file;
   Double_t m1;
   Double_t m2;
-  Double_t zeroTime;
+  Double_t rowConversion;
+  Double_t rowConversionOffset;
+  Double_t heightOffset;
   Double_t driftVelocity;
+  Double_t timeResolution;
+  Long64_t entry;
   Double_t beamEnergy;
   Double_t density;
   Double_t distanceHavarToSilicon;
   Double_t numberB8;
+
   EnergyLoss *boronMethane;
   EnergyLoss *protonMethane;
+
+// Tree Variables
+  void InitTree();
+  void FillTree();
+  void WriteTree();
+  TTree *outTree;
+  Int_t siDet;
+  Int_t siQuad;
+  Int_t siChannel;
+  Double_t siEnergy;
+  Double_t siEnergyCal;
+  Double_t siTime;
+  Double_t trackForwardSiX;
+  Double_t trackForwardSiZ;
+  Double_t trackLeftSiY;
+  Double_t trackLeftSiZ;
 
 };
 #endif
@@ -279,9 +245,9 @@ private:
 inline Spectra::Spectra(TTree *tree) : fChain(0) {
   // if parameter tree is not specified (or zero), connect the file
   // used to generate this class and read the Tree.
-  if (tree == 0) {
+  if(tree == 0) {
     TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("run1_0.root");
-    if (!f || !f->IsOpen()) {
+    if(!f || !f->IsOpen()) {
       f = new TFile("run1_0.root");
     }
     f->GetObject("mfmData",tree);
@@ -290,22 +256,22 @@ inline Spectra::Spectra(TTree *tree) : fChain(0) {
 }
 
 inline Spectra::~Spectra() {
-  if (!fChain) return;
+  if(!fChain) return;
   delete fChain->GetCurrentFile();
 }
 
 inline Int_t Spectra::GetEntry(Long64_t entry) {
   // Read contents of entry.
-  if (!fChain) return 0;
+  if(!fChain) return 0;
   return fChain->GetEntry(entry);
 }
 
 inline Long64_t Spectra::LoadTree(Long64_t entry) {
 // Set the environment to read one entry
-  if (!fChain) return -5;
+  if(!fChain) return -5;
   Long64_t centry = fChain->LoadTree(entry);
-  if (centry < 0) return centry;
-  if (fChain->GetTreeNumber() != fCurrent) {
+  if(centry < 0) return centry;
+  if(fChain->GetTreeNumber() != fCurrent) {
     fCurrent = fChain->GetTreeNumber();
     Notify();
   }
@@ -322,7 +288,7 @@ inline void Spectra::Init(TTree *tree) {
   // (once per file to be processed).
 
   // Set branch addresses and branch pointers
-  if (!tree) return;
+  if(!tree) return;
   fChain = tree;
   fCurrent = -1;
   fChain->SetMakeClass(1);
@@ -350,7 +316,7 @@ Bool_t Spectra::Notify() {
 inline void Spectra::Show(Long64_t entry) {
   // Print contents of entry.
   // If entry is not specified, print current entry
-  if (!fChain) return;
+  if(!fChain) return;
   fChain->Show(entry);
 }
 
@@ -362,64 +328,64 @@ inline void Spectra::InitChannelMap() {
   //////////////////////////
 
   // Detector 1
-  siForwardMap[5] = std::make_pair(1, 1);
-  siForwardMap[12] = std::make_pair(1, 2);
-  siForwardMap[18] = std::make_pair(1, 3);
-  siForwardMap[25] = std::make_pair(1, 4);
+  siForwardMap[5]  = std::make_pair(0, 0);
+  siForwardMap[12] = std::make_pair(0, 1);
+  siForwardMap[18] = std::make_pair(0, 2);
+  siForwardMap[25] = std::make_pair(0, 3);
 
   // Detector 2
-  siForwardMap[31] = std::make_pair(2, 1);
-  siForwardMap[37] = std::make_pair(2, 2);
-  siForwardMap[43] = std::make_pair(2, 3);
-  siForwardMap[50] = std::make_pair(2, 4);
+  siForwardMap[31] = std::make_pair(1, 0);
+  siForwardMap[37] = std::make_pair(1, 1);
+  siForwardMap[43] = std::make_pair(1, 2);
+  siForwardMap[50] = std::make_pair(1, 3);
 
   // Detector 3
-  siForwardMap[54] = std::make_pair(3, 1);
-  siForwardMap[59] = std::make_pair(3, 2);
-  siForwardMap[63] = std::make_pair(3, 3);
-  siForwardMap[67] = std::make_pair(3, 4);
+  siForwardMap[54] = std::make_pair(2, 0);
+  siForwardMap[59] = std::make_pair(2, 1);
+  siForwardMap[63] = std::make_pair(2, 2);
+  siForwardMap[67] = std::make_pair(2, 3);
 
   // Detector 4
-  siForwardMap[23] = std::make_pair(4, 1);
-  siForwardMap[3] = std::make_pair(4, 2);
-  siForwardMap[9] = std::make_pair(4, 3);
-  siForwardMap[16] = std::make_pair(4, 4);
+  siForwardMap[23] = std::make_pair(3, 0);
+  siForwardMap[3]  = std::make_pair(3, 1);
+  siForwardMap[9]  = std::make_pair(3, 2);
+  siForwardMap[16] = std::make_pair(3, 3);
 
   // Detector 5
-  siForwardMap[29] = std::make_pair(5, 1);
-  siForwardMap[35] = std::make_pair(5, 2);
-  siForwardMap[41] = std::make_pair(5, 3);
-  siForwardMap[48] = std::make_pair(5, 4);
+  siForwardMap[29] = std::make_pair(4, 0);
+  siForwardMap[35] = std::make_pair(4, 1);
+  siForwardMap[41] = std::make_pair(4, 2);
+  siForwardMap[48] = std::make_pair(4, 3);
 
   // Detector 6
-  siForwardMap[52] = std::make_pair(6, 1);
-  siForwardMap[57] = std::make_pair(6, 2);
-  siForwardMap[61] = std::make_pair(6, 3);
-  siForwardMap[65] = std::make_pair(6, 4);
+  siForwardMap[52] = std::make_pair(5, 0);
+  siForwardMap[57] = std::make_pair(5, 1);
+  siForwardMap[61] = std::make_pair(5, 2);
+  siForwardMap[65] = std::make_pair(5, 3);
 
   // Detector 7
-  siForwardMap[1] = std::make_pair(7, 1);
-  siForwardMap[7] = std::make_pair(7, 2);
-  siForwardMap[14] = std::make_pair(7, 3);
-  siForwardMap[20] = std::make_pair(7, 4);
+  siForwardMap[1]  = std::make_pair(6, 0);
+  siForwardMap[7]  = std::make_pair(6, 1);
+  siForwardMap[14] = std::make_pair(6, 2);
+  siForwardMap[20] = std::make_pair(6, 3);
 
   // Detector 8
-  siForwardMap[46] = std::make_pair(8, 1);
-  siForwardMap[27] = std::make_pair(8, 2);
-  siForwardMap[33] = std::make_pair(8, 3);
-  siForwardMap[39] = std::make_pair(8, 4);
+  siForwardMap[46] = std::make_pair(7, 0);
+  siForwardMap[27] = std::make_pair(7, 1);
+  siForwardMap[33] = std::make_pair(7, 2);
+  siForwardMap[39] = std::make_pair(7, 3);
 
   // Detector 9
-  siForwardMap[4] = std::make_pair(9, 1);
-  siForwardMap[10] = std::make_pair(9, 2);
-  siForwardMap[17] = std::make_pair(9, 3);
-  siForwardMap[24] = std::make_pair(9, 4);
+  siForwardMap[4]  = std::make_pair(8, 0);
+  siForwardMap[10] = std::make_pair(8, 1);
+  siForwardMap[17] = std::make_pair(8, 2);
+  siForwardMap[24] = std::make_pair(8, 3);
 
   // Detector 10
-  siForwardMap[30] = std::make_pair(10, 1);
-  siForwardMap[36] = std::make_pair(10, 2);
-  siForwardMap[42] = std::make_pair(10, 3);
-  siForwardMap[49] = std::make_pair(10, 4);
+  siForwardMap[30] = std::make_pair(9, 0);
+  siForwardMap[36] = std::make_pair(9, 1);
+  siForwardMap[42] = std::make_pair(9, 2);
+  siForwardMap[49] = std::make_pair(9, 3);
 
   siForwardChannel[0][0] = 5;
   siForwardChannel[0][1] = 12;
@@ -467,40 +433,40 @@ inline void Spectra::InitChannelMap() {
   ////////////////////////////
 
   // Detector 1
-  siLeftMap[5] = std::make_pair(1, 1);
-  siLeftMap[12] = std::make_pair(1, 2);
-  siLeftMap[18] = std::make_pair(1, 3);
-  siLeftMap[25] = std::make_pair(1, 4);
+  siLeftMap[5]  = std::make_pair(0, 0);
+  siLeftMap[12] = std::make_pair(0, 1);
+  siLeftMap[18] = std::make_pair(0, 2);
+  siLeftMap[25] = std::make_pair(0, 3);
 
   // Detector 2
-  siLeftMap[50] = std::make_pair(2, 1);
-  siLeftMap[31] = std::make_pair(2, 2);
-  siLeftMap[37] = std::make_pair(2, 3);
-  siLeftMap[43] = std::make_pair(2, 4);
+  siLeftMap[50] = std::make_pair(1, 0);
+  siLeftMap[31] = std::make_pair(1, 1);
+  siLeftMap[37] = std::make_pair(1, 2);
+  siLeftMap[43] = std::make_pair(1, 3);
 
   // Detector 3
-  siLeftMap[54] = std::make_pair(3, 1);
-  siLeftMap[59] = std::make_pair(3, 2);
-  siLeftMap[63] = std::make_pair(3, 3);
-  siLeftMap[67] = std::make_pair(3, 4);
+  siLeftMap[54] = std::make_pair(2, 0);
+  siLeftMap[59] = std::make_pair(2, 1);
+  siLeftMap[63] = std::make_pair(2, 2);
+  siLeftMap[67] = std::make_pair(2, 3);
 
   // Detector 4
-  siLeftMap[23] = std::make_pair(4, 1);
-  siLeftMap[3] = std::make_pair(4, 2);
-  siLeftMap[9] = std::make_pair(4, 3);
-  siLeftMap[16] = std::make_pair(4, 4);
+  siLeftMap[23] = std::make_pair(3, 0);
+  siLeftMap[3]  = std::make_pair(3, 1);
+  siLeftMap[9]  = std::make_pair(3, 2);
+  siLeftMap[16] = std::make_pair(3, 3);
 
   // Detector 5
-  siLeftMap[29] = std::make_pair(5, 1);
-  siLeftMap[35] = std::make_pair(5, 2);
-  siLeftMap[41] = std::make_pair(5, 3);
-  siLeftMap[48] = std::make_pair(5, 4);
+  siLeftMap[29] = std::make_pair(4, 0);
+  siLeftMap[35] = std::make_pair(4, 1);
+  siLeftMap[41] = std::make_pair(4, 2);
+  siLeftMap[48] = std::make_pair(4, 3);
 
   // Detector 6
-  siLeftMap[65] = std::make_pair(6, 1);
-  siLeftMap[52] = std::make_pair(6, 2);
-  siLeftMap[57] = std::make_pair(6, 3);
-  siLeftMap[61] = std::make_pair(6, 4);
+  siLeftMap[65] = std::make_pair(5, 0);
+  siLeftMap[52] = std::make_pair(5, 1);
+  siLeftMap[57] = std::make_pair(5, 2);
+  siLeftMap[61] = std::make_pair(5, 3);
 
   siLeftChannel[0][0] = 5;
   siLeftChannel[0][1] = 12;
@@ -531,16 +497,16 @@ inline void Spectra::InitChannelMap() {
   // Forward CsI Detectors //
   ///////////////////////////
 
-  csiForwardMap[2] = 1;
-  csiForwardMap[7] = 2;
-  csiForwardMap[10] = 3;
-  csiForwardMap[16] = 4;
-  csiForwardMap[19] = 5;
-  csiForwardMap[25] = 6;
-  csiForwardMap[28] = 7;
-  csiForwardMap[33] = 8;
-  csiForwardMap[36] = 9;
-  csiForwardMap[41] = 10;
+  csiForwardMap[2]  = 0;
+  csiForwardMap[7]  = 1;
+  csiForwardMap[10] = 2;
+  csiForwardMap[16] = 3;
+  csiForwardMap[19] = 4;
+  csiForwardMap[25] = 5;
+  csiForwardMap[28] = 6;
+  csiForwardMap[33] = 7;
+  csiForwardMap[36] = 8;
+  csiForwardMap[41] = 9;
 
   csiForwardChannel[0] = 2;
   csiForwardChannel[1] = 7;
@@ -557,12 +523,12 @@ inline void Spectra::InitChannelMap() {
   // Beam Left CsI Detectors //
   /////////////////////////////
 
-  csiLeftMap[44] = 1;
-  csiLeftMap[50] = 2;
-  csiLeftMap[53] = 3;
-  csiLeftMap[59] = 4;
-  csiLeftMap[62] = 5;
-  csiLeftMap[67] = 6;
+  csiLeftMap[44] = 0;
+  csiLeftMap[50] = 1;
+  csiLeftMap[53] = 2;
+  csiLeftMap[59] = 3;
+  csiLeftMap[62] = 4;
+  csiLeftMap[67] = 5;
 
   csiLeftChannel[0] = 44;
   csiLeftChannel[1] = 50;
@@ -581,155 +547,285 @@ inline void Spectra::InitChannelMap() {
   // Asad 3 Aget 1+2 are beam right
 
   // Aget_Map
-  int j=0;
-  for(int i=0; i<68; i++) {
-    if(i==11 || i==22 || i==45 || i==56) continue; // FPN Channels
+  Int_t j = 0;
+  for(Int_t i = 0; i < 68; i++) {
+    if(i == 11 || i == 22 || i == 45 || i == 56) continue; // FPN Channels
     Aget_Map[j] = i;
     j++;
   }
 
   // Asad0_Aget0
-  j=31;
-  for(int i=0; i<64; i++) {
-    if(i%4==0 && i!=0) j--;
-    int remain = i%4;
-    MM_Map_Asad0_Aget0[Aget_Map[i]] = std::make_pair(4-remain, j);
+  j = 31;
+  for(Int_t i = 0; i < 64; i++) {
+    if(i % 4 == 0 && i != 0) j--;
+    Int_t remain = i % 4;
+    MM_Map_Asad0_Aget0[Aget_Map[i]] = std::make_pair(4 - remain, j);
   }
 
   // Asad0_Aget1
-  j=63;
-  for(int i=0; i<64; i++) {
-    if(i%4==0 && i!=0) j--;
-    int remain = i%4;
-    MM_Map_Asad0_Aget1[Aget_Map[i]] = std::make_pair(4-remain, j);
+  j = 63;
+  for(Int_t i = 0; i < 64; i++) {
+    if(i % 4 == 0 && i != 0) j--;
+    Int_t remain = i % 4;
+    MM_Map_Asad0_Aget1[Aget_Map[i]] = std::make_pair(4 - remain, j);
   }
 
   // Asad0_Aget2
-  j=95;
-  for(int i=0; i<64; i++) {
-    if(i%4==0 && i!=0) j--;
-    int remain = i%4;
-    MM_Map_Asad0_Aget2[Aget_Map[i]] = std::make_pair(1+remain, j);
+  j = 95;
+  for(Int_t i = 0; i < 64; i++) {
+    if(i % 4 == 0 && i != 0) j--;
+    Int_t remain = i % 4;
+    MM_Map_Asad0_Aget2[Aget_Map[i]] = std::make_pair(1 + remain, j);
   }
 
   // Asad0_Aget3
-  j=127;
-  for(int i=0; i<64; i++) {
-    if(i%4==0 && i!=0) j--;
-    int remain = i%4;
-    MM_Map_Asad0_Aget3[Aget_Map[i]] = std::make_pair(1+remain, j);
+  j = 127;
+  for(Int_t i = 0; i < 64; i++) {
+    if(i % 4 == 0 && i != 0) j--;
+    Int_t remain = i % 4;
+    MM_Map_Asad0_Aget3[Aget_Map[i]] = std::make_pair(1 + remain, j);
   }
 
   // Asad1_Aget0
-  j=15;
-  for(int i=0; i<64; i++) {
-    if(i%4==0 && i!=0) j--;
-    int remain = i%4;
-    MM_Map_Asad1_Aget0[Aget_Map[i]] = std::make_pair(1+remain, j);
+  j = 15;
+  for(Int_t i = 0; i < 64; i++) {
+    if(i % 4 == 0 && i != 0) j--;
+    Int_t remain = i % 4;
+    MM_Map_Asad1_Aget0[Aget_Map[i]] = std::make_pair(1 + remain, j);
   }
 
   // Asad1_Aget1
-  j=47;
-  for(int i=0; i<64; i++) {
-    if(i%4==0 && i!=0) j--;
-    int remain = i%4;
-    MM_Map_Asad1_Aget1[Aget_Map[i]] = std::make_pair(1+remain, j);
+  j = 47;
+  for(Int_t i = 0; i < 64; i++) {
+    if(i % 4 == 0 && i != 0) j--;
+    Int_t remain = i % 4;
+    MM_Map_Asad1_Aget1[Aget_Map[i]] = std::make_pair(1 + remain, j);
   }
 
   // Asad1_Aget2
-  j=79;
-  for(int i=0; i<64; i++) {
-    if(i%4==0 && i!=0) j--;
-    int remain = i%4;
-    MM_Map_Asad1_Aget2[Aget_Map[i]] = std::make_pair(4-remain, j);
+  j = 79;
+  for(Int_t i = 0; i < 64; i++) {
+    if(i % 4 == 0 && i != 0) j--;
+    Int_t remain = i % 4;
+    MM_Map_Asad1_Aget2[Aget_Map[i]] = std::make_pair(4 - remain, j);
   }
 
   // Asad1_Aget3
-  j=111;
-  for(int i=0; i<64; i++) {
-    if(i%4==0 && i!=0) j--;
-    int remain = i%4;
-    MM_Map_Asad1_Aget3[Aget_Map[i]] = std::make_pair(4-remain, j);
+  j = 111;
+  for(Int_t i = 0; i < 64; i++) {
+    if(i % 4 == 0 && i != 0) j--;
+    Int_t remain = i % 4;
+    MM_Map_Asad1_Aget3[Aget_Map[i]] = std::make_pair(4 - remain, j);
   }
 
-  // Asad2_Aget0
-  // Strips part (Beam left)
-  j=31;
-  for(int i=0; i<32; i++) {
-    MM_Map_Asad2_Aget0[Aget_Map[i]] = j;
-    j--;
-  }
-  // Chains part (Beam left)
-  j=32;
-  for(int i=32; i<64; i++) {
-    MM_Map_Asad2_Aget0[Aget_Map[i]] = j;
-    j++;
-  }
+  // Asad2_Aget0 (Beam left)
+  // Strips
+  MM_Map_Asad2_Aget0[Aget_Map[28]] = 0;
+  MM_Map_Asad2_Aget0[Aget_Map[29]] = 1;
+  MM_Map_Asad2_Aget0[Aget_Map[30]] = 2;
+  MM_Map_Asad2_Aget0[Aget_Map[31]] = 3;
+  MM_Map_Asad2_Aget0[Aget_Map[24]] = 4;
+  MM_Map_Asad2_Aget0[Aget_Map[25]] = 5;
+  MM_Map_Asad2_Aget0[Aget_Map[26]] = 6;
+  MM_Map_Asad2_Aget0[Aget_Map[27]] = 7;
+  MM_Map_Asad2_Aget0[Aget_Map[20]] = 8;
+  MM_Map_Asad2_Aget0[Aget_Map[21]] = 9;
+  MM_Map_Asad2_Aget0[Aget_Map[22]] = 10;
+  MM_Map_Asad2_Aget0[Aget_Map[23]] = 11;
+  MM_Map_Asad2_Aget0[Aget_Map[16]] = 12;
+  MM_Map_Asad2_Aget0[Aget_Map[17]] = 13;
+  MM_Map_Asad2_Aget0[Aget_Map[18]] = 14;
+  MM_Map_Asad2_Aget0[Aget_Map[19]] = 15;
+  MM_Map_Asad2_Aget0[Aget_Map[12]] = 16;
+  MM_Map_Asad2_Aget0[Aget_Map[13]] = 17;
+  MM_Map_Asad2_Aget0[Aget_Map[14]] = 18;
+  MM_Map_Asad2_Aget0[Aget_Map[15]] = 19;
+  MM_Map_Asad2_Aget0[Aget_Map[8]] = 20;
+  MM_Map_Asad2_Aget0[Aget_Map[9]] = 21;
+  MM_Map_Asad2_Aget0[Aget_Map[10]] = 22;
+  MM_Map_Asad2_Aget0[Aget_Map[11]] = 23;
+  MM_Map_Asad2_Aget0[Aget_Map[4]] = 24;
+  MM_Map_Asad2_Aget0[Aget_Map[5]] = 25;
+  MM_Map_Asad2_Aget0[Aget_Map[6]] = 26;
+  MM_Map_Asad2_Aget0[Aget_Map[7]] = 27;
+  MM_Map_Asad2_Aget0[Aget_Map[0]] = 28;
+  MM_Map_Asad2_Aget0[Aget_Map[1]] = 29;
+  MM_Map_Asad2_Aget0[Aget_Map[2]] = 30;
+  MM_Map_Asad2_Aget0[Aget_Map[3]] = 31;
+  // j = 31;
+  // for(Int_t i = 0; i < 32; i++) {
+  //   MM_Map_Asad2_Aget0[Aget_Map[i]] = j;
+  //   j--;
+  // }
+  // Chains
+  MM_Map_Asad2_Aget0[Aget_Map[35]] = 32;
+  MM_Map_Asad2_Aget0[Aget_Map[34]] = 33;
+  MM_Map_Asad2_Aget0[Aget_Map[33]] = 34;
+  MM_Map_Asad2_Aget0[Aget_Map[32]] = 35;
+  MM_Map_Asad2_Aget0[Aget_Map[39]] = 36;
+  MM_Map_Asad2_Aget0[Aget_Map[38]] = 37;
+  MM_Map_Asad2_Aget0[Aget_Map[37]] = 38;
+  MM_Map_Asad2_Aget0[Aget_Map[36]] = 39;
+  MM_Map_Asad2_Aget0[Aget_Map[43]] = 40;
+  MM_Map_Asad2_Aget0[Aget_Map[42]] = 41;
+  MM_Map_Asad2_Aget0[Aget_Map[41]] = 42;
+  MM_Map_Asad2_Aget0[Aget_Map[40]] = 43;
+  MM_Map_Asad2_Aget0[Aget_Map[47]] = 44;
+  MM_Map_Asad2_Aget0[Aget_Map[46]] = 45;
+  MM_Map_Asad2_Aget0[Aget_Map[45]] = 46;
+  MM_Map_Asad2_Aget0[Aget_Map[44]] = 47;
+  MM_Map_Asad2_Aget0[Aget_Map[51]] = 48;
+  MM_Map_Asad2_Aget0[Aget_Map[50]] = 49;
+  MM_Map_Asad2_Aget0[Aget_Map[49]] = 50;
+  MM_Map_Asad2_Aget0[Aget_Map[48]] = 51;
+  MM_Map_Asad2_Aget0[Aget_Map[55]] = 52;
+  MM_Map_Asad2_Aget0[Aget_Map[54]] = 53;
+  MM_Map_Asad2_Aget0[Aget_Map[53]] = 54;
+  MM_Map_Asad2_Aget0[Aget_Map[52]] = 55;
+  MM_Map_Asad2_Aget0[Aget_Map[59]] = 56;
+  MM_Map_Asad2_Aget0[Aget_Map[58]] = 57;
+  MM_Map_Asad2_Aget0[Aget_Map[57]] = 58;
+  MM_Map_Asad2_Aget0[Aget_Map[56]] = 59;
+  MM_Map_Asad2_Aget0[Aget_Map[63]] = 60;
+  MM_Map_Asad2_Aget0[Aget_Map[62]] = 61;
+  MM_Map_Asad2_Aget0[Aget_Map[61]] = 62;
+  MM_Map_Asad2_Aget0[Aget_Map[60]] = 63;
+  // j = 32;
+  // for(Int_t i = 32; i < 64; i++) {
+  //   MM_Map_Asad2_Aget0[Aget_Map[i]] = j;
+  //   j++;
+  // }
 
-  // Asad2_Aget1
-  // Strips part (Beam left)
-  j=63;
-  for(int i=0; i<32; i++) {
-    MM_Map_Asad2_Aget1[Aget_Map[i]] = j;
-    j--;
-  }
-  // Chains part (Beam left)
-  j=0;
-  for(int i=32; i<64; i++) {
-    MM_Map_Asad2_Aget1[Aget_Map[i]] = j;
-    j++;
-  }
+  // Asad2_Aget1 (Beam left)
+  // Strips
+  MM_Map_Asad2_Aget1[Aget_Map[28]] = 32;
+  MM_Map_Asad2_Aget1[Aget_Map[29]] = 33;
+  MM_Map_Asad2_Aget1[Aget_Map[30]] = 34;
+  MM_Map_Asad2_Aget1[Aget_Map[31]] = 35;
+  MM_Map_Asad2_Aget1[Aget_Map[24]] = 36;
+  MM_Map_Asad2_Aget1[Aget_Map[25]] = 37;
+  MM_Map_Asad2_Aget1[Aget_Map[26]] = 38;
+  MM_Map_Asad2_Aget1[Aget_Map[27]] = 39;
+  MM_Map_Asad2_Aget1[Aget_Map[20]] = 40;
+  MM_Map_Asad2_Aget1[Aget_Map[21]] = 41;
+  MM_Map_Asad2_Aget1[Aget_Map[22]] = 42;
+  MM_Map_Asad2_Aget1[Aget_Map[23]] = 43;
+  MM_Map_Asad2_Aget1[Aget_Map[16]] = 44;
+  MM_Map_Asad2_Aget1[Aget_Map[17]] = 45;
+  MM_Map_Asad2_Aget1[Aget_Map[18]] = 46;
+  MM_Map_Asad2_Aget1[Aget_Map[19]] = 47;
+  MM_Map_Asad2_Aget1[Aget_Map[12]] = 48;
+  MM_Map_Asad2_Aget1[Aget_Map[13]] = 49;
+  MM_Map_Asad2_Aget1[Aget_Map[14]] = 50;
+  MM_Map_Asad2_Aget1[Aget_Map[15]] = 51;
+  MM_Map_Asad2_Aget1[Aget_Map[8]] = 52;
+  MM_Map_Asad2_Aget1[Aget_Map[9]] = 53;
+  MM_Map_Asad2_Aget1[Aget_Map[10]] = 54;
+  MM_Map_Asad2_Aget1[Aget_Map[11]] = 55;
+  MM_Map_Asad2_Aget1[Aget_Map[4]] = 56;
+  MM_Map_Asad2_Aget1[Aget_Map[5]] = 57;
+  MM_Map_Asad2_Aget1[Aget_Map[6]] = 58;
+  MM_Map_Asad2_Aget1[Aget_Map[7]] = 59;
+  MM_Map_Asad2_Aget1[Aget_Map[0]] = 60;
+  MM_Map_Asad2_Aget1[Aget_Map[1]] = 61;
+  MM_Map_Asad2_Aget1[Aget_Map[2]] = 62;
+  MM_Map_Asad2_Aget1[Aget_Map[3]] = 63;
+  // j = 63;
+  // for(Int_t i = 0; i < 32; i++) {
+  //   MM_Map_Asad2_Aget1[Aget_Map[i]] = j;
+  //   j--;
+  // }
+  // Chains
+  MM_Map_Asad2_Aget1[Aget_Map[35]] = 0;
+  MM_Map_Asad2_Aget1[Aget_Map[34]] = 1;
+  MM_Map_Asad2_Aget1[Aget_Map[33]] = 2;
+  MM_Map_Asad2_Aget1[Aget_Map[32]] = 3;
+  MM_Map_Asad2_Aget1[Aget_Map[39]] = 4;
+  MM_Map_Asad2_Aget1[Aget_Map[38]] = 5;
+  MM_Map_Asad2_Aget1[Aget_Map[37]] = 6;
+  MM_Map_Asad2_Aget1[Aget_Map[36]] = 7;
+  MM_Map_Asad2_Aget1[Aget_Map[43]] = 8;
+  MM_Map_Asad2_Aget1[Aget_Map[42]] = 9;
+  MM_Map_Asad2_Aget1[Aget_Map[41]] = 10;
+  MM_Map_Asad2_Aget1[Aget_Map[40]] = 11;
+  MM_Map_Asad2_Aget1[Aget_Map[47]] = 12;
+  MM_Map_Asad2_Aget1[Aget_Map[46]] = 13;
+  MM_Map_Asad2_Aget1[Aget_Map[45]] = 14;
+  MM_Map_Asad2_Aget1[Aget_Map[44]] = 15;
+  MM_Map_Asad2_Aget1[Aget_Map[51]] = 16;
+  MM_Map_Asad2_Aget1[Aget_Map[50]] = 17;
+  MM_Map_Asad2_Aget1[Aget_Map[49]] = 18;
+  MM_Map_Asad2_Aget1[Aget_Map[48]] = 19;
+  MM_Map_Asad2_Aget1[Aget_Map[55]] = 20;
+  MM_Map_Asad2_Aget1[Aget_Map[54]] = 21;
+  MM_Map_Asad2_Aget1[Aget_Map[53]] = 22;
+  MM_Map_Asad2_Aget1[Aget_Map[52]] = 23;
+  MM_Map_Asad2_Aget1[Aget_Map[59]] = 24;
+  MM_Map_Asad2_Aget1[Aget_Map[58]] = 25;
+  MM_Map_Asad2_Aget1[Aget_Map[57]] = 26;
+  MM_Map_Asad2_Aget1[Aget_Map[56]] = 27;
+  MM_Map_Asad2_Aget1[Aget_Map[63]] = 28;
+  MM_Map_Asad2_Aget1[Aget_Map[62]] = 29;
+  MM_Map_Asad2_Aget1[Aget_Map[61]] = 30;
+  MM_Map_Asad2_Aget1[Aget_Map[60]] = 31;
+  // j = 0;
+  // for(Int_t i = 32; i < 64; i++) {
+  //   MM_Map_Asad2_Aget1[Aget_Map[i]] = j;
+  //   j++;
+  // }
 
   // Asad2_Aget2
-  j=63;
-  for(int i=0; i<64; i++) {
+  j = 63;
+  for(Int_t i = 0; i < 64; i++) {
     MM_Map_Asad2_Aget2[Aget_Map[i]] = std::make_pair(0, j);
     j--;
   }
 
   // Asad2_Aget3
-  j=127;
-  for(int i=0; i<64; i++) {
+  j = 127;
+  for(Int_t i = 0; i < 64; i++) {
     MM_Map_Asad2_Aget3[Aget_Map[i]] = std::make_pair(0, j);
     j--;
   }
 
-  // Asad3_Aget0
-  j=31;
-  for(int i=0; i<32; i++) {
+  // Asad3_Aget0 (Beam right)
+  // Strips
+  j = 31;
+  for(Int_t i = 0; i < 32; i++) {
     MM_Map_Asad3_Aget0[Aget_Map[i]] = j;
     j--;
   }
-  // Chains part (Beam right)
-  j=32;
-  for(int i=32; i<64; i++) {
+  // Chains
+  j = 32;
+  for(Int_t i = 32; i < 64; i++) {
     MM_Map_Asad3_Aget0[Aget_Map[i]] = j;
     j++;
   }
 
-  // Asad3_Aget1
-  j=63;
-  for(int i=0; i<32; i++) {
+  // Asad3_Aget1 (Beam right)
+  // Strips
+  j = 63;
+  for(Int_t i = 0; i < 32; i++) {
     MM_Map_Asad3_Aget1[Aget_Map[i]] = j;
     j--;
   }
-  // Chains part (Beam right)
-  j=0;
-  for(int i=32; i<64; i++) {
+  // Chains
+  j = 0;
+  for(Int_t i = 32; i < 64; i++) {
     MM_Map_Asad3_Aget1[Aget_Map[i]] = j;
     j++;
   }
 
   // Asad3_Aget2
-  j=63;
-  for(int i=0; i<64; i++) {
+  j = 63;
+  for(Int_t i = 0; i < 64; i++) {
     MM_Map_Asad3_Aget2[Aget_Map[i]] = std::make_pair(5, j);
     j--;
   }
 
   // Asad3_Aget3
-  j=127;
-  for(int i=0; i<64; i++) {
+  j = 127;
+  for(Int_t i = 0; i < 64; i++) {
     MM_Map_Asad3_Aget3[Aget_Map[i]] = std::make_pair(5, j);
     j--;
   }
@@ -740,7 +836,7 @@ inline void Spectra::InitHistograms() {
   printf("Initializing Histograms\n");
 
   // Histograms for the Forward Si Detectors
-  for(unsigned int i=0; i<10; i++) {
+  for(UInt_t i = 0; i < 10; i++) {
     TString name = Form("siEForward_d%d", i + 1);
     hSiEForwardTotal[i] = new TH1F(name, name, 500, 0, 4000);
     hSiEForwardTotal[i]->GetXaxis()->SetTitle("Channels"); hSiEForwardTotal[i]->GetXaxis()->CenterTitle();
@@ -759,29 +855,32 @@ inline void Spectra::InitHistograms() {
     hSiTForwardTotal[i]->GetYaxis()->SetTitle("Counts"); hSiTForwardTotal[i]->GetYaxis()->CenterTitle();
     hSiTForwardTotal[i]->GetYaxis()->SetTitleOffset(1.4);
 
-    for(unsigned int j=0; j<4; j++) {
-      TString name = Form("siEForward_d%d_q%d_ch_%d", i + 1, j + 1, siForwardChannel[i][j]);
-      hSiEForward[i][j] = new TH1F(name, name, 500, 0, 4000);
+    for(UInt_t j = 0; j < 4; j++) {
+      TString name = Form("siEForward_d%d_q%d_ch%d", i + 1, j + 1, siForwardChannel[i][j]);
+      hSiEForward[i][j] = new TH1F(name, name, 1000, 0, 1000);
       hSiEForward[i][j]->GetXaxis()->SetTitle("Channels"); hSiEForward[i][j]->GetXaxis()->CenterTitle();
       hSiEForward[i][j]->GetYaxis()->SetTitle("Counts"); hSiEForward[i][j]->GetYaxis()->CenterTitle();
       hSiEForward[i][j]->GetYaxis()->SetTitleOffset(1.4);
 
-      name = Form("siEForwardCal_d%d_q%d_ch_%d", i + 1, j + 1, siForwardChannel[i][j]);
+      name = Form("siEForwardCal_d%d_q%d_ch%d", i + 1, j + 1, siForwardChannel[i][j]);
       hSiEForwardCal[i][j] = new TH1F(name, name, 500, 0, 4000);
       hSiEForwardCal[i][j]->GetXaxis()->SetTitle("Channels"); hSiEForwardCal[i][j]->GetXaxis()->CenterTitle();
       hSiEForwardCal[i][j]->GetYaxis()->SetTitle("Counts"); hSiEForwardCal[i][j]->GetYaxis()->CenterTitle();
       hSiEForwardCal[i][j]->GetYaxis()->SetTitleOffset(1.4);
 
-      name = Form("siTForward_d%d_q%d_ch_%d", i + 1, j + 1, siForwardChannel[i][j]);
+      name = Form("siTForward_d%d_q%d_ch%d", i + 1, j + 1, siForwardChannel[i][j]);
       hSiTForward[i][j] = new TH1F(name, name, 500, 0, 4000);
       hSiTForward[i][j]->GetXaxis()->SetTitle("Channels"); hSiTForward[i][j]->GetXaxis()->CenterTitle();
       hSiTForward[i][j]->GetYaxis()->SetTitle("Counts"); hSiTForward[i][j]->GetYaxis()->CenterTitle();
       hSiTForward[i][j]->GetYaxis()->SetTitleOffset(1.4);
     }
+
+    name = Form("siCsIForward_d%d", i + 1);
+    hSiCsIForward[i] = new TH2F(name, name, 500, 0, 4000, 500, 0, 4000);
   }
 
   // Histograms for the Beam Left Si Detectors
-  for(unsigned int i=0; i<6; i++) {
+  for(UInt_t i = 0; i < 6; i++) {
     if(i > 7) break;
     TString name = Form("siELeft_d%d", i + 1);
     hSiELeftTotal[i] = new TH1F(name, name, 500, 0, 4000);
@@ -801,20 +900,20 @@ inline void Spectra::InitHistograms() {
     hSiTLeftTotal[i]->GetYaxis()->SetTitle("Counts"); hSiTLeftTotal[i]->GetYaxis()->CenterTitle();
     hSiTLeftTotal[i]->GetYaxis()->SetTitleOffset(1.4);
 
-    for(unsigned int j=0; j<4; j++) {
-      TString name = Form("siELeft_d%d_q%d_ch_%d", i + 1, j + 1, siLeftChannel[i][j]);
-      hSiELeft[i][j] = new TH1F(name, name, 500, 0, 4000);
+    for(UInt_t j = 0; j < 4; j++) {
+      TString name = Form("siELeft_d%d_q%d_ch%d", i + 1, j + 1, siLeftChannel[i][j]);
+      hSiELeft[i][j] = new TH1F(name, name, 1000, 0, 1000);
       hSiELeft[i][j]->GetXaxis()->SetTitle("Channels"); hSiELeft[i][j]->GetXaxis()->CenterTitle();
       hSiELeft[i][j]->GetYaxis()->SetTitle("Counts"); hSiELeft[i][j]->GetYaxis()->CenterTitle();
       hSiELeft[i][j]->GetYaxis()->SetTitleOffset(1.4);
 
-      name = Form("siELeftCal_d%d_q%d_ch_%d", i + 1, j + 1, siLeftChannel[i][j]);
+      name = Form("siELeftCal_d%d_q%d_ch%d", i + 1, j + 1, siLeftChannel[i][j]);
       hSiELeftCal[i][j] = new TH1F(name, name, 500, 0, 4000);
       hSiELeftCal[i][j]->GetXaxis()->SetTitle("Channels"); hSiELeftCal[i][j]->GetXaxis()->CenterTitle();
       hSiELeftCal[i][j]->GetYaxis()->SetTitle("Counts"); hSiELeftCal[i][j]->GetYaxis()->CenterTitle();
       hSiELeftCal[i][j]->GetYaxis()->SetTitleOffset(1.4);
 
-      name = Form("siTLeft_d%d_q%d_ch_%d", i + 1, j + 1, siLeftChannel[i][j]);
+      name = Form("siTLeft_d%d_q%d_ch%d", i + 1, j + 1, siLeftChannel[i][j]);
       hSiTLeft[i][j] = new TH1F(name, name, 500, 0, 4000);
       hSiTLeft[i][j]->GetXaxis()->SetTitle("Channels"); hSiTLeft[i][j]->GetXaxis()->CenterTitle();
       hSiTLeft[i][j]->GetYaxis()->SetTitle("Counts"); hSiTLeft[i][j]->GetYaxis()->CenterTitle();
@@ -823,7 +922,7 @@ inline void Spectra::InitHistograms() {
   }
 
   // Histograms for the Forward CsI Detectors
-  for(unsigned int i=0; i<10; i++) {
+  for(UInt_t i = 0; i < 10; i++) {
     TString name = Form("CsIEForward_d%d_ch%d", i + 1, csiForwardChannel[i]);
     hCsIEForward[i] = new TH1F(name, name, 1000, 0, 4000);
     hCsIEForward[i]->GetXaxis()->SetTitle("Channels"); hCsIEForward[i]->GetXaxis()->CenterTitle();
@@ -844,7 +943,7 @@ inline void Spectra::InitHistograms() {
   }
 
   // Histograms for the Beam Left CsI Detectors
-  for(unsigned int i=0; i<6; i++) {
+  for(UInt_t i = 0; i < 6; i++) {
     TString name = Form("CsIELeft_d%d_ch%d", i + 1, csiLeftChannel[i]);
     hCsIELeft[i] = new TH1F(name,name,1000,0,4000);
     hCsIELeft[i]->GetXaxis()->SetTitle("Channels"); hCsIELeft[i]->GetXaxis()->CenterTitle();
@@ -869,10 +968,10 @@ inline void Spectra::InitSiEForwardCalibration() {
   printf("Reading Si Energy Forward Calibrations File\n");
   std::ifstream inSiCalFile("siCalibration.dat");
   assert(inSiCalFile.is_open());
-  int var1, var2, var3;
-  double slope, intercept;
+  Int_t var1, var2, var3;
+  Double_t slope, intercept;
   while(inSiCalFile >> var1 >> var2 >> var3 >> slope >> intercept) {
-    siEForwardCalibration[var1-1][var2-1] = std::make_pair(slope, intercept);
+    siEForwardCalibration[var1 - 1][var2 - 1] = std::make_pair(slope, intercept);
   }
   inSiCalFile.close();
 }
@@ -881,8 +980,8 @@ inline void Spectra::InitCentralPadGainMatch() {
   printf("Reading Central Pad Gain Matching File\n");
   std::ifstream inGainFile("gainFile.dat");
   assert(inGainFile.is_open());
-  int varI, varJ;
-  double varScale;
+  Int_t varI, varJ;
+  Double_t varScale;
   while(inGainFile >> varI >> varJ >> varScale) {
     scale[varI][varJ] = varScale;
   }
@@ -893,8 +992,8 @@ inline void Spectra::InitAverageBeamEnergy() {
   printf("Reading Average Beam Energy File\n");
   std::ifstream inBeamFile("averageBeamEnergy.out");
   assert(inBeamFile.is_open());
-  int varJ;
-  double varE;
+  Int_t varJ;
+  Double_t varE;
   while(inBeamFile >> varJ >> varE) {
     averageBeamEnergy[varJ] = varE;
   }
@@ -903,12 +1002,19 @@ inline void Spectra::InitAverageBeamEnergy() {
 inline void Spectra::InitVariables() {
   printf("Initializing Variables\n");
 
+  // Make output file
+  file = new TFile("spectra.root", "recreate");
+
   m1 = 8.; // AMU of projectile
   m2 = 1.; // AMU of target
 
-  // zeroTime = 6081.81; // Time of 0 height in chamber (in ns)
-  zeroTime = 6081.81 - 352.457; // Time of 0 height in chamber (in ns)
+  heightOffset = 6081.81 - 352.457; // Time of 0 height in chamber (in ns)
   driftVelocity = 0.05674449; // in mm/ns
+
+  rowConversion = 1.75; // Side of row in mm
+  rowConversionOffset = 1.75/2.; // Put the position in middle of row
+
+  timeResolution = 40; // Buckets to time (40 ns time buckets)
 
   beamEnergy = 56.; // In MeV, after havar window
   density = 0.00038175; // in g/cm3, from LISE++ (Methane at 435 torr)
@@ -919,6 +1025,25 @@ inline void Spectra::InitVariables() {
   // Initialize EnergyLoss
   boronMethane = new EnergyLoss("b8_methane.dat");
   protonMethane = new EnergyLoss("proton_methane.dat");
+}
+
+inline void Spectra::InitTree() {
+  outTree = new TTree("outTree","Events from Digitizer");
+
+  outTree->Branch("siDet", &siDet);
+  outTree->Branch("siQuad", &siQuad);
+  outTree->Branch("siChannel", &siChannel);
+  outTree->Branch("siEnergy", &siEnergy);
+  outTree->Branch("siTime", &siTime);
+  return;
+}
+
+inline void Spectra::FillTree() {
+  outTree->Fill();
+}
+
+inline void Spectra::WriteTree() {
+  outTree->Write();
 }
 
 #endif // #ifdef Spectra_cxx

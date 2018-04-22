@@ -1,6 +1,77 @@
 #define Spectra_cxx
 #include "Spectra.h"
 
+TChain* MakeChain();
+
+int main() {
+
+  TChain *chain = MakeChain();
+
+  Spectra t(chain);
+  t.Loop();
+
+  return 0;
+}
+
+TChain* MakeChain() {
+  TChain *chain = new TChain("mfmData");
+
+  // Home
+  // TString PathToFiles = "/hd3/research/data/run0817a/rootM2R-MaxModule/run";
+
+  // Laptop
+  TString PathToFiles = "/Users/joshhooker/Desktop/data/run0817a/run";
+
+  // chain->Add(PathToFiles+"004.root");
+  chain->Add(PathToFiles+"175.root");
+  // chain->Add(PathToFiles+"178.root");
+  // chain->Add(PathToFiles+"180.root");
+  // chain->Add(PathToFiles+"181.root");
+  // chain->Add(PathToFiles+"182.root");
+  // chain->Add(PathToFiles+"183.root");
+  // chain->Add(PathToFiles+"184.root");
+  // chain->Add(PathToFiles+"185.root");
+  // chain->Add(PathToFiles+"186.root");
+  // chain->Add(PathToFiles+"187.root");
+  // chain->Add(PathToFiles+"188.root");
+  // chain->Add(PathToFiles+"189.root");
+  // chain->Add(PathToFiles+"190.root");
+  // chain->Add(PathToFiles+"191.root");
+  // chain->Add(PathToFiles+"192.root");
+  // chain->Add(PathToFiles+"193.root");
+  // chain->Add(PathToFiles+"195.root");
+  // chain->Add(PathToFiles+"196.root");
+  // chain->Add(PathToFiles+"197.root");
+  // chain->Add(PathToFiles+"198.root");
+  // chain->Add(PathToFiles+"199.root");
+  // chain->Add(PathToFiles+"200.root");
+  // chain->Add(PathToFiles+"201.root");
+  // chain->Add(PathToFiles+"202.root");
+  // chain->Add(PathToFiles+"203.root");
+  // chain->Add(PathToFiles+"204.root");
+  // chain->Add(PathToFiles+"205.root");
+  // chain->Add(PathToFiles+"206.root");
+  // chain->Add(PathToFiles+"207.root");
+  // chain->Add(PathToFiles+"208.root");
+  // chain->Add(PathToFiles+"210.root");
+  // chain->Add(PathToFiles+"211.root");
+  // chain->Add(PathToFiles+"212.root");
+  // chain->Add(PathToFiles+"213.root");
+  // chain->Add(PathToFiles+"214.root");
+  // chain->Add(PathToFiles+"215.root");
+  // chain->Add(PathToFiles+"216.root");
+  // chain->Add(PathToFiles+"217.root");
+  // chain->Add(PathToFiles+"218.root");
+  // chain->Add(PathToFiles+"219.root");
+  // chain->Add(PathToFiles+"220.root");
+  // chain->Add(PathToFiles+"221.root");
+  // chain->Add(PathToFiles+"223.root");
+  // chain->Add(PathToFiles+"224.root");
+  // chain->Add(PathToFiles+"232.root");
+
+  return chain;
+}
+
 void Spectra::Loop() {
 
   if (fChain == 0) return;
@@ -14,17 +85,17 @@ void Spectra::Loop() {
   InitCentralPadGainMatch();
   InitAverageBeamEnergy();
 
-  bool individualMMHistograms = false;
+  Bool_t individualMMHistograms = false;
 
   Long64_t nentries = fChain->GetEntriesFast();
 
   /////////////////
   // Set up cuts //
   /////////////////
-  TFile* cutFile = TFile::Open("cuts.root");
-  TCutG* det5_dEE_noPunchthroughCut = (TCutG*)cutFile->Get("det5_dEECut_noPunchthrough");
-  TCutG* det56_dEECut = (TCutG*)cutFile->Get("det56_dEECut");
-  cutFile->Close();
+  // TFile* cutFile = TFile::Open("cuts.root");
+  // TCutG* det5_dEE_noPunchthroughCut = (TCutG*)cutFile->Get("det5_dEECut_noPunchthrough");
+  // TCutG* det56_dEECut = (TCutG*)cutFile->Get("det56_dEECut");
+  // cutFile->Close();
 
   ////////////////
   // Histograms //
@@ -89,26 +160,23 @@ void Spectra::Loop() {
   hCSDet5Counts->GetXaxis()->SetTitle("Center of Mass Energy [MeV]"); hCSDet5Counts->GetXaxis()->SetTitleSize(0.05); hCSDet5Counts->GetXaxis()->CenterTitle();
   hCSDet5Counts->GetYaxis()->SetTitle("Counts"); hCSDet5Counts->GetYaxis()->SetTitleSize(0.05); hCSDet5Counts->GetYaxis()->CenterTitle(); hCSDet5Counts->GetYaxis()->SetTitleOffset(1.);
 
-  // Make output file
-  TFile* file = new TFile("spectra.root","recreate");
-
   // For average energy deposited
-  std::vector<double> padCumulative[6][128];
-  std::vector<double> padCumulativeScaled[6][128];
-  std::vector<double> rowCumulativeScaled[128];
-  std::vector<double> padCumulativeTime[6][128];
+  std::vector<Double_t> padCumulative[6][128];
+  std::vector<Double_t> padCumulativeScaled[6][128];
+  std::vector<Double_t> rowCumulativeScaled[128];
+  std::vector<Double_t> padCumulativeTime[6][128];
 
   printf("Starting Main Loop\n");
 
   Long64_t nbytes = 0, nb = 0;
-  // for (Long64_t jentry=0; jentry<10; jentry++) {
-  for (Long64_t jentry=0; jentry<nentries; jentry++) {
+  // for(Long64_t jentry = 0; jentry < 400; jentry++) {
+  for(Long64_t jentry = 0; jentry < nentries; jentry++) {
     Long64_t ientry = LoadTree(jentry);
-    if (ientry < 0) break;
+    if(ientry < 0) break;
     nb = fChain->GetEntry(jentry);   nbytes += nb;
     // if (Cut(ientry) < 0) continue;
 
-    // if(jentry!=0 && jentry%200==0) printf("Processed %lld events\n",jentry);
+    if(jentry != 0 && jentry % 200 == 0) printf("Processed %lld events\n",jentry);
 
     // Find hit in Si detectors
     std::vector<siDetect> siDetect_;
@@ -121,55 +189,55 @@ void Spectra::Loop() {
     std::vector<mmCenter> mmCenterMatched_;
 
     // Beam Left Strips in Micromegas
-    std::vector<mmStrip> mmLeftStrip_;
+    std::vector<mmStripChain> mmLeftStrip_;
 
     // Beam Left Chains in Micromegas
-    std::vector<mmChain> mmLeftChain_;
+    std::vector<mmStripChain> mmLeftChain_;
 
     // Beam Right Strips in Micromegas
-    std::vector<mmStrip> mmRightStrip_;
+    std::vector<mmStripChain> mmRightStrip_;
 
     // Beam Right Chains in Micromegas
-    std::vector<mmChain> mmRightChain_;
+    std::vector<mmStripChain> mmRightChain_;
 
     // IC
-    int icE = 0.;
-    int icT = 0.;
+    Int_t icE = 0.;
+    Int_t icT = 0.;
 
-    for(int i=0; i<mmMul; i++) {
-      if(mmChan[i]==11 || mmChan[i]==22 || mmChan[i]==45 || mmChan[i]==56) continue; // Skip FPN Channels
+    for(Int_t i = 0; i < mmMul; i++) {
+      if(mmChan[i] == 11 || mmChan[i] == 22 || mmChan[i] == 45 || mmChan[i] == 56) continue; // Skip FPN Channels
 
       // Micromegas
-      if(mmCobo[i]==0) {
+      if(mmCobo[i] == 0) {
         // Asad0 - All Center Pads
-        if(mmAsad[i]==0) {
+        if(mmAsad[i] == 0) {
           // Aget0
-          if(mmAget[i]==0) {
-            std::pair<int,int> pad = MM_Map_Asad0_Aget0[mmChan[i]];
+          if(mmAget[i] == 0) {
+            std::pair<Int_t, Int_t> pad = MM_Map_Asad0_Aget0[mmChan[i]];
             mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
             mmCenter_.push_back(mmHit);
             mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i]};
             mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget1
-          else if(mmAget[i]==1) {
-            std::pair<int,int> pad = MM_Map_Asad0_Aget1[mmChan[i]];
+          else if(mmAget[i] == 1) {
+            std::pair<Int_t, Int_t> pad = MM_Map_Asad0_Aget1[mmChan[i]];
             mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
             mmCenter_.push_back(mmHit);
             mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i]};
             mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget2
-          else if(mmAget[i]==2) {
-            std::pair<int,int> pad = MM_Map_Asad0_Aget2[mmChan[i]];
+          else if(mmAget[i] == 2) {
+            std::pair<Int_t, Int_t> pad = MM_Map_Asad0_Aget2[mmChan[i]];
             mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
             mmCenter_.push_back(mmHit);
             mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i]};
             mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget3
-          else if(mmAget[i]==3) {
-            std::pair<int,int> pad = MM_Map_Asad0_Aget3[mmChan[i]];
+          else if(mmAget[i] == 3) {
+            std::pair<Int_t, Int_t> pad = MM_Map_Asad0_Aget3[mmChan[i]];
             mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
             mmCenter_.push_back(mmHit);
             mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i]};
@@ -177,34 +245,34 @@ void Spectra::Loop() {
           }
         }
         // Asad1
-        else if(mmAsad[i]==1) {
+        else if(mmAsad[i] == 1) {
           // Aget0
-          if(mmAget[i]==0) {
-            std::pair<int,int> pad = MM_Map_Asad1_Aget0[mmChan[i]];
+          if(mmAget[i] == 0) {
+            std::pair<Int_t, Int_t> pad = MM_Map_Asad1_Aget0[mmChan[i]];
             mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
             mmCenter_.push_back(mmHit);
             mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i]};
             mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget1
-          else if(mmAget[i]==1) {
-            std::pair<int,int> pad = MM_Map_Asad1_Aget1[mmChan[i]];
+          else if(mmAget[i] == 1) {
+            std::pair<Int_t, Int_t> pad = MM_Map_Asad1_Aget1[mmChan[i]];
             mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
             mmCenter_.push_back(mmHit);
             mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i]};
             mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget2
-          else if(mmAget[i]==2) {
-            std::pair<int,int> pad = MM_Map_Asad1_Aget2[mmChan[i]];
+          else if(mmAget[i] == 2) {
+            std::pair<Int_t, Int_t> pad = MM_Map_Asad1_Aget2[mmChan[i]];
             mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
             mmCenter_.push_back(mmHit);
             mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i]};
             mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget3
-          else if(mmAget[i]==3) {
-            std::pair<int,int> pad = MM_Map_Asad1_Aget3[mmChan[i]];
+          else if(mmAget[i] == 3) {
+            std::pair<Int_t, Int_t> pad = MM_Map_Asad1_Aget3[mmChan[i]];
             mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
             mmCenter_.push_back(mmHit);
             mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i]};
@@ -212,26 +280,42 @@ void Spectra::Loop() {
           }
         }
         // Asad2
-        else if(mmAsad[i]==2) {
-          // Aget0 - Strips and Chains
-          if(mmAget[i]==0) {
-            int bin = MM_Map_Asad2_Aget0[mmChan[i]];
+        else if(mmAsad[i] == 2) {
+          // Aget0 - Strips and Chains (Beam left)
+          if(mmAget[i] == 0) {
+            Int_t bin = MM_Map_Asad2_Aget0[mmChan[i]];
+            if(mmChan[i] < 34) { // Strips
+              mmStripChain mmHit = {bin, mmEnergy[i], mmTime[i]};
+              mmLeftStrip_.push_back(mmHit);
+            }
+            else if(mmChan[i] > 33 && mmChan[i] < 68) { // Chains
+              mmStripChain mmHit = {bin, mmEnergy[i], mmTime[i]};
+              mmLeftChain_.push_back(mmHit);
+            }
           }
-          // Aget1 - Strips and Chains
-          else if(mmAget[i]==1) {
-            int bin = MM_Map_Asad2_Aget1[mmChan[i]];
+          // Aget1 - Strips and Chains (Beam left)
+          else if(mmAget[i] == 1) {
+            Int_t bin = MM_Map_Asad2_Aget1[mmChan[i]];
+            if(mmChan[i] < 34) { // Strips
+              mmStripChain mmHit = {bin, mmEnergy[i], mmTime[i]};
+              mmLeftStrip_.push_back(mmHit);
+            }
+            else if(mmChan[i] > 33 && mmChan[i] < 68) { // Chains
+              mmStripChain mmHit = {bin, mmEnergy[i], mmTime[i]};
+              mmLeftChain_.push_back(mmHit);
+            }
           }
           // Aget2 - Outside Central Pads
-          else if(mmAget[i]==2) {
-            std::pair<int,int> pad = MM_Map_Asad2_Aget2[mmChan[i]];
+          else if(mmAget[i] == 2) {
+            std::pair<Int_t, Int_t> pad = MM_Map_Asad2_Aget2[mmChan[i]];
             mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
             mmCenter_.push_back(mmHit);
             mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i]};
             mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget3 - Outside Central Pads
-          else if(mmAget[i]==3) {
-            std::pair<int,int> pad = MM_Map_Asad2_Aget3[mmChan[i]];
+          else if(mmAget[i] == 3) {
+            std::pair<Int_t, Int_t> pad = MM_Map_Asad2_Aget3[mmChan[i]];
             mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
             mmCenter_.push_back(mmHit);
             mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i]};
@@ -239,26 +323,42 @@ void Spectra::Loop() {
           }
         }
         // Asad3
-        else if(mmAsad[i]==3) {
-          // Aget0
-          if(mmAget[i]==0) {
-            int bin = MM_Map_Asad3_Aget0[mmChan[i]];
+        else if(mmAsad[i] == 3) {
+          // Aget0 - Strips and Chains (Beam right)
+          if(mmAget[i] == 0) {
+            Int_t bin = MM_Map_Asad3_Aget0[mmChan[i]];
+            if(mmChan[i] < 34) { // Strips
+              mmStripChain mmHit = {bin, mmEnergy[i], mmTime[i]};
+              mmRightStrip_.push_back(mmHit);
+            }
+            else if(mmChan[i] > 33 && mmChan[i] < 68) { // Chains
+              mmStripChain mmHit = {bin, mmEnergy[i], mmTime[i]};
+              mmRightChain_.push_back(mmHit);
+            }
           }
-          // Aget1
-          else if(mmAget[i]==1) {
-            int bin = MM_Map_Asad3_Aget1[mmChan[i]];
+          // Aget1 - Strips and Chains (Beam right)
+          else if(mmAget[i] == 1) {
+            Int_t bin = MM_Map_Asad3_Aget1[mmChan[i]];
+            if(mmChan[i] < 34) { // Strips
+              mmStripChain mmHit = {bin, mmEnergy[i], mmTime[i]};
+              mmRightStrip_.push_back(mmHit);
+            }
+            else if(mmChan[i] > 33 && mmChan[i] < 68) { // Chains
+              mmStripChain mmHit = {bin, mmEnergy[i], mmTime[i]};
+              mmRightChain_.push_back(mmHit);
+            }
           }
           // Aget2
-          else if(mmAget[i]==2) {
-            std::pair<int,int> pad = MM_Map_Asad3_Aget2[mmChan[i]];
+          else if(mmAget[i] == 2) {
+            std::pair<Int_t, Int_t> pad = MM_Map_Asad3_Aget2[mmChan[i]];
             mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
             mmCenter_.push_back(mmHit);
             mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i]};
             mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget3
-          else if(mmAget[i]==3) {
-            std::pair<int,int> pad = MM_Map_Asad3_Aget3[mmChan[i]];
+          else if(mmAget[i] == 3) {
+            std::pair<Int_t, Int_t> pad = MM_Map_Asad3_Aget3[mmChan[i]];
             mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
             mmCenter_.push_back(mmHit);
             mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i]};
@@ -267,41 +367,39 @@ void Spectra::Loop() {
         }
       }
 
-      else if(mmCobo[i]==1) {
+      else if(mmCobo[i] == 1) {
         // Si Detectors
-        if(mmAsad[i]==0) {
+        if(mmAsad[i] == 0) {
           // Forward Detectors
-          if(mmAget[i]==0) {
-            int detect = siForwardMap[mmChan[i]].first;
-            int quad = siForwardMap[mmChan[i]].second;
-            int channel = mmChan[i];
-            if(detect>0 && quad>0){
-              siDetect siHit = {detect, quad, channel, mmEnergy[i], mmTime[i]};
-              siDetect_.push_back(siHit);
-            }
+          if(mmAget[i] == 0) {
+            if(siForwardMap.count(mmChan[i]) == 0) continue;
+            Int_t detect = siForwardMap[mmChan[i]].first;
+            Int_t quad = siForwardMap[mmChan[i]].second;
+            Int_t channel = mmChan[i];
+            siDetect siHit = {detect, quad, channel, mmEnergy[i], mmTime[i]};
+            siDetect_.push_back(siHit);
           }
           // Beam Left Detectors
-          else if(mmAget[i]==3) {
-            int detect = siLeftMap[mmChan[i]].first;
-            int quad = siLeftMap[mmChan[i]].second;
-            int channel = mmChan[i];
-            if(detect>0 && quad>0){
-              siDetect siHit = {detect+10, quad, channel, mmEnergy[i], mmTime[i]};
-              siDetect_.push_back(siHit);
-            }
+          else if(mmAget[i] == 3) {
+            if(siLeftMap.count(mmChan[i]) == 0) continue;
+            Int_t detect = siLeftMap[mmChan[i]].first;
+            Int_t quad = siLeftMap[mmChan[i]].second;
+            Int_t channel = mmChan[i];
+            siDetect siHit = {detect+10, quad, channel, mmEnergy[i], mmTime[i]};
+            siDetect_.push_back(siHit);
           }
         }
 
         // IC/CsI
-        else if(mmAsad[i]==1) {
+        else if(mmAsad[i] == 1) {
           // Ionization Chamber
-          if(mmAget[i]==0 && mmChan[i]==10) {
+          if(mmAget[i] == 0 && mmChan[i] == 10) {
             icE = mmEnergy[i];
             icT = mmTime[i];
           }
           // CsI Detectors
-          else if(mmAget[i]==3) {
-            if(mmChan[i]<43) {
+          else if(mmAget[i] == 3) {
+            if(mmChan[i] < 43) {
               csiDetect csiHit = {csiForwardMap[mmChan[i]], mmEnergy[i], mmTime[i]};
               csiDetect_.push_back(csiHit);
             }
@@ -315,520 +413,51 @@ void Spectra::Loop() {
     }
 
     // Only one silicon should fire
-    if(siDetect_.size()!=1) continue;
+    if(siDetect_.size() != 1) continue;
 
     hIonizationChamberE->Fill(icE);
     hIonizationChamberT->Fill(icT);
 
     // if(icE<1250) continue;
-    if(icE < 1500 || icE > 1900) continue;
-    // if(icT<5500 || icT>6500) continue;
+    if(icE < 1400 || icE > 1900) continue;
+    if(icT < 5500 || icT > 6500) continue;
 
-    int siDet = siDetect_[0].detect;
-    int siQuad = siDetect_[0].quad;
-    int siChannel = siDetect_[0].channel;
-    double siEnergy = siDetect_[0].energy;
-    double siEnergyCal = 0.;
-    if(siDet<11) {
-      siEnergyCal = siDetect_[0].energy*siEForwardCalibration[siDet-1][siQuad-1].first + siEForwardCalibration[siDet-1][siQuad-1].second;
+    siDet = siDetect_[0].detect;
+    siQuad = siDetect_[0].quad;
+    siChannel = siDetect_[0].channel;
+    siEnergy = siDetect_[0].energy;
+    siEnergyCal = 0.;
+    if(siDet < 10) {
+      siEnergyCal = siEnergy*siEForwardCalibration[siDet][siQuad].first + siEForwardCalibration[siDet][siQuad].second;
     }
-    double siTime = siDetect_[0].time;
+    siTime = siDetect_[0].time;
 
-    if(siDet<11) hSiTForwardTotal[siDet-1]->Fill(siTime);
-
-    // Find if CsI behind Si fired
-    bool punchthrough = false;
-    for(size_t i=0; i<csiDetect_.size(); i++) {
-      if(csiDetect_[i].detect==siDet) punchthrough = true;
-    }
-
-    // Fill Silicon Histograms
-    if(siDet<11) {
-      hSiEForwardTotal[siDet-1]->Fill(siEnergy);
-      hSiEForwardTotalCal[siDet-1]->Fill(siEnergyCal);
-      hSiEForward[siDet-1][siQuad-1]->Fill(siEnergy);
-      hSiEForwardCal[siDet-1][siQuad-1]->Fill(siEnergyCal);
+    if(siDet < 10) {
+      hSiEForwardTotal[siDet]->Fill(siEnergy);
+      hSiTForwardTotal[siDet]->Fill(siTime);
+      hSiEForward[siDet][siQuad]->Fill(siEnergy);
     }
     else {
-      hSiELeftTotal[siDet-11]->Fill(siEnergy);
-      hSiELeftTotalCal[siDet-11]->Fill(siEnergyCal);
-      hSiELeft[siDet-11][siQuad-1]->Fill(siEnergy);
-      hSiELeftCal[siDet-1][siQuad-1]->Fill(siEnergyCal);
+      hSiELeftTotal[siDet - 10]->Fill(siEnergy);
+      hSiTLeftTotal[siDet - 10]->Fill(siTime);
+      hSiELeft[siDet - 10][siQuad]->Fill(siEnergy);
     }
 
-    // Sum up rows in central pads
-    float centerPadEnergy[128];
-    float centerdEPadEnergy[6][4];
-    for(size_t i=0; i<128; i++) {
-      centerPadEnergy[i] = 0.;
-    }
-
-    // Fill MM Center Histograms
-    float centerPadEnergydE = 0.;
-    for(size_t i=0; i<mmCenterMatched_.size(); i++) {
-      hMicroMegasCenterCumulative->Fill(mmCenterMatched_[i].column-3, mmCenterMatched_[i].row);
-      hCenterPadTime->Fill(mmCenterMatched_[i].time);
-
-      padCumulativeScaled[mmCenterMatched_[i].column][mmCenterMatched_[i].row].push_back(mmCenterMatched_[i].energy);
-      padCumulativeTime[mmCenterMatched_[i].column][mmCenterMatched_[i].row].push_back(mmCenterMatched_[i].time);
-
-      if(mmCenterMatched_[i].time>4000 && mmCenterMatched_[i].time<7000 && mmCenterMatched_[i].column!=0 && mmCenterMatched_[i].column!=5) centerPadEnergy[mmCenterMatched_[i].row] += mmCenterMatched_[i].energy;
-
-      if(mmCenterMatched_[i].row>117 && mmCenterMatched_[i].row<124 && mmCenterMatched_[i].column!=0 && mmCenterMatched_[i].column!=5) {
-        if(mmCenterMatched_[i].time>4000 && mmCenterMatched_[i].time<7000) centerPadEnergydE += mmCenterMatched_[i].energy;
+    // Find if CsI behind Si fired
+    Bool_t punchthrough = false;
+    for(UInt_t i = 0; i < csiDetect_.size(); i++) {
+      if(csiDetect_[i].detect == siDet) {
+        punchthrough = true;
+        hSiCsIForward[siDet]->Fill(siEnergy, csiDetect_[i].energy);
       }
     }
 
-    double padNumber[112];
-    double centerPadEnergySubtracted[112];
-    for(unsigned int i=0; i<112; i++) {
-      padNumber[i] = i;
-      if(centerPadEnergy[i] > 0) {
-        centerPadEnergySubtracted[i] = centerPadEnergy[i] - averageBeamEnergy[i];
-      }
-      else {
-        centerPadEnergySubtracted[i] = 0.;
-      }
-    }
-
-    // Find point where centerPadEnergySubtracted goes over 200 (or else find the maximum)
-    int vertexRow = -1;
-    if(siDet == 5 && centerPadEnergydE<20000) {
-      if(centerPadEnergy[0] == 0 || centerPadEnergy[1] == 0 || centerPadEnergy[2] == 0) continue;
-      bool found = false;
-      for(unsigned int i=0; i<112; i++) {
-        if(centerPadEnergySubtracted[i] > 200 && !found) {
-          vertexRow = i;
-          found = true;
-        }
-      }
-
-      if(vertexRow == -1) { // did not find a point above 200, not find the maximum
-        double maxEnergy = -1000.;
-        for(unsigned int i=0; i<112; i++) {
-          if(centerPadEnergySubtracted[i] > maxEnergy) {
-            maxEnergy = centerPadEnergySubtracted[i];
-            vertexRow = i;
-          }
-        }
-      }
-      hVertexECal->Fill(vertexRow, siEnergyCal);
-    }
-
-    if(vertexRow == -1) continue;
-
-    // Reduce MM Center to one entry per row
-    std::map<int, double> centralPadPosition;
-    std::map<int, double> centralPadTotalEnergy;
-    std::map<int, double> centralPadTime;
-    std::map<int, int> centralPadTotal;
-    for(unsigned int i=0; i<128; i++) {
-      centralPadTotal[i] = 0;
-    }
-    for(size_t i=0; i<mmCenterMatched_.size(); i++) {
-      if(mmCenterMatched_[i].time>4000 && mmCenterMatched_[i].time<7000) {
-        if(centralPadTotal[mmCenterMatched_[i].row] == 0) {
-          centralPadPosition[mmCenterMatched_[i].row] = (mmCenterMatched_[i].column*3.0-7.5)*mmCenterMatched_[i].energy;
-          centralPadTotalEnergy[mmCenterMatched_[i].row] = mmCenterMatched_[i].energy;
-          centralPadTime[mmCenterMatched_[i].row] = mmCenterMatched_[i].time;
-        }
-        else {
-          centralPadPosition[mmCenterMatched_[i].row] += (mmCenterMatched_[i].column*3.0-7.5)*mmCenterMatched_[i].energy;
-          centralPadTotalEnergy[mmCenterMatched_[i].row] += mmCenterMatched_[i].energy;
-          centralPadTime[mmCenterMatched_[i].row] += mmCenterMatched_[i].time;
-        }
-        centralPadTotal[mmCenterMatched_[i].row]++;
-      }
-    }
-
-    std::vector<mmCenterTrack> mmCenterBeamTotal;
-    std::vector<mmCenterTrack> mmCenterBeam;
-    std::vector<mmCenterTrack> mmCenterProton;
-    std::vector<mmCenterTrack> mmCenterScatteredBeam;
-    std::vector<mmCenterTrack> mmCenterVertex;
-    std::map<int, double>::iterator it;
-    for(it = centralPadPosition.begin(); it != centralPadPosition.end(); it++) {
-      int row = it->first;
-      if(row < 112) { // beam
-        mmCenterTrack hit = {0., 0, 0., 0., 0., 0};
-        hit.position = centralPadPosition[row]/centralPadTotalEnergy[row];
-        hit.row = row;
-        hit.time = centralPadTime[row]/centralPadTotal[row];
-        hit.energy = centralPadTotalEnergy[row];
-        hit.height = (zeroTime - hit.time)*driftVelocity;
-        hit.total = centralPadTotal[row];
-        mmCenterBeamTotal.push_back(hit);
-      }
-      else if((row == 116) || (row > 117 && row<124)) { // proton
-        mmCenterTrack hit = {0., 0, 0., 0., 0., 0};
-        hit.position = centralPadPosition[row]/centralPadTotalEnergy[row];
-        hit.row = row;
-        hit.time = centralPadTime[row]/centralPadTotal[row];
-        hit.energy = centralPadTotalEnergy[row];
-        hit.height = (zeroTime - hit.time)*driftVelocity;
-        hit.total = centralPadTotal[row];
-        mmCenterProton.push_back(hit);
-      }
-    }
-
-    // Find point on beamline corresponding to the vertex row
-    for(size_t i=0; i<mmCenterBeamTotal.size(); i++) {
-      if(mmCenterBeamTotal[i].row == vertexRow) {
-        mmCenterVertex.push_back(mmCenterBeamTotal[i]);
-        mmCenterProton.push_back(mmCenterBeamTotal[i]);
-      }
-    }
-
-    // Make scattered beam particle track
-    int maxRowScatteredBeam = 0;
-    for(it = centralPadPosition.begin(); it != centralPadPosition.end(); it++) {
-      int row = it->first;
-      if(row < 112 && row > vertexRow) {
-        if(row > maxRowScatteredBeam) {
-          maxRowScatteredBeam = row;
-        }
-        mmCenterTrack hit = {0., 0, 0., 0., 0., 0};
-        hit.position = centralPadPosition[row]/centralPadTotalEnergy[row];
-        hit.row = row;
-        hit.time = centralPadTime[row]/centralPadTotal[row];
-        hit.energy = centralPadTotalEnergy[row];
-        hit.height = (zeroTime - hit.time)*driftVelocity;
-        hit.total = centralPadTotal[row];
-        mmCenterScatteredBeam.push_back(hit);
-      }
-      else if (row < 112 && row <= vertexRow) {
-        mmCenterTrack hit = {0., 0, 0., 0., 0., 0};
-        hit.position = centralPadPosition[row]/centralPadTotalEnergy[row];
-        hit.row = row;
-        hit.time = centralPadTime[row]/centralPadTotal[row];
-        hit.energy = centralPadTotalEnergy[row];
-        hit.height = (zeroTime - hit.time)*driftVelocity;
-        hit.total = centralPadTotal[row];
-        mmCenterBeam.push_back(hit);
-      }
-    }
-
-    // // Plot event by event for vertex
-    // if(det5_dEE_noPunchthroughCut->IsInside(siEnergyCal, centerPadEnergydE)) {
-    //   TString name = Form("Vertex_Event_%lld", jentry);
-    //   TGraph *gr = new TGraph(112, padNumber, centerPadEnergySubtracted);
-    //   gr->SetName(name);
-    //   gr->Write();
-    //   delete gr;
-    // }
-
-    // for(unsigned int i=0; i<128; i++) {
-    //   if(centerPadEnergy[i] > 5) {
-    //     rowCumulativeScaled[i].push_back(centerPadEnergy[i]);
-    //   }
-    // }
-
-    // // Make dE plots
-    // if((siDet==5 || siDet==6) && !punchthrough && centerPadEnergydE>100) {
-    //   hdEECenterPad->Fill(siEnergy, centerPadEnergydE);
-    //   hdEECenterPadCal->Fill(siEnergyCal, centerPadEnergydE);
-    // }
-    // if((siDet==5 || siDet==6) && centerPadEnergydE>100) {
-    //   hdEECenterPadPunchthrough->Fill(siEnergy, centerPadEnergydE);
-    //   hdEECenterPadPunchthroughCal->Fill(siEnergyCal, centerPadEnergydE);
-    // }
-
-    // // Make sure the reaction happened over the micromegas and not before
-    // float maxEnergy = 0;
-    // int maxRow = 0;
-    // if(centerPadEnergy[0]>0 && centerPadEnergy[1]>0 && centerPadEnergy[2]>0) {
-    //   for(size_t i=0; i<110; i++) {
-    //     if(centerPadEnergy[i]>maxEnergy) {
-    //       maxEnergy = centerPadEnergy[i];
-    //       maxRow = i;
-    //     }
-    //   }
-    //   // Skip events with no maximum in micromegas
-    //   if(maxRow==0) continue;
-
-    //   if(siDet==5 && centerPadEnergydE<20000 && !punchthrough) {
-    //     hVertexE->Fill(maxRow, siEnergy);
-    //     // hVertexECal->Fill(maxRow, siEnergyCal);
-    //   }
-    //   if(siDet==5 && centerPadEnergydE<20000) {
-    //     hVertexEPunchthrough->Fill(maxRow, siEnergy);
-    //     hVertexEPunchthroughCal->Fill(maxRow, siEnergyCal);
-    //   }
-    // }
-
-    // // Skip events with no maximum in micromegas
-    // if(maxRow==0) continue;
-
-    // // For events scattering over the micromegas, make 3d histogram (TH3F)
-    // if(det5_dEE_noPunchthroughCut->IsInside(siEnergyCal, centerPadEnergydE)) {
-    //   TString name = Form("Track_Event_%lld", jentry);
-    //   TH3F *h_3d_track= new TH3F(name, name, 10, -5, 5, 128, 0, 128, 400, 2000, 10000);
-    //   for(size_t i=0; i<mmCenterMatched_.size(); i++) {
-    //     double xPosition = mmCenterMatched_
-    //     h_3d_track->Fill(mmCenterMatched_[i].column-3, mmCenterMatched_[i].row, mmCenterMatched_[i].time);
-    //   }
-    //   h_3d_track->Write();
-    //   delete h_3d_track;
-    // }
-
-    // For events scattering over the micromegas, make 3d graph (TGraph2D)
-    if(det5_dEE_noPunchthroughCut->IsInside(siEnergyCal, centerPadEnergydE)) {
-      // Loop over all beam particles
-      int N = 0;
-      TString name = Form("Track_Event_%lld_Beam_Total", jentry);
-      TGraph2D *h_3d_track_beam_total = new TGraph2D();
-      h_3d_track_beam_total->SetMarkerStyle(20);
-      h_3d_track_beam_total->SetMarkerColor(2);
-      for(size_t i=0; i<mmCenterBeamTotal.size(); i++) {
-        mmCenterTrack hit = mmCenterBeamTotal[i];
-        // h_3d_track_beam->SetPoint(i, hit.position, hit.row, hit.time);
-        h_3d_track_beam_total->SetPoint(i, hit.position, hit.row, hit.height);
-      }
-      h_3d_track_beam_total->SetName(name);
-      h_3d_track_beam_total->Write();
-      delete h_3d_track_beam_total;
-
-      // Loop over pre-scattered beam particles
-      name = Form("Track_Event_%lld_Beam", jentry);
-      TGraph2D *h_3d_track_beam = new TGraph2D();
-      h_3d_track_beam->SetMarkerStyle(20);
-      h_3d_track_beam->SetMarkerColor(2);
-      for(size_t i = 0; i < mmCenterBeam.size(); i++) {
-        mmCenterTrack hit = mmCenterBeam[i];
-        h_3d_track_beam->SetPoint(i, hit.position, hit.row, hit.height);
-      }
-
-      // Fit pre-scattered beam track
-      double p0_beam[4] = {10, 20, 1, 2};
-      ROOT::Fit::Fitter fitter_beam;
-      SumDistance2 sdist_beam(h_3d_track_beam);
-      ROOT::Math::Functor fcn_beam(sdist_beam, 4);
-      double pStart_beam[4] = {1, 1, 1, 1};
-      fitter_beam.SetFCN(fcn_beam, pStart_beam);
-      for(int i = 0; i < 4; i++) {
-        fitter_beam.Config().ParSettings(i).SetStepSize(0.01);
-      }
-      bool ok_beam = fitter_beam.FitFCN();
-      if(!ok_beam) {
-        Error("line3Dfit", "Line3D Fit failed beam");
-        continue;
-      }
-      const ROOT::Fit::FitResult &result_beam = fitter_beam.Result();
-      const double *parFit_beam = result_beam.GetParams();
-      h_3d_track_beam->SetName(name);
-      h_3d_track_beam->Write();
-      delete h_3d_track_beam;
-
-      // Draw fitted beam line
-      int n_beam = 1000;
-      double t0_beam = 0;
-      double dt_beam = vertexRow + 1;
-      TGraph2D *l_beam = new TGraph2D(n_beam);
-      for(int i = 0; i < n_beam; i++) {
-        double t = t0_beam + dt_beam*i/n_beam;
-        double x, y, z;
-        line(t, parFit_beam, x, y, z);
-        l_beam->SetPoint(i, x, y, z);
-      }
-      l_beam->SetMarkerStyle(8);
-      l_beam->SetMarkerColor(2);
-      name = Form("Fit_Event_%lld_Beam", jentry);
-      l_beam->SetName(name);
-      l_beam->Write();
-      delete l_beam;
-
-      // Loop over scattered beam particles
-      name = Form("Track_Event_%lld_Beam_Scattered", jentry);
-      TGraph2D *h_3d_track_beam_scattered = new TGraph2D();
-      h_3d_track_beam_scattered->SetMarkerStyle(20);
-      h_3d_track_beam_scattered->SetMarkerColor(6);
-      for(size_t i=0; i<mmCenterScatteredBeam.size(); i++) {
-        mmCenterTrack hit = mmCenterScatteredBeam[i];
-        h_3d_track_beam_scattered->SetPoint(i, hit.position, hit.row, hit.height);
-      }
-
-      // Fit scattered beam track
-      double p0_scattered[4] = {10, 20, 1, 2};
-      ROOT::Fit::Fitter fitter_scattered;
-      SumDistance2 sdist_scattered(h_3d_track_beam_scattered);
-      ROOT::Math::Functor fcn_scattered(sdist_scattered, 4);
-      double pStart_scattered[4] = {1, 1, 1, 1};
-      fitter_scattered.SetFCN(fcn_scattered, pStart_scattered);
-      for(int i = 0; i < 4; i++) {
-        fitter_scattered.Config().ParSettings(i).SetStepSize(0.01);
-      }
-      bool ok_scattered = fitter_scattered.FitFCN();
-      if(!ok_scattered) {
-        Error("line3Dfit", "Line3D Fit failed scattered beam");
-        continue;
-      }
-      const ROOT::Fit::FitResult &result_scattered = fitter_scattered.Result();
-      const double *parFit_scattered = result_scattered.GetParams();
-      h_3d_track_beam_scattered->SetName(name);
-      h_3d_track_beam_scattered->Write();
-      delete h_3d_track_beam_scattered;
-
-      // Draw fitted scattered beam line
-      int n_scattered = 1000;
-      double t0_scattered = vertexRow;
-      double dt_scattered = maxRowScatteredBeam - t0_scattered;
-      TGraph2D *l_scattered = new TGraph2D(n_scattered);
-      for(int i = 0; i < n_scattered; i++) {
-        double t = t0_scattered + dt_scattered*i/n_scattered;
-        double x, y, z;
-        line(t, parFit_scattered, x, y, z);
-        // std::cout << i << " " << y << " " << x << " " << z << std::endl;
-        l_scattered->SetPoint(i, x, y, z);
-      }
-      l_scattered->SetMarkerStyle(8);
-      l_scattered->SetMarkerColor(7);
-      name = Form("Fit_Event_%lld_Beam_Scattered", jentry);
-      l_scattered->SetName(name);
-      l_scattered->Write();
-      delete l_scattered;
-
-      // Loop over proton particles
-      name = Form("Track_Event_%lld_Proton", jentry);
-      TGraph2D *h_3d_track_proton = new TGraph2D();
-      h_3d_track_proton->SetMarkerStyle(8);
-      h_3d_track_proton->SetMarkerColor(4);
-      for(size_t i = 0; i < mmCenterProton.size(); i++) {
-        mmCenterTrack hit = mmCenterProton[i];
-        // h_3d_track_proton->SetPoint(i, hit.position, hit.row, hit.time);
-        h_3d_track_proton->SetPoint(i, hit.position, hit.row, hit.height);
-      }
-
-      // Fit proton track
-      double p0[4] = {10, 20, 1, 2};
-      ROOT::Fit::Fitter fitter;
-      SumDistance2 sdist(h_3d_track_proton);
-      ROOT::Math::Functor fcn(sdist, 4);
-      double pStart[4] = {1, 1, 1, 1};
-      fitter.SetFCN(fcn, pStart);
-      for(int i = 0; i < 4; i++) {
-        fitter.Config().ParSettings(i).SetStepSize(0.01);
-      }
-      bool ok = fitter.FitFCN();
-      if(!ok) {
-        Error("line3Dfit", "Line3D Fit failed");
-        continue;
-      }
-      const ROOT::Fit::FitResult &result = fitter.Result();
-      const double *parFit = result.GetParams();
-      h_3d_track_proton->SetName(name);
-      h_3d_track_proton->Write();
-      delete h_3d_track_proton;
-
-      // Draw fitted proton line
-      int n = 1000;
-      double t0 = vertexRow;
-      double dt = 128 - vertexRow;
-      TGraph2D *l_proton = new TGraph2D(n);
-      for(int i = 0; i < n; i++) {
-        double t = t0 + dt*i/n;
-        double x, y, z;
-        line(t, parFit, x, y, z);
-        l_proton->SetPoint(i, x, y, z);
-      }
-      l_proton->SetMarkerStyle(8);
-      l_proton->SetMarkerColor(3);
-      name = Form("Fit_Event_%lld_Proton", jentry);
-      l_proton->SetName(name);
-      l_proton->Write();
-      delete l_proton;
-
-      // Draw vertex location
-      TGraph2D *h_3d_track_vertex = new TGraph2D(1);
-      h_3d_track_vertex->SetMarkerStyle(20);
-      h_3d_track_vertex->SetMarkerColor(4);
-      h_3d_track_vertex->SetPoint(0, mmCenterVertex[0].position, mmCenterVertex[0].row, mmCenterVertex[0].height);
-      name = Form("Track_Event_%lld_Vertex", jentry);
-      h_3d_track_vertex->SetName(name);
-      h_3d_track_vertex->Write();
-      delete h_3d_track_vertex;
-
-      // TGraph2D boundaries
-      TGraph2D *h_3d_track_bound = new TGraph2D();
-      h_3d_track_bound->SetMarkerStyle(8);
-      h_3d_track_bound->SetMarkerColor(5);
-      h_3d_track_bound->SetPoint(0, -30, 0, -100);
-      h_3d_track_bound->SetPoint(1, 30, 128, 100);
-      h_3d_track_bound->SetName(Form("Track_Event_%lld_Bound", jentry));
-      h_3d_track_bound->Write();
-      delete h_3d_track_bound;
-
-      printf("Entry: %lld Si Det: %d Si Quad: %d Si Chan: %d Vertex Row: %d MaxBeam: %d\n", jentry, siDet, siQuad, siChannel, vertexRow, maxRowScatteredBeam);
-    }
-
-    // // Simple Cross Section calculation for detector 5
-    // if(det5_dEE_noPunchthroughCut->IsInside(siEnergyCal, centerPadEnergydE)) {
-    //   Double_t massFactor = m1*m2/((m1+m2)*(m1+m2));
-    //   Double_t factor = 4.*massFactor; // missing cos^2 term but setting to 1 for now
-    //   Double_t b8Energy = siEnergyCal/factor;
-    //   Double_t cmEnergy = b8Energy*m2/(m1+m2);
-    //   hCSDet5->Fill(cmEnergy/1000.);
-    //   hCSDet5Counts->Fill(cmEnergy/1000.);
-    //   if(maxRow>80 && siEnergyCal<1800) {
-    //     printf("Event: %lld Row: %d Energy: %f SiEnergy: %f\n", jentry, maxRow, maxEnergy, siEnergyCal);
-    //     TString name = Form("vertexEvent_%lld", jentry);
-    //     TH1F* hVertexEvent = new TH1F(name, name, 115, 0, 115);
-    //     for(size_t row=0; row<110; row++) {
-    //       hVertexEvent->SetBinContent(row+1, centerPadEnergy[row]);
-    //     }
-    //     hVertexEvent->Write();
-    //     delete hVertexEvent;
-    //   }
-    // }
 
     //  ** End of event by event analysis ** //
   }
 
-  // For beam average
-  // FILE* averageBeamEnergyFile = fopen("averageBeamEnergy.out", "w");
-  // FILE* averageBeamTimeFile = fopen("averageBeamTime.out", "w");
-  // Loop over rows
-  // for(unsigned int j=0; j<128; j++) {
-    // double averageEnergy = 0.;
-    // double averageTime = 0.;
-    // Loop over rows
-    // for(size_t k=0; k<rowCumulativeScaled[j].size(); k++) {
-      // averageEnergy += rowCumulativeScaled[j][k];
-      // averageTime += padCumulativeTime[i][j][k];
-    // }
-    // if(rowCumulativeScaled[j].size() == 0) {
-      // averageEnergy = 0.;
-      // averageTime = 0.;
-    // }
-    // else {
-      // averageEnergy /= rowCumulativeScaled[j].size();
-      // averageTime /= padCumulativeScaled[i][j].size();
-    // }
-    // fprintf(averageBeamEnergyFile, "%d %f\n", j, averageEnergy);
-    // fprintf(averageBeamTimeFile, "%d %f\n", j, averageTime);
-  // }
-  // fflush(averageBeamEnergyFile);
-  // fflush(averageBeamTimeFile);
-  // fclose(averageBeamEnergyFile);
-  // fclose(averageBeamTimeFile);
-
-  // // Simple Cross Section calculation for detector 5
-  // SimpleCrossSection(hCSDet5);
-
-  // FILE* cmCSFile;
-  // cmCSFile = fopen("testCS.out", "w");
-  // int i_size = hCSDet5->GetSize();
-  // TAxis *xaxis = hCSDet5->GetXaxis();
-  // for(int i=1; i<i_size; i++) {
-  //   float binCenter = xaxis->GetBinCenter(i);
-  //   float binContent = hCSDet5->GetBinContent(i);
-  //   float binError = hCSDet5->GetBinError(i);
-  //   fprintf(cmCSFile, "%f %f %f\n", binCenter, binContent, binError);
-  // }
-  // fflush(cmCSFile);
-  // fclose(cmCSFile);
-
-  // for(int i=0; i<10 ; i++) {
-    // hSiEForwardTotal[i]->Write();
+  for(int i=0; i<10 ; i++) {
+    hSiEForwardTotal[i]->Write();
     // hSiTForwardTotal[i]->Write();
     // for(int j=0; j<4; j++) {
       // hSiEForward[i][j]->Write();
@@ -837,20 +466,21 @@ void Spectra::Loop() {
     // }
     // hCsIEForward[i]->Write();
     // hCsITForward[i]->Write();
-  // }
+    // hSiCsIForward[i]->Write();
+  }
 
-  // for(int i=0; i<6 ; i++) {
-    // hSiELeftTotal[i]->Write();
+  for(int i=0; i<6 ; i++) {
+    hSiELeftTotal[i]->Write();
     // for(int j=0; j<4; j++) {
       // hSiELeft[i][j]->Write();
       // hSiTLeft[i][j]->Write();
     // }
     // hCsIELeft[i]->Write();
     // hCsITLeft[i]->Write();
-  // }
+  }
 
-  // hIonizationChamberE->Write();
-  // hIonizationChamberT->Write();
+  hIonizationChamberE->Write();
+  hIonizationChamberT->Write();
 
   // hMicroMegasCenterCumulative->Write();
   // hMicroMegasCenterEnergyCumulative->Write();
@@ -880,92 +510,321 @@ void Spectra::Loop() {
   file->Close();
 }
 
-void Spectra::SimpleCrossSection(TH1F *f) {
-  SimpleSolidAngleDet5(f);
-  DivideTargetThickness(f);
-  f->Scale(1./numberB8);
-}
-
-void Spectra::SimpleSolidAngleDet5(TH1F *f) {
-  Int_t i_size = f->GetSize();
-
-  TAxis *xaxis = f->GetXaxis();
-  for(Int_t i=1; i<i_size; i++) {
-    Double_t binCenter = xaxis->GetBinCenter(i);
-    Double_t binContent = f->GetBinContent(i);
-    Double_t binError = f->GetBinError(i);
-    Double_t solidAngle = CalcSimpleSolidAngleDet5(binCenter);
-    if(solidAngle==0.) {
-      f->SetBinContent(i, 0.);
-      f->SetBinError(i, 0.);
-    }
-    else {
-      f->SetBinContent(i, binContent/solidAngle);
-      f->SetBinError(i, binError/solidAngle);
-    }
-
+void Spectra::StripChainMatch(std::vector<mmTrack> &stripChainMatched, std::vector<mmTrack> &stripChainRaw, std::vector<mmStripChain> chain_,
+                              std::vector<mmStripChain> strip_, Bool_t leftSide, Double_t siTime) {
+  // stripChainMatched.clear();
+  // stripChainRaw.clear();
+  std::vector<mmTrack> totalTime0;
+  StripChainMatchingTime(totalTime0, chain_, strip_, leftSide, siTime, 0);
+  StripChainMatchingTime(stripChainRaw, chain_, strip_, leftSide, siTime, 0);
+  size_t numTimeBuckets = StripChainTime0TimeBuckets(totalTime0);
+  if(numTimeBuckets < 4) {
+    StripChainMatchingBoxTime0(stripChainMatched, totalTime0);
+  }
+  else if(chain_.size() > 8 && strip_.size() > 8) {
+    StripChainMatchingTimeSlopeHough(stripChainMatched, chain_, strip_, leftSide, siTime, 10.);
+  }
+  else {
+    StripChainMatchingTime(stripChainMatched, chain_, strip_, leftSide, siTime, 0);
   }
 }
 
-Double_t Spectra::CalcSimpleSolidAngleDet5(Double_t cmEnergy) {
-  Double_t b8Energy = cmEnergy*(m1+m2)/m2;
-  Double_t dist = boronMethane->CalcRange(beamEnergy, b8Energy);
+size_t Spectra::StripChainTime0TimeBuckets(std::vector<mmTrack> matched) {
+  // Function that finds the number of different time buckets for the time0 algorithm
+  // This is used if you want to change the strip/chain matching algorithm (if all on the same plane)
 
-  Double_t distToSi = distanceHavarToSilicon - dist;
+  std::map<Int_t, Int_t> timeMap;
 
-  TH1F* h = new TH1F("h", "h", 360, 0, 180);
-  TH1F* h2 = new TH1F("h2", "h2", 360, 0, 180);
+  for(UInt_t i = 0; i < matched.size(); i++) {
+    timeMap[matched[i].time] = 1;
+  }
 
-  Double_t angle;
-  Double_t sum = 0;
-  for(Double_t dx=0; dx<25.0; dx+=0.1) {
-    for(Double_t dy=26.8; dy<76.8; dy+=0.1) {
-      Double_t dr = sqrt(dx*dx+dy*dy+distToSi*distToSi);
-      angle = acos(distToSi/dr)/3.14159*180.;
-      Double_t protonEnergy = 4.*m1/(m1+m2)*distToSi*distToSi/(dr*dr)*cmEnergy;
-      Double_t range = protonMethane->CalcRange(protonEnergy, 0.);
-      if(range>=dr) {
-        sum += 0.1*0.1*distToSi/(dr*dr*dr);
-        h->Fill(angle);
-        h2->Fill(180.-2.*angle);
+  return timeMap.size();
+}
+
+size_t Spectra::StripChainNumberTimeBuckets(std::vector<mmStripChain> chain, std::vector<mmStripChain> strip) {
+  // Function that finds the number of different time buckets for strips and chains
+  // This is used if you want to change the strip/chain matching algorithm (if all on the same plane)
+
+  std::map<Int_t, Int_t> individualTimeStripMap;
+  std::map<Int_t, Int_t> individualTimeChainMap;
+
+  for(UInt_t i = 0; i < chain.size(); i++) {
+    individualTimeChainMap[chain[i].time] = 1;
+  }
+  for(UInt_t i = 0; i < strip.size(); i++) {
+    individualTimeStripMap[strip[i].time] = 1;
+  }
+
+  size_t sizeTimeChainMap = individualTimeChainMap.size();
+  size_t sizeTimeStripMap = individualTimeStripMap.size();
+
+  return std::min(sizeTimeChainMap, sizeTimeStripMap);
+}
+
+void Spectra::StripChainMatchingOutward(std::vector<mmTrack> &stripChainMatched, std::vector<mmStripChain> chain,
+                                        std::vector<mmStripChain> strip, Bool_t leftSide, Double_t siTime) {
+  // Function to match strips and chains outward. Meaning that the matched strips and chains must be moving away from the central region
+  // Strip and chains need to be sorted for this
+  // Position transform = 10.5 + 1.75/2 + 1.75*chain (chain starting at 0)
+  // Row transform = (strip - 1)*2
+  // Row position transform = Row * rowConversion + rowConversionOffset
+
+  std::vector<mmStripChain> stripCopy = strip;
+  for(UInt_t i = 0; i < chain.size(); i++) {
+    Double_t timeChain = chain[i].time;
+    // Look in the strip vector for this time
+    std::vector<mmStripChain>::iterator it = std::find_if(stripCopy.begin(), stripCopy.end(),
+      [timeChain] (const mmStripChain& d) { return d.time == timeChain; });
+    if(it != stripCopy.end()) {
+      Double_t position = 10.5 + 1.75/2 + 1.75*chain[i].row;
+      if(leftSide) position = -position;
+      Int_t row = (*it).row*2;
+      mmTrack hit = {0, 0., 0., 0., 0., 0., 0};
+      hit.row = row;
+      hit.xPosition = position;
+      hit.yPosition = hit.row*rowConversion + rowConversionOffset;
+      hit.time = chain[i].time - siTime;
+      hit.energy = (*it).energy;
+      hit.height = heightOffset - hit.time*driftVelocity;
+      hit.total = 1;
+      // if(fabs(hit.position) > 150) std::cout << chain[i].row << '\t' << (*it).row << '\t' << hit.time/1000. << std::endl;
+      stripChainMatched.push_back(hit);
+      stripCopy.erase(stripCopy.begin(), stripCopy.begin() + std::distance(stripCopy.begin(), it) + 1);
+    }
+    else continue;
+  }
+}
+
+void Spectra::StripChainMatchingBox(std::vector<mmTrack> &stripChainMatched, std::vector<mmStripChain> chain,
+                                    std::vector<mmStripChain> strip, Bool_t leftSide, Double_t siTime) {
+  // Function to match strips and chains. This is the simplest algorithm, making two points in the side
+  // region which is where the particle entered and exited.
+  // Strips and chains need to be sorted for this
+  // Position transform = 10.5 + 1.75/2 + 1.75*chain (chain starting at 0)
+  // Row transform = (strip - 1)*2
+  // Row position transform = Row * rowConversion + rowConversionOffset
+  Size_t chainSize = chain.size();
+  Size_t stripSize = strip.size();
+
+  Double_t position0 = 10.5 + 1.75/2 + 1.75*chain[0].row;
+  if(leftSide) position0 = -position0;
+  Int_t row0 = strip[0].row*2;
+  mmTrack hit0 = {0, 0., 0., 0., 0., 0., 0};
+  hit0.row = row0;
+  hit0.xPosition = position0;
+  hit0.yPosition = hit0.row*rowConversion + rowConversionOffset;
+  hit0.time = (chain[0].time + strip[0].time)/2. - siTime;
+  hit0.energy = strip[0].energy;
+  hit0.height = heightOffset - hit0.time*driftVelocity;
+  hit0.total = 1;
+
+  Double_t position1 = 10.5 + 1.75/2 + 1.75*chain[chainSize - 1].row;
+  if(leftSide) position1 = -position1;
+  Int_t row1 = strip[stripSize - 1].row*2;
+  mmTrack hit1 = {0, 0., 0., 0., 0., 0., 0};
+  hit1.row = row1;
+  hit1.xPosition = position1;
+  hit1.yPosition = hit1.row*rowConversion + rowConversionOffset;
+  hit1.time = (chain[chainSize - 1].time + strip[stripSize - 1].time)/2. - siTime;
+  hit1.energy = strip[stripSize - 1].energy;
+  hit1.height = heightOffset - hit1.time*driftVelocity;
+  hit1.total = 1;
+
+  stripChainMatched.push_back(hit0);
+  stripChainMatched.push_back(hit1);
+}
+
+void Spectra::StripChainMatchingBoxTime0(std::vector<mmTrack> &stripChainMatched, std::vector<mmTrack> time0) {
+  UInt_t size = time0.size();
+  if(size == 0) return;
+  stripChainMatched.push_back(time0[0]);
+  stripChainMatched.push_back(time0[size - 1]);
+}
+
+void Spectra::StripChainMatchingTime(std::vector<mmTrack> &stripChainMatched, std::vector<mmStripChain> chain,
+                                     std::vector<mmStripChain> strip, Bool_t leftSide, Double_t siTime,
+                                     Int_t timeWindow) {
+  // Function to match strips and chains. Chains and strips are matched if their time is within the timeWindow parameter
+  // The timeWindow parameter is the window of time buckets to look for using the timeResolution parameter
+  // which is the ns -> bucket
+  // Position transform = 10.5 + 1.75/2 + 1.75*chain (chain starting at 0)
+  // Row transform = strip*2
+  // Row position transform = Row * rowConversion + rowConversionOffset
+
+  // Remove all strips and chains with time outside boundary
+  std::vector<mmStripChain> stripReduced;
+  std::vector<mmStripChain> chainReduced;
+  for(UInt_t i = 0; i < strip.size(); i++) {
+    if(strip[i].time < 8000 || strip[i].time > 11000) continue;
+    stripReduced.push_back(strip[i]);
+  }
+  for(UInt_t i = 0; i < chain.size(); i++) {
+    if(chain[i].time < 8000 || chain[i].time > 11000) continue;
+    chainReduced.push_back(chain[i]);
+  }
+
+  for(UInt_t i = 0; i < chainReduced.size(); i++) {
+    Double_t timeChain = chainReduced[i].time;
+    // Loop over strips and find strips when the time is within the timeWindow
+    for(UInt_t j = 0; j < stripReduced.size(); j++) {
+      if((stripReduced[j].time > timeChain - timeWindow*timeResolution - timeResolution/2.) &&
+          (stripReduced[j].time < timeChain + timeWindow*timeResolution + timeResolution/2.)) {
+        mmTrack hit = {0, 0., 0., 0., 0., 0., 0};
+        Double_t position = 10.5 + 1.75/2 + 1.75*chainReduced[i].row;
+        if(leftSide) position = -position;
+        Int_t row = stripReduced[j].row*2;
+        hit.row = row;
+        hit.xPosition = position;
+        hit.yPosition = hit.row*rowConversion + rowConversionOffset;
+        hit.time = chainReduced[i].time - siTime;
+        hit.energy = stripReduced[j].energy;
+        hit.height = heightOffset - hit.time*driftVelocity;
+        hit.total = 1;
+        stripChainMatched.push_back(hit);
       }
     }
   }
-  sum *= 2.;
-
-  if(sum==0) {
-    delete h;
-    delete h2;
-    return 0.;
-  }
-  else {
-    Double_t aFactor = 4.*cos(h->GetMean()*3.14159/180.);
-    Double_t changeBinContent = sum*aFactor;
-    delete h;
-    delete h2;
-    return changeBinContent;
-  }
 }
 
-void Spectra::DivideTargetThickness(TH1F *f) {
-  Int_t i_size = f->GetSize();
+void Spectra::StripChainMatchingTimeSlopeFit(std::vector<mmTrack> &stripChainMatched, std::vector<mmStripChain> chain,
+                                          std::vector<mmStripChain> strip, Bool_t leftSide, Double_t siTime,
+                                          Double_t timeWindow) {
+  // Function to match strips and chains by fitting with time individually
+  // Then is able to correlate strips and chains by time. Requires multiple time steps in both strips and chains
+  // After the fit, it goes through each chain and finds strips based off of the fit when match within the timeWindow input parameter
+  // Position transform = 10.5 + 1.75/2 + 1.75*chain (chain starting at 0)
+  // Row transform = (strip - 1)*2
+  // Row position transform = Row * rowConversion + rowConversionOffset
 
-  TAxis *xaxis = f->GetXaxis();
-  for(Int_t i=1; i<i_size; i++) {
-    Double_t binLowEdge = xaxis->GetBinLowEdge(i);
-    Double_t binUpEdge = xaxis->GetBinUpEdge(i);
-    if(binLowEdge==0.) binLowEdge += 0.001;
-    binLowEdge *= (m1+m2)/m2; // From C.M. to Lab frame
-    binUpEdge *= (m1+m2)/m2; // From C.M. to Lab frame
-    Double_t binContent = f->GetBinContent(i);
-    Double_t binError = f->GetBinError(i);
-    Double_t delta_x = boronMethane->CalcRange(binUpEdge, binLowEdge);
-    delta_x /= 10.0;
-    Double_t molarMassMethane = 0.01604;
-    Double_t factor = 4.e-27*density*delta_x*TMath::Na()/molarMassMethane;
-    binContent /= factor;
-    binError /= factor;
-    f->SetBinContent(i, binContent);
-    f->SetBinError(i, binError);
+  TGraph* hStrip = new TGraph();
+  TGraph* hChain = new TGraph();
+
+  // Fill hStrip
+  for(UInt_t i = 0; i < strip.size(); i++) {
+    hStrip->SetPoint(i, strip[i].row, strip[i].time);
+  }
+
+  // Fill hChain
+  for(UInt_t i = 0; i < chain.size(); i++) {
+    hChain->SetPoint(i, chain[i].row, chain[i].time);
+  }
+
+  // Fit each with a 1-D polynomial
+  hStrip->Fit("pol1", "Q");
+  hChain->Fit("pol1", "Q");
+  TF1 *fitStrip = hStrip->GetFunction("pol1");
+  TF1 *fitChain = hChain->GetFunction("pol1");
+
+  hStrip->SetName(Form("hStrip_%lld", entry));
+  hChain->SetName(Form("hChain_%lld", entry));
+//  hStrip->Write();
+//  hChain->Write();
+
+  Double_t stripP0 = fitStrip->GetParameter(0);
+  Double_t stripP1 = fitStrip->GetParameter(1);
+  Double_t chainP0 = fitChain->GetParameter(0);
+  Double_t chainP1 = fitChain->GetParameter(1);
+
+  // Loop through chains and find strips within timeWindow
+  for(UInt_t i = 0; i < chain.size(); i++) {
+    Double_t chainTime = chain[i].row*chainP1 + chainP0;
+    for(UInt_t j = 0; j < strip.size(); j++) {
+      Double_t stripTime = strip[j].row*stripP1 + stripP0;
+      if((stripTime > chainTime - timeWindow) && (stripTime < chainTime + timeWindow)) {
+        // Check if chains and strips are actually within a timebucket
+        if((chain[i].time < strip[j].time - timeResolution) ||
+           (chain[i].time > strip[j].time + timeResolution)) continue;
+        mmTrack hit = {0, 0., 0., 0., 0., 0., 0};
+        Double_t position = 10.5 + 1.75/2 + 1.75*chain[i].row;
+        if(leftSide) position = -position;
+        Int_t row = strip[j].row*2;
+        hit.row = row;
+        hit.xPosition = position;
+        hit.yPosition = hit.row*rowConversion + rowConversionOffset;
+        hit.time = chain[i].time - siTime;
+        hit.energy = strip[j].energy;
+        hit.height = heightOffset - hit.time*driftVelocity;
+        hit.total = 1;
+        stripChainMatched.push_back(hit);
+      }
+    }
+  }
+
+  delete fitStrip;
+  delete fitChain;
+
+  delete hStrip;
+  delete hChain;
+}
+
+void Spectra::StripChainMatchingTimeSlopeHough(std::vector<mmTrack> &stripChainMatched, std::vector<mmStripChain> chain,
+                                             std::vector<mmStripChain> strip, Bool_t leftSide, Double_t siTime,
+                                             Double_t timeWindow) {
+  // Function to match strips and chains by fitting with time individually (using Hough 2D)
+  // Then is able to correlate strips and chains by time. Requires multiple time steps in both strips and chains
+  // After the fit, it goes through each chain and finds strips based off of the fit when match within the timeWindow input parameter
+  // Position transform = 10.5 + 1.75/2 + 1.75*chain (chain starting at 0)
+  // Row transform = (strip - 1)*2
+  // Row position transform = Row * rowConversion + rowConversionOffset
+
+  std::vector<mmTrack> newChain;
+  for(UInt_t i = 0; i < chain.size(); i++) {
+    mmTrack hit = {0, 0., 0., 0., 0., 0., 0};
+    hit.xPosition = chain[i].row;
+    hit.yPosition = chain[i].time/timeResolution; // Convert to time buckets
+    newChain.push_back(hit);
+  }
+
+  std::vector<mmTrack> newStrip;
+  for(UInt_t i = 0; i < strip.size(); i++) {
+    mmTrack hit = {0, 0., 0., 0., 0., 0., 0};
+    hit.xPosition = strip[i].row;
+    hit.yPosition = strip[i].time/timeResolution; // Convert to time buckets
+    newStrip.push_back(hit);
+  }
+
+  Hough2D *houghChain = new Hough2D();
+  houghChain->SetPoints(newChain);
+  houghChain->CalculateHoughXY();
+  Double_t chainTheta = houghChain->GetMaxThetaXY();
+  Double_t chainD = houghChain->GetMaxDXY();
+  delete houghChain;
+
+  Hough2D *houghStrip = new Hough2D();
+  houghStrip->SetPoints(newStrip);
+  houghStrip->CalculateHoughXY();
+  Double_t stripTheta = houghStrip->GetMaxThetaXY();
+  Double_t stripD = houghStrip->GetMaxDXY();
+  delete houghStrip;
+
+  // Loop through chains and find strips within timeWindow
+  for(UInt_t i = 0; i < chain.size(); i++) {
+    Double_t chainTime = -(cos(chainTheta*M_PI/180.)/sin(chainTheta*M_PI/180.))*chain[i].row +
+        chainD/sin(chainTheta*M_PI/180.);
+    chainTime *= 40.;
+    for(UInt_t j = 0; j < strip.size(); j++) {
+//      Double_t stripTime = strip[j].row*stripP1 + stripP0;
+      Double_t stripTime = -(cos(stripTheta*M_PI/180.)/sin(stripTheta*M_PI/180.))*strip[j].row +
+          stripD/sin(stripTheta*M_PI/180.);
+      stripTime *= 40.;
+      if((stripTime > chainTime - timeWindow) && (stripTime < chainTime + timeWindow)) {
+        // Check if chains and strips are actually within a timebucket
+        if((chain[i].time < strip[j].time - timeResolution) ||
+           (chain[i].time > strip[j].time + timeResolution)) continue;
+        mmTrack hit = {0, 0., 0., 0., 0., 0., 0};
+        Double_t position = 10.5 + 1.75/2 + 1.75*chain[i].row;
+        if(leftSide) position = -position;
+        Int_t row = strip[j].row*2;
+        hit.row = row;
+        hit.xPosition = position;
+        hit.yPosition = hit.row*rowConversion + rowConversionOffset;
+        hit.time = chain[i].time - siTime;
+        hit.energy = strip[j].energy;
+        hit.height = heightOffset - hit.time*driftVelocity;
+        hit.total = 1;
+        stripChainMatched.push_back(hit);
+      }
+    }
   }
 }
