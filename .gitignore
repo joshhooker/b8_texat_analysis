@@ -2,3 +2,9 @@
 *.so
 *.pcm
 .DS_Store
+.idea/
+averageBeamProperties/
+averageBeamTime.out
+build/
+calcExcitationEnergy/
+cmake-build-debug/
