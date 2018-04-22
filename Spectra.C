@@ -444,7 +444,7 @@ void Spectra::Loop() {
     }
 
     // Find if CsI behind Si fired
-    Bool_t punchthrough = false;
+    punchthrough = false;
     for(UInt_t i = 0; i < csiDetect_.size(); i++) {
       if(csiDetect_[i].detect == siDet) {
         punchthrough = true;
@@ -452,6 +452,76 @@ void Spectra::Loop() {
       }
     }
 
+    // Reduce MM Center to one entry per row
+    std::map<Int_t, Double_t> centralPadPosition;
+    std::map<Int_t, Double_t> centralPadTotalEnergy;
+    std::map<Int_t, Double_t> centralPadTime;
+    std::map<Int_t, Int_t> centralPadTotal;
+    for(UInt_t i = 0; i < 128; i++) {
+      centralPadTotal[i] = 0;
+    }
+    for(UInt_t i = 0; i < mmCenterMatched_.size(); i++) {
+      if(centralPadTotal[mmCenterMatched_[i].row] == 0) {
+        centralPadPosition[mmCenterMatched_[i].row] = (mmCenterMatched_[i].column*3.5 - 8.75)*mmCenterMatched_[i].energy;
+        centralPadTotalEnergy[mmCenterMatched_[i].row] = mmCenterMatched_[i].energy;
+        centralPadTime[mmCenterMatched_[i].row] = mmCenterMatched_[i].time;
+      }
+      else {
+        centralPadPosition[mmCenterMatched_[i].row] += (mmCenterMatched_[i].column*3.5 - 8.75)*mmCenterMatched_[i].energy;
+        centralPadTotalEnergy[mmCenterMatched_[i].row] += mmCenterMatched_[i].energy;
+        centralPadTime[mmCenterMatched_[i].row] += mmCenterMatched_[i].time;
+      }
+      centralPadTotal[mmCenterMatched_[i].row]++;
+    }
+
+    std::vector<mmTrack> mmCenterBeamTotal;
+    std::map<Int_t, Double_t>::iterator it;
+    for(it = centralPadPosition.begin(); it != centralPadPosition.end(); it++) {
+      Int_t row = it->first;
+      mmTrack hit = {0, 0., 0., 0., 0., 0., 0};
+      hit.row = row;
+      hit.xPosition = centralPadPosition[row]/centralPadTotalEnergy[row];
+      hit.yPosition = row*rowConversion + rowConversionOffset;
+      hit.time = centralPadTime[row]/static_cast<Double_t>(centralPadTotal[row]) - siTime;
+      hit.energy = centralPadTotalEnergy[row];
+      hit.height = heightOffset - hit.time*driftVelocity;
+      hit.total = centralPadTotal[row];
+      mmCenterBeamTotal.push_back(hit);
+    }
+
+    // Sorting mmCenterBeamTotal
+    if(mmCenterBeamTotal.size() > 0) {
+      std::sort(mmCenterBeamTotal.begin(), mmCenterBeamTotal.end(), sortByRowMMTrack());
+    }
+
+    // Sorting mmLeftChain
+    if(mmLeftChain_.size() > 0) {
+      std::sort(mmLeftChain_.begin(), mmLeftChain_.end(), sortByRowMMStripChain());
+    }
+
+    // Sorting mmLeftStrip
+    if(mmLeftStrip_.size() > 0) {
+      std::sort(mmLeftStrip_.begin(), mmLeftStrip_.end(), sortByRowMMStripChain());
+    }
+
+    // Sorting mmRightChain
+    if(mmRightChain_.size() > 0) {
+      std::sort(mmRightChain_.begin(), mmRightChain_.end(), sortByRowMMStripChain());
+    }
+
+    // Sorting mmRightStrip
+    if(mmRightStrip_.size() > 0) {
+      std::sort(mmRightStrip_.begin(), mmRightStrip_.end(), sortByRowMMStripChain());
+    }
+
+    std::vector<mmTrack> stripChainMatched;
+    std::vector<mmTrack> stripChainRaw;
+    if(mmLeftChain_.size() > 0 && mmLeftStrip_.size() > 0) {
+      StripChainMatch(stripChainMatched, stripChainRaw, mmLeftChain_, mmLeftStrip_, true, siTime);
+    }
+    if(mmRightChain_.size() > 0 && mmRightStrip_.size() > 0) {
+      StripChainMatch(stripChainMatched, stripChainRaw, mmRightChain_, mmRightStrip_, false, siTime);
+    }
 
     //  ** End of event by event analysis ** //
   }

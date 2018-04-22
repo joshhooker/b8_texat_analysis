@@ -232,10 +232,7 @@ private:
   Double_t siEnergy;
   Double_t siEnergyCal;
   Double_t siTime;
-  Double_t trackForwardSiX;
-  Double_t trackForwardSiZ;
-  Double_t trackLeftSiY;
-  Double_t trackLeftSiZ;
+  Bool_t punchthrough;
 
 };
 #endif
@@ -1035,6 +1032,7 @@ inline void Spectra::InitTree() {
   outTree->Branch("siChannel", &siChannel);
   outTree->Branch("siEnergy", &siEnergy);
   outTree->Branch("siTime", &siTime);
+  outTree->Branch("punchthrough", &punchthrough);
   return;
 }
 
