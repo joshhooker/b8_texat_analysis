@@ -138,10 +138,12 @@ private:
 private:
   void InitHistograms();
 
+  TH1F* hIonizationChamberE;
+  TH1F* hIonizationChamberT;
+
   TH1F* hSiEForwardTotal[10];
   TH1F* hSiEForwardTotalCal[10];
   TH1F* hSiTForwardTotal[10];
-
   TH1F* hSiEForward[10][4];
   TH1F* hSiEForwardCal[10][4];
   TH1F* hSiTForward[10][4];
@@ -149,7 +151,6 @@ private:
   TH1F* hSiELeftTotal[6];
   TH1F* hSiELeftTotalCal[6];
   TH1F* hSiTLeftTotal[6];
-
   TH1F* hSiELeft[6][4];
   TH1F* hSiELeftCal[6][4];
   TH1F* hSiTLeft[6][4];
@@ -165,8 +166,21 @@ private:
   TH2F* hSiCsIForward[10];
   TH2F* hSiCsILeft[6];
 
-  TH1F* hCSDet5;
-  TH1F* hCSDet5Counts;
+  TH2F* hdEEForwardCenterTotal;
+  TH2F* hdEEForwardCenterTotalCal;
+  TH2F* hdEEForwardLeftTotal;
+  TH2F* hdEEForwardLeftTotalCal;
+  TH2F* hdEEForwardRightTotal;
+  TH2F* hdEEForwardRightTotalCal;
+  TH2F* hdEELeftWallTotal;
+  TH2F* hdEELeftWallTotalCal;
+  TH2F* hdEEForward[10];
+  TH2F* hdEEForwardCal[10];
+  TH2F* hdEELeft[6];
+  TH2F* hdEELeftCal[6];
+
+  TH2F* hVertexSiEForward[10];
+  TH2F* hVertexSiELeft[6];
 
 // Silicon Energy Calibration
 private:
@@ -233,6 +247,10 @@ private:
   Double_t siEnergyCal;
   Double_t siTime;
   Bool_t punchthrough;
+  Double_t dE;
+  Double_t vertexPositionX;
+  Double_t vertexPositionY;
+  Double_t vertexPositionZ;
 
 };
 #endif
@@ -832,87 +850,98 @@ inline void Spectra::InitChannelMap() {
 inline void Spectra::InitHistograms() {
   printf("Initializing Histograms\n");
 
+  // Ionization Chamber
+  hIonizationChamberE = new TH1F("icE", "icE", 500, 0, 4000);
+  hIonizationChamberE->GetXaxis()->SetTitle("Energy [channels]"); hIonizationChamberE->GetXaxis()->CenterTitle();
+  hIonizationChamberE->GetYaxis()->SetTitle("Counts"); hIonizationChamberE->GetYaxis()->CenterTitle();
+  hIonizationChamberE->GetYaxis()->SetTitleOffset(1.4);
+
+  hIonizationChamberT = new TH1F("icT", "icT", 500, 0, 20000);
+  hIonizationChamberT->GetXaxis()->SetTitle("Time [ns]"); hIonizationChamberT->GetXaxis()->CenterTitle();
+  hIonizationChamberT->GetYaxis()->SetTitle("Counts"); hIonizationChamberT->GetYaxis()->CenterTitle();
+  hIonizationChamberT->GetYaxis()->SetTitleOffset(1.4);
+
   // Histograms for the Forward Si Detectors
   for(UInt_t i = 0; i < 10; i++) {
-    TString name = Form("siEForward_d%d", i + 1);
+    TString name = Form("siEForward_d%d", i);
     hSiEForwardTotal[i] = new TH1F(name, name, 500, 0, 4000);
-    hSiEForwardTotal[i]->GetXaxis()->SetTitle("Channels"); hSiEForwardTotal[i]->GetXaxis()->CenterTitle();
+    hSiEForwardTotal[i]->GetXaxis()->SetTitle("Energy [channels]"); hSiEForwardTotal[i]->GetXaxis()->CenterTitle();
     hSiEForwardTotal[i]->GetYaxis()->SetTitle("Counts"); hSiEForwardTotal[i]->GetYaxis()->CenterTitle();
     hSiEForwardTotal[i]->GetYaxis()->SetTitleOffset(1.4);
 
-    name = Form("siEForwardCal_d%d", i + 1);
+    name = Form("siEForwardCal_d%d", i);
     hSiEForwardTotalCal[i] = new TH1F(name, name, 2000, 0, 16000);
     hSiEForwardTotalCal[i]->GetXaxis()->SetTitle("Energy [keV]"); hSiEForwardTotalCal[i]->GetXaxis()->CenterTitle();
     hSiEForwardTotalCal[i]->GetYaxis()->SetTitle("Counts"); hSiEForwardTotalCal[i]->GetYaxis()->CenterTitle();
     hSiEForwardTotalCal[i]->GetYaxis()->SetTitleOffset(1.4);
 
-    name = Form("siTForward_d%d", i + 1);
+    name = Form("siTForward_d%d", i);
     hSiTForwardTotal[i] = new TH1F(name, name, 2500, 0, 20000);
-    hSiTForwardTotal[i]->GetXaxis()->SetTitle("Channels"); hSiTForwardTotal[i]->GetXaxis()->CenterTitle();
+    hSiTForwardTotal[i]->GetXaxis()->SetTitle("Time [ns]"); hSiTForwardTotal[i]->GetXaxis()->CenterTitle();
     hSiTForwardTotal[i]->GetYaxis()->SetTitle("Counts"); hSiTForwardTotal[i]->GetYaxis()->CenterTitle();
     hSiTForwardTotal[i]->GetYaxis()->SetTitleOffset(1.4);
 
     for(UInt_t j = 0; j < 4; j++) {
-      TString name = Form("siEForward_d%d_q%d_ch%d", i + 1, j + 1, siForwardChannel[i][j]);
+      TString name = Form("siEForward_d%d_q%d_ch%d", i, j, siForwardChannel[i][j]);
       hSiEForward[i][j] = new TH1F(name, name, 1000, 0, 1000);
-      hSiEForward[i][j]->GetXaxis()->SetTitle("Channels"); hSiEForward[i][j]->GetXaxis()->CenterTitle();
+      hSiEForward[i][j]->GetXaxis()->SetTitle("Energy [channels]"); hSiEForward[i][j]->GetXaxis()->CenterTitle();
       hSiEForward[i][j]->GetYaxis()->SetTitle("Counts"); hSiEForward[i][j]->GetYaxis()->CenterTitle();
       hSiEForward[i][j]->GetYaxis()->SetTitleOffset(1.4);
 
-      name = Form("siEForwardCal_d%d_q%d_ch%d", i + 1, j + 1, siForwardChannel[i][j]);
+      name = Form("siEForwardCal_d%d_q%d_ch%d", i, j, siForwardChannel[i][j]);
       hSiEForwardCal[i][j] = new TH1F(name, name, 500, 0, 4000);
-      hSiEForwardCal[i][j]->GetXaxis()->SetTitle("Channels"); hSiEForwardCal[i][j]->GetXaxis()->CenterTitle();
+      hSiEForwardCal[i][j]->GetXaxis()->SetTitle("Energy [keV]"); hSiEForwardCal[i][j]->GetXaxis()->CenterTitle();
       hSiEForwardCal[i][j]->GetYaxis()->SetTitle("Counts"); hSiEForwardCal[i][j]->GetYaxis()->CenterTitle();
       hSiEForwardCal[i][j]->GetYaxis()->SetTitleOffset(1.4);
 
-      name = Form("siTForward_d%d_q%d_ch%d", i + 1, j + 1, siForwardChannel[i][j]);
+      name = Form("siTForward_d%d_q%d_ch%d", i, j, siForwardChannel[i][j]);
       hSiTForward[i][j] = new TH1F(name, name, 500, 0, 4000);
-      hSiTForward[i][j]->GetXaxis()->SetTitle("Channels"); hSiTForward[i][j]->GetXaxis()->CenterTitle();
+      hSiTForward[i][j]->GetXaxis()->SetTitle("Time [ns]"); hSiTForward[i][j]->GetXaxis()->CenterTitle();
       hSiTForward[i][j]->GetYaxis()->SetTitle("Counts"); hSiTForward[i][j]->GetYaxis()->CenterTitle();
       hSiTForward[i][j]->GetYaxis()->SetTitleOffset(1.4);
     }
 
-    name = Form("siCsIForward_d%d", i + 1);
+    name = Form("siCsIForward_d%d", i);
     hSiCsIForward[i] = new TH2F(name, name, 500, 0, 4000, 500, 0, 4000);
   }
 
   // Histograms for the Beam Left Si Detectors
   for(UInt_t i = 0; i < 6; i++) {
     if(i > 7) break;
-    TString name = Form("siELeft_d%d", i + 1);
+    TString name = Form("siELeft_d%d", i);
     hSiELeftTotal[i] = new TH1F(name, name, 500, 0, 4000);
-    hSiELeftTotal[i]->GetXaxis()->SetTitle("Channels"); hSiELeftTotal[i]->GetXaxis()->CenterTitle();
+    hSiELeftTotal[i]->GetXaxis()->SetTitle("Energy [channels]"); hSiELeftTotal[i]->GetXaxis()->CenterTitle();
     hSiELeftTotal[i]->GetYaxis()->SetTitle("Counts"); hSiELeftTotal[i]->GetYaxis()->CenterTitle();
     hSiELeftTotal[i]->GetYaxis()->SetTitleOffset(1.4);
 
-    name = Form("siELeftCal_d%d", i + 1);
+    name = Form("siELeftCal_d%d", i);
     hSiELeftTotalCal[i] = new TH1F(name, name, 2000, 0, 16000);
     hSiELeftTotalCal[i]->GetXaxis()->SetTitle("Energy [keV]"); hSiELeftTotalCal[i]->GetXaxis()->CenterTitle();
     hSiELeftTotalCal[i]->GetYaxis()->SetTitle("Counts"); hSiELeftTotalCal[i]->GetYaxis()->CenterTitle();
     hSiELeftTotalCal[i]->GetYaxis()->SetTitleOffset(1.4);
 
-    name = Form("siTLeft_d%d", i + 1);
+    name = Form("siTLeft_d%d", i);
     hSiTLeftTotal[i] = new TH1F(name, name, 2500, 0, 20000);
-    hSiTLeftTotal[i]->GetXaxis()->SetTitle("Channels"); hSiTLeftTotal[i]->GetXaxis()->CenterTitle();
+    hSiTLeftTotal[i]->GetXaxis()->SetTitle("Time [ns]"); hSiTLeftTotal[i]->GetXaxis()->CenterTitle();
     hSiTLeftTotal[i]->GetYaxis()->SetTitle("Counts"); hSiTLeftTotal[i]->GetYaxis()->CenterTitle();
     hSiTLeftTotal[i]->GetYaxis()->SetTitleOffset(1.4);
 
     for(UInt_t j = 0; j < 4; j++) {
-      TString name = Form("siELeft_d%d_q%d_ch%d", i + 1, j + 1, siLeftChannel[i][j]);
+      TString name = Form("siELeft_d%d_q%d_ch%d", i, j, siLeftChannel[i][j]);
       hSiELeft[i][j] = new TH1F(name, name, 1000, 0, 1000);
-      hSiELeft[i][j]->GetXaxis()->SetTitle("Channels"); hSiELeft[i][j]->GetXaxis()->CenterTitle();
+      hSiELeft[i][j]->GetXaxis()->SetTitle("Energy [channels]"); hSiELeft[i][j]->GetXaxis()->CenterTitle();
       hSiELeft[i][j]->GetYaxis()->SetTitle("Counts"); hSiELeft[i][j]->GetYaxis()->CenterTitle();
       hSiELeft[i][j]->GetYaxis()->SetTitleOffset(1.4);
 
-      name = Form("siELeftCal_d%d_q%d_ch%d", i + 1, j + 1, siLeftChannel[i][j]);
+      name = Form("siELeftCal_d%d_q%d_ch%d", i, j, siLeftChannel[i][j]);
       hSiELeftCal[i][j] = new TH1F(name, name, 500, 0, 4000);
-      hSiELeftCal[i][j]->GetXaxis()->SetTitle("Channels"); hSiELeftCal[i][j]->GetXaxis()->CenterTitle();
+      hSiELeftCal[i][j]->GetXaxis()->SetTitle("Energy [keV]"); hSiELeftCal[i][j]->GetXaxis()->CenterTitle();
       hSiELeftCal[i][j]->GetYaxis()->SetTitle("Counts"); hSiELeftCal[i][j]->GetYaxis()->CenterTitle();
       hSiELeftCal[i][j]->GetYaxis()->SetTitleOffset(1.4);
 
-      name = Form("siTLeft_d%d_q%d_ch%d", i + 1, j + 1, siLeftChannel[i][j]);
+      name = Form("siTLeft_d%d_q%d_ch%d", i, j, siLeftChannel[i][j]);
       hSiTLeft[i][j] = new TH1F(name, name, 500, 0, 4000);
-      hSiTLeft[i][j]->GetXaxis()->SetTitle("Channels"); hSiTLeft[i][j]->GetXaxis()->CenterTitle();
+      hSiTLeft[i][j]->GetXaxis()->SetTitle("Time [ns]"); hSiTLeft[i][j]->GetXaxis()->CenterTitle();
       hSiTLeft[i][j]->GetYaxis()->SetTitle("Counts"); hSiTLeft[i][j]->GetYaxis()->CenterTitle();
       hSiTLeft[i][j]->GetYaxis()->SetTitleOffset(1.4);
     }
@@ -920,44 +949,98 @@ inline void Spectra::InitHistograms() {
 
   // Histograms for the Forward CsI Detectors
   for(UInt_t i = 0; i < 10; i++) {
-    TString name = Form("CsIEForward_d%d_ch%d", i + 1, csiForwardChannel[i]);
+    TString name = Form("CsIEForward_d%d_ch%d", i, csiForwardChannel[i]);
     hCsIEForward[i] = new TH1F(name, name, 1000, 0, 4000);
-    hCsIEForward[i]->GetXaxis()->SetTitle("Channels"); hCsIEForward[i]->GetXaxis()->CenterTitle();
+    hCsIEForward[i]->GetXaxis()->SetTitle("Energy [channels]"); hCsIEForward[i]->GetXaxis()->CenterTitle();
     hCsIEForward[i]->GetYaxis()->SetTitle("Counts"); hCsIEForward[i]->GetYaxis()->CenterTitle();
     hCsIEForward[i]->GetYaxis()->SetTitleOffset(1.4);
 
-    name = Form("CsIEForwardCal_d%d_ch%d", i + 1, csiForwardChannel[i]);
+    name = Form("CsIEForwardCal_d%d_ch%d", i, csiForwardChannel[i]);
     hCsIEForwardCal[i] = new TH1F(name, name, 1000, 0, 4000);
-    hCsIEForwardCal[i]->GetXaxis()->SetTitle("Channels"); hCsIEForwardCal[i]->GetXaxis()->CenterTitle();
+    hCsIEForwardCal[i]->GetXaxis()->SetTitle("Energy [keV]"); hCsIEForwardCal[i]->GetXaxis()->CenterTitle();
     hCsIEForwardCal[i]->GetYaxis()->SetTitle("Counts"); hCsIEForwardCal[i]->GetYaxis()->CenterTitle();
     hCsIEForwardCal[i]->GetYaxis()->SetTitleOffset(1.4);
 
-    name = Form("CsITForward_d%d_ch%d", i + 1, csiForwardChannel[i]);
+    name = Form("CsITForward_d%d_ch%d", i, csiForwardChannel[i]);
     hCsITForward[i] = new TH1F(name, name, 1000, 0, 20000);
-    hCsITForward[i]->GetXaxis()->SetTitle("Channels"); hCsITForward[i]->GetXaxis()->CenterTitle();
+    hCsITForward[i]->GetXaxis()->SetTitle("Time [ns]"); hCsITForward[i]->GetXaxis()->CenterTitle();
     hCsITForward[i]->GetYaxis()->SetTitle("Counts"); hCsITForward[i]->GetYaxis()->CenterTitle();
     hCsITForward[i]->GetYaxis()->SetTitleOffset(1.4);
   }
 
   // Histograms for the Beam Left CsI Detectors
   for(UInt_t i = 0; i < 6; i++) {
-    TString name = Form("CsIELeft_d%d_ch%d", i + 1, csiLeftChannel[i]);
+    TString name = Form("CsIELeft_d%d_ch%d", i, csiLeftChannel[i]);
     hCsIELeft[i] = new TH1F(name,name,1000,0,4000);
-    hCsIELeft[i]->GetXaxis()->SetTitle("Channels"); hCsIELeft[i]->GetXaxis()->CenterTitle();
+    hCsIELeft[i]->GetXaxis()->SetTitle("Energy [channels]"); hCsIELeft[i]->GetXaxis()->CenterTitle();
     hCsIELeft[i]->GetYaxis()->SetTitle("Counts"); hCsIELeft[i]->GetYaxis()->CenterTitle();
     hCsIELeft[i]->GetYaxis()->SetTitleOffset(1.4);
 
-    name = Form("CsIELeftCal_d%d_ch%d", i + 1, csiLeftChannel[i]);
+    name = Form("CsIELeftCal_d%d_ch%d", i, csiLeftChannel[i]);
     hCsIELeftCal[i] = new TH1F(name,name,1000,0,4000);
-    hCsIELeftCal[i]->GetXaxis()->SetTitle("Channels"); hCsIELeftCal[i]->GetXaxis()->CenterTitle();
+    hCsIELeftCal[i]->GetXaxis()->SetTitle("Energy [keV]"); hCsIELeftCal[i]->GetXaxis()->CenterTitle();
     hCsIELeftCal[i]->GetYaxis()->SetTitle("Counts"); hCsIELeftCal[i]->GetYaxis()->CenterTitle();
     hCsIELeftCal[i]->GetYaxis()->SetTitleOffset(1.4);
 
-    name = Form("CsITLeft_d%d_ch%d", i + 1, csiLeftChannel[i]);
+    name = Form("CsITLeft_d%d_ch%d", i, csiLeftChannel[i]);
     hCsITLeft[i] = new TH1F(name,name,1000,0,20000);
-    hCsITLeft[i]->GetXaxis()->SetTitle("Channels"); hCsITLeft[i]->GetXaxis()->CenterTitle();
+    hCsITLeft[i]->GetXaxis()->SetTitle("Time [ns]"); hCsITLeft[i]->GetXaxis()->CenterTitle();
     hCsITLeft[i]->GetYaxis()->SetTitle("Counts"); hCsITLeft[i]->GetYaxis()->CenterTitle();
     hCsITLeft[i]->GetYaxis()->SetTitleOffset(1.4);
+  }
+
+  // dE vs E Histograms
+  hdEEForwardCenterTotal = new TH2F("dEEForwardCenterTotal", "dEEForwardCenterTotal", 500, 0, 4000, 500, 0, 4000);
+  hdEEForwardCenterTotal->GetXaxis()->SetTitle("Si Energy [channels]"); hdEEForwardCenterTotal->GetXaxis()->CenterTitle();
+  hdEEForwardCenterTotal->GetYaxis()->SetTitle("dE [channels]"); hdEEForwardCenterTotal->GetYaxis()->CenterTitle();
+  hdEEForwardCenterTotal->GetYaxis()->SetTitleOffset(1.4);
+
+  hdEEForwardLeftTotal = new TH2F("dEEForwardLeftTotal", "dEEForwardLeftTotal", 500, 0, 4000, 500, 0, 4000);
+  hdEEForwardLeftTotal->GetXaxis()->SetTitle("Si Energy [channels]"); hdEEForwardLeftTotal->GetXaxis()->CenterTitle();
+  hdEEForwardLeftTotal->GetYaxis()->SetTitle("dE [channels]"); hdEEForwardLeftTotal->GetYaxis()->CenterTitle();
+  hdEEForwardLeftTotal->GetYaxis()->SetTitleOffset(1.4);
+
+  hdEEForwardRightTotal = new TH2F("dEEForwardRightTotal", "dEEForwardRightTotal", 500, 0, 4000, 500, 0, 4000);
+  hdEEForwardRightTotal->GetXaxis()->SetTitle("Si Energy [channels]"); hdEEForwardRightTotal->GetXaxis()->CenterTitle();
+  hdEEForwardRightTotal->GetYaxis()->SetTitle("dE [channels]"); hdEEForwardRightTotal->GetYaxis()->CenterTitle();
+  hdEEForwardRightTotal->GetYaxis()->SetTitleOffset(1.4);
+
+  hdEELeftWallTotal = new TH2F("dEELeftWallTotal", "dEELeftWallTotal", 500, 0, 4000, 500, 0, 4000);
+  hdEELeftWallTotal->GetXaxis()->SetTitle("Si Energy [channels]"); hdEELeftWallTotal->GetXaxis()->CenterTitle();
+  hdEELeftWallTotal->GetYaxis()->SetTitle("dE [channels]"); hdEELeftWallTotal->GetYaxis()->CenterTitle();
+  hdEELeftWallTotal->GetYaxis()->SetTitleOffset(1.4);
+
+  for(UInt_t i = 0; i < 10; i++) {
+    TString name = Form("dEEForward_d%d", i);
+    hdEEForward[i] = new TH2F(name, name, 500, 0, 4000, 500, 0, 4000);
+    hdEEForward[i]->GetXaxis()->SetTitle("Si Energy [channels]"); hdEEForward[i]->GetXaxis()->CenterTitle();
+    hdEEForward[i]->GetYaxis()->SetTitle("dE [channels]"); hdEEForward[i]->GetYaxis()->CenterTitle();
+    hdEEForward[i]->GetYaxis()->SetTitleOffset(1.4);
+  }
+
+  for(UInt_t i = 0; i < 6; i++) {
+    TString name = Form("dEELeft_d%d", i);
+    hdEELeft[i] = new TH2F(name, name, 500, 0, 4000, 500, 0, 4000);
+    hdEELeft[i]->GetXaxis()->SetTitle("Si Energy [channels]"); hdEELeft[i]->GetXaxis()->CenterTitle();
+    hdEELeft[i]->GetYaxis()->SetTitle("dE [channels]"); hdEELeft[i]->GetYaxis()->CenterTitle();
+    hdEELeft[i]->GetYaxis()->SetTitleOffset(1.4);
+  }
+
+  // Vertex vs E Histograms
+  for(UInt_t i = 0; i < 10; i++) {
+    TString name = Form("vertexSiEForward_d%d", i);
+    hVertexSiEForward[i] = new TH2F(name, name, 500, 0, 4000, 500, -250, 300);
+    hVertexSiEForward[i]->GetXaxis()->SetTitle("Si Energy [channels]"); hVertexSiEForward[i]->GetXaxis()->CenterTitle();
+    hVertexSiEForward[i]->GetYaxis()->SetTitle("Vertex [mm]"); hVertexSiEForward[i]->GetYaxis()->CenterTitle();
+    hVertexSiEForward[i]->GetYaxis()->SetTitleOffset(1.4);
+  }
+
+  for(UInt_t i = 0; i < 6; i++) {
+    TString name = Form("vertexSiELeft_d%d", i);
+    hVertexSiELeft[i] = new TH2F(name, name, 500, 0, 4000, 500, -250, 300);
+    hVertexSiELeft[i]->GetXaxis()->SetTitle("Si Energy [channels]"); hVertexSiELeft[i]->GetXaxis()->CenterTitle();
+    hVertexSiELeft[i]->GetYaxis()->SetTitle("Vertex [mm]"); hVertexSiELeft[i]->GetYaxis()->CenterTitle();
+    hVertexSiELeft[i]->GetYaxis()->SetTitleOffset(1.4);
   }
 }
 
@@ -1033,6 +1116,10 @@ inline void Spectra::InitTree() {
   outTree->Branch("siEnergy", &siEnergy);
   outTree->Branch("siTime", &siTime);
   outTree->Branch("punchthrough", &punchthrough);
+  outTree->Branch("dE", &dE);
+  outTree->Branch("vertexPositionX", &vertexPositionX);
+  outTree->Branch("vertexPositionY", &vertexPositionY);
+  outTree->Branch("vertexPositionZ", &vertexPositionZ);
   return;
 }
 
