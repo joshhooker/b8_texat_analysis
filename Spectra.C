@@ -24,13 +24,13 @@ TChain* MakeChain() {
 
   // chain->Add(PathToFiles+"004.root");
   chain->Add(PathToFiles+"175.root");
-  chain->Add(PathToFiles+"178.root");
-  chain->Add(PathToFiles+"180.root");
-  chain->Add(PathToFiles+"181.root");
-  chain->Add(PathToFiles+"182.root");
-  chain->Add(PathToFiles+"183.root");
-  chain->Add(PathToFiles+"184.root");
-  chain->Add(PathToFiles+"185.root");
+  // chain->Add(PathToFiles+"178.root");
+  // chain->Add(PathToFiles+"180.root");
+  // chain->Add(PathToFiles+"181.root");
+  // chain->Add(PathToFiles+"182.root");
+  // chain->Add(PathToFiles+"183.root");
+  // chain->Add(PathToFiles+"184.root");
+  // chain->Add(PathToFiles+"185.root");
   // chain->Add(PathToFiles+"186.root");
   // chain->Add(PathToFiles+"187.root");
   // chain->Add(PathToFiles+"188.root");
@@ -121,8 +121,9 @@ void Spectra::Loop() {
   printf("Starting Main Loop\n");
 
   Long64_t nbytes = 0, nb = 0;
-  // for(Long64_t jentry = 0; jentry < 4000; jentry++) {
-  for(Long64_t jentry = 0; jentry < nentries; jentry++) {
+  for(Long64_t jentry = 0; jentry < 4000; jentry++) {
+  // for(Long64_t jentry = 3877; jentry < 3878; jentry++) {
+  // for(Long64_t jentry = 0; jentry < nentries; jentry++) {
     Long64_t ientry = LoadTree(jentry);
     if(ientry < 0) break;
     nb = fChain->GetEntry(jentry);   nbytes += nb;
@@ -445,6 +446,7 @@ void Spectra::Loop() {
     for(it = centralPadPosition.begin(); it != centralPadPosition.end(); it++) {
       Int_t row = it->first;
       mmTrack hit = {0, 0., 0., 0., 0., 0., 0};
+      if(centralPadTotalEnergy[row] == 0) continue;
       hit.row = row;
       hit.xPosition = centralPadPosition[row]/centralPadTotalEnergy[row];
       hit.yPosition = row*rowConversion + rowConversionOffset;
@@ -554,12 +556,14 @@ void Spectra::Loop() {
 
     // Find vertex using the proton track in side regions
     vertexPositionX = 0.;
-    vertexPositionY = -200.;
+    vertexPositionY = -400.;
     vertexPositionZ = 0.;
     if(!central) {
       // for(UInt_t i = 0; i < protonTrack.size(); i++) {
         // printf("%f %f %f\n", protonTrack[i].xPosition, protonTrack[i].yPosition, protonTrack[i].height);
       // }
+
+      // std::cout << jentry << '\t' << siDet << '\t' << mmRightChain_.size() << '\t' << mmRightStrip_.size() << '\t' << protonTrack.size() << std::endl;
 
       FitTrack* fitProton = new FitTrack();
       fitProton->DisableLineFit();
@@ -569,14 +573,13 @@ void Spectra::Loop() {
       delete fitProton;
 
       // Check there were beam ions
-      if(mmCenterBeamTotal.size() < 2) {
-        vertexPositionY = -200.;
+      UInt_t mmCenterSize = mmCenterBeamTotal.size();
+      if(mmCenterBeamTotal.size() < 3) {
+        vertexPositionY = -350.;
         continue;
       }
 
-      // printf("%f %f %f %f %f\n", minDist, parsProton[0], parsProton[1], parsProton[2], parsProton[3]);
-
-      // Loop through beam in central region
+      // Loop through beam in central region starting from last
       Double_t beamX_old = mmCenterBeamTotal[0].xPosition;
       Double_t beamY_old = mmCenterBeamTotal[0].yPosition;
       Double_t beamZ_old = mmCenterBeamTotal[0].height;
@@ -589,6 +592,7 @@ void Spectra::Loop() {
       Double_t protonX = protonX_old;
       Double_t xDiff_old = beamX - protonX_old;
       Double_t xDiff = xDiff_old;
+      // std::cout << jentry << '\t' << mmCenterBeamTotal.size() << std::endl;
       for(UInt_t i = 1; i < mmCenterBeamTotal.size(); i++) {
         beamX = mmCenterBeamTotal[i].xPosition;
         beamY = mmCenterBeamTotal[i].yPosition;
@@ -596,10 +600,12 @@ void Spectra::Loop() {
         line(beamY, parsProton, x, y, z);
         protonX = x;
         xDiff = beamX - protonX;
+        // printf("%lld %f %f %f %f %f %f\n", jentry, beamX_old, beamY_old, beamX, beamY, xDiff, xDiff_old);
         if(xDiff_old * xDiff < 0) {
           Double_t m = (beamY - beamY_old)/(xDiff - xDiff_old);
           Double_t b = beamY - m*xDiff;
-          // printf("%f %f %f %f %f %f %f\n", beamX_old, beamY_old, beamX, beamY, protonX, protonX_old, b);
+          // printf("%lld %f\n", jentry, b);
+          // printf("%lld %f %f %f %f %f %f %f\n", jentry, beamX_old, beamY_old, beamX, beamY, protonX, protonX_old, b);
           vertexPositionX = beamX;
           vertexPositionY = b;
           vertexPositionZ = beamZ;
@@ -609,35 +615,83 @@ void Spectra::Loop() {
         beamY_old = beamY;
         beamZ_old = beamZ;
         protonX_old = protonX;
+        xDiff_old = xDiff;
       }
 
-      // TGraph *hTrackProtonRaw = new TGraph();
-      // for(UInt_t i = 0; i < protonTrack.size(); i++) {
-      //   hTrackProtonRaw->SetPoint(i, protonTrack[i].xPosition, protonTrack[i].yPosition);
-      // }
-      // hTrackProtonRaw->SetMarkerStyle(20);
-      // hTrackProtonRaw->SetMarkerColor(2);
-      // hTrackProtonRaw->SetName(Form("Proton_Raw_Track_%lld", jentry));
-      // hTrackProtonRaw->Write();
-      // delete hTrackProtonRaw;
+      // Check if found vertex over micromegas. If not check backwards
+      if(vertexPositionY == -400) {
+        line(0, parsProton, x, y, z);
+        beamX_old = mmCenterBeamTotal[0].xPosition;
+        beamY_old = 0.;
+        beamZ_old = 0.;
+        beamX = beamX_old;
+        beamY = beamY_old;
+        beamZ = beamZ_old;
+        protonX_old = x;
+        xDiff_old = beamX_old - protonX_old;
+        for(Double_t beamY = -1; beamY > -300; beamY -= 1) {
+          line(beamY, parsProton, x, y, z);
+          protonX = x;
+          xDiff = beamX - x;
+          if(xDiff * xDiff_old < 0) {
+            Double_t m = (beamY - beamY_old)/(xDiff - xDiff_old);
+            Double_t b = beamY - m*xDiff;
+            vertexPositionX = beamX;
+            vertexPositionY = b;
+            vertexPositionZ = 0.;
+            break;
+          }
+          beamY_old = beamY;
+          protonX_old = protonX;
+          xDiff_old = xDiff;
+        }
+      }
+      printf("%lld %d %f\n", jentry, siDet, vertexPositionY);
 
-      // TGraph *hTrackVertex = new TGraph();
-      // hTrackVertex->SetPoint(0, vertexPositionX, vertexPositionY);
-      // hTrackVertex->SetMarkerStyle(20);
-      // hTrackVertex->SetMarkerColor(4);
-      // hTrackVertex->SetName(Form("Vertex_%lld", jentry));
-      // hTrackVertex->Write();
-      // delete hTrackVertex;
+      TGraph *hTrackProtonRaw = new TGraph();
+      for(UInt_t i = 0; i < protonTrack.size(); i++) {
+        hTrackProtonRaw->SetPoint(i, protonTrack[i].xPosition, protonTrack[i].yPosition);
+      }
+      hTrackProtonRaw->SetMarkerStyle(20);
+      hTrackProtonRaw->SetMarkerColor(2);
+      hTrackProtonRaw->SetName(Form("Proton_Raw_Track_%lld", jentry));
+      hTrackProtonRaw->Write();
+      delete hTrackProtonRaw;
 
-      // TGraph *hTrackBeam = new TGraph();
-      // for(UInt_t i = 0; i < mmCenterBeamTotal.size(); i++) {
-      //   hTrackBeam->SetPoint(i, mmCenterBeamTotal[i].xPosition, mmCenterBeamTotal[i].yPosition);
-      // }
-      // hTrackBeam->SetMarkerStyle(20);
-      // hTrackBeam->SetMarkerColor(1);
-      // hTrackBeam->SetName(Form("Beam_Track_%lld", jentry));
-      // hTrackBeam->Write();
-      // delete hTrackBeam;
+      Int_t n = 6000;
+      Double_t t0 = -300.;
+      Double_t dt = 300 - t0;
+      TGraph *hTrackProtonFit = new TGraph();
+      for(Int_t i = 0; i < n; i++) {
+        Double_t t = t0 + dt*i/n;
+        Double_t x, y, z;
+        line(t, parsProton, x, y, z);
+        // std::cout << i << '\t' << x << '\t' << y << '\t' << z << std::endl;
+        hTrackProtonFit->SetPoint(i, x, y);
+      }
+      hTrackProtonFit->SetMarkerStyle(20);
+      hTrackProtonFit->SetMarkerColor(3);
+      hTrackProtonFit->SetName(Form("Proton_Fit_Track_%lld", jentry));
+      hTrackProtonFit->Write();
+      delete hTrackProtonFit;
+
+      TGraph *hTrackVertex = new TGraph();
+      hTrackVertex->SetPoint(0, vertexPositionX, vertexPositionY);
+      hTrackVertex->SetMarkerStyle(20);
+      hTrackVertex->SetMarkerColor(4);
+      hTrackVertex->SetName(Form("Vertex_%lld", jentry));
+      hTrackVertex->Write();
+      delete hTrackVertex;
+
+      TGraph *hTrackBeam = new TGraph();
+      for(UInt_t i = 0; i < mmCenterBeamTotal.size(); i++) {
+        hTrackBeam->SetPoint(i, mmCenterBeamTotal[i].xPosition, mmCenterBeamTotal[i].yPosition);
+      }
+      hTrackBeam->SetMarkerStyle(20);
+      hTrackBeam->SetMarkerColor(1);
+      hTrackBeam->SetName(Form("Beam_Track_%lld", jentry));
+      hTrackBeam->Write();
+      delete hTrackBeam;
     }
 
     if(siDet < 10) {
@@ -652,8 +706,8 @@ void Spectra::Loop() {
   TGraph *h_track_bound = new TGraph();
   h_track_bound->SetMarkerStyle(8);
   h_track_bound->SetMarkerColor(5);
-  h_track_bound->SetPoint(0, -150, 0);
-  h_track_bound->SetPoint(1, 150, 275);
+  h_track_bound->SetPoint(0, -150, -300);
+  h_track_bound->SetPoint(1, 150, 300);
   h_track_bound->SetName("Bound");
   h_track_bound->Write();
   delete h_track_bound;
@@ -692,17 +746,6 @@ void Spectra::Loop() {
   // hMicroMegasCenterEnergyAverageScaled->Write();
   // hMicroMegasCenterTimeAverage->Write();
 
-  // hdEECenterPad->Write();
-  // hdEECenterPadPunchthrough->Write();
-  // hdEECenterPadCal->Write();
-  // hdEECenterPadPunchthroughCal->Write();
-  // hCenterPadTime->Write();
-
-  // hVertexE->Write();
-  // hVertexEPunchthrough->Write();
-  // hVertexECal->Write();
-  // hVertexEPunchthroughCal->Write();
-
   hdEEForwardCenterTotal->Write();
   hdEEForwardLeftTotal->Write();
   hdEEForwardRightTotal->Write();
@@ -723,20 +766,26 @@ void Spectra::Loop() {
 
 void Spectra::StripChainMatch(std::vector<mmTrack> &stripChainMatched, std::vector<mmTrack> &stripChainRaw, std::vector<mmStripChain> chain_,
                               std::vector<mmStripChain> strip_, Bool_t leftSide, Double_t siTime) {
-  // stripChainMatched.clear();
-  // stripChainRaw.clear();
+  stripChainMatched.clear();
+  stripChainRaw.clear();
   std::vector<mmTrack> totalTime0;
   StripChainMatchingTime(totalTime0, chain_, strip_, leftSide, siTime, 0);
   StripChainMatchingTime(stripChainRaw, chain_, strip_, leftSide, siTime, 0);
+
   size_t numTimeBuckets = StripChainTime0TimeBuckets(totalTime0);
-  if(numTimeBuckets < 4) {
+  // std::cout << "Time buckets: " << numTimeBuckets << std::endl;
+  if(numTimeBuckets < 6) {
     StripChainMatchingBoxTime0(stripChainMatched, totalTime0);
     // std::cout << "BoxTime0: " << stripChainMatched.size() << std::endl;
   }
-  else if(chain_.size() > 8 && strip_.size() > 8) {
-    StripChainMatchingTimeSlopeHough(stripChainMatched, chain_, strip_, leftSide, siTime, 10.);
-    // std::cout << "SlopeHough0: " << stripChainMatched.size() << std::endl;
-  }
+  // else if(chain_.size() > 12 && strip_.size() > 12) {
+  //   StripChainMatchingTimeSlopeHough(stripChainMatched, chain_, strip_, leftSide, siTime, 10.);
+  //   if(stripChainMatched.size() < 2) {
+  //     stripChainMatched.clear();
+  //     StripChainMatchingBoxTime0(stripChainMatched, totalTime0);
+  //   }
+  //   // std::cout << "SlopeHough0: " << stripChainMatched.size() << std::endl;
+  // }
   else {
     StripChainMatchingTime(stripChainMatched, chain_, strip_, leftSide, siTime, 0);
     // std::cout << "MatchingTime: " << stripChainMatched.size() << std::endl;
