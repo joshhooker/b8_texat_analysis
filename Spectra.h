@@ -243,9 +243,11 @@ private:
   Int_t siDet;
   Int_t siQuad;
   Int_t siChannel;
-  Double_t siEnergy;
-  Double_t siEnergyCal;
-  Double_t siTime;
+  Float_t siEnergy;
+  Float_t siEnergyCal;
+  Float_t siTime;
+  Float_t csiEnergy;
+  Float_t csiTime;
   Bool_t punchthrough;
   Double_t dE;
   Double_t vertexPositionX;
@@ -1115,6 +1117,8 @@ inline void Spectra::InitTree() {
   outTree->Branch("siChannel", &siChannel);
   outTree->Branch("siEnergy", &siEnergy);
   outTree->Branch("siTime", &siTime);
+  outTree->Branch("csiEnergy", &csiEnergy);
+  outTree->Branch("csiTime", &csiTime);
   outTree->Branch("punchthrough", &punchthrough);
   outTree->Branch("dE", &dE);
   outTree->Branch("vertexPositionX", &vertexPositionX);

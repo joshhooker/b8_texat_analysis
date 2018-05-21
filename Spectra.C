@@ -17,12 +17,14 @@ TChain* MakeChain() {
   TChain *chain = new TChain("mfmData");
 
   // Home
-  TString PathToFiles = "/hd3/research/data/run0817a/rootM2R-MaxModule/run";
+  TString PathToFiles = "/hd3/research/data/run0817a/rootM2R-WaveformReduced/run";
 
   // Laptop
   // TString PathToFiles = "/Users/joshhooker/Desktop/data/run0817a/run";
 
+  // Alpha source test in gas
   // chain->Add(PathToFiles+"004.root");
+
   chain->Add(PathToFiles+"175.root");
   chain->Add(PathToFiles+"178.root");
   chain->Add(PathToFiles+"180.root");
@@ -67,7 +69,9 @@ TChain* MakeChain() {
   chain->Add(PathToFiles+"221.root");
   chain->Add(PathToFiles+"223.root");
   chain->Add(PathToFiles+"224.root");
-  chain->Add(PathToFiles+"232.root");
+
+  // Alpha source test in gas
+  // chain->Add(PathToFiles+"232.root");
 
   return chain;
 }
@@ -411,9 +415,13 @@ void Spectra::Loop() {
 
     // Find if CsI behind Si fired
     punchthrough = false;
+    csiEnergy = 0.;
+    csiTime = 0.;
     for(UInt_t i = 0; i < csiDetect_.size(); i++) {
       if(csiDetect_[i].detect == siDet) {
         punchthrough = true;
+        csiEnergy = csiDetect_[i].energy;
+        csiTime = csiDetect_[i].time;
         hSiCsIForward[siDet]->Fill(siEnergy, csiDetect_[i].energy);
       }
     }
