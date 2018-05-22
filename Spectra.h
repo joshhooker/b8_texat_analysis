@@ -178,6 +178,7 @@ private:
   TH2F* hdEEForwardCal[10];
   TH2F* hdEELeft[6];
   TH2F* hdEELeftCal[6];
+  TH2F* hAngleEForward[10];
 
   TH2F* hVertexSiEForward[10];
   TH2F* hVertexSiELeft[6];
@@ -249,10 +250,11 @@ private:
   Float_t csiEnergy;
   Float_t csiTime;
   Bool_t punchthrough;
-  Double_t dE;
-  Double_t vertexPositionX;
-  Double_t vertexPositionY;
-  Double_t vertexPositionZ;
+  Float_t dE;
+  Float_t vertexPositionX;
+  Float_t vertexPositionY;
+  Float_t vertexPositionZ;
+  Float_t angle;
 
 };
 #endif
@@ -1044,6 +1046,15 @@ inline void Spectra::InitHistograms() {
     hVertexSiELeft[i]->GetYaxis()->SetTitle("Vertex [mm]"); hVertexSiELeft[i]->GetYaxis()->CenterTitle();
     hVertexSiELeft[i]->GetYaxis()->SetTitleOffset(1.4);
   }
+
+  // Angle vs E Histograms hAngleEForward[10]
+  for(UInt_t i = 0; i < 10; i++) {
+    TString name = Form("angleSiEForward_d%d", i);
+    hAngleEForward[i] = new TH2F(name, name, 500, 0, 4000, 500, 0, 3);
+    hAngleEForward[i]->GetXaxis()->SetTitle("Si Energy [channels]"); hAngleEForward[i]->GetXaxis()->CenterTitle();
+    hAngleEForward[i]->GetYaxis()->SetTitle("Vertex [mm]"); hAngleEForward[i]->GetYaxis()->CenterTitle();
+    hAngleEForward[i]->GetYaxis()->SetTitleOffset(1.4);
+  }
 }
 
 inline void Spectra::InitSiEForwardCalibration() {
@@ -1124,6 +1135,7 @@ inline void Spectra::InitTree() {
   outTree->Branch("vertexPositionX", &vertexPositionX);
   outTree->Branch("vertexPositionY", &vertexPositionY);
   outTree->Branch("vertexPositionZ", &vertexPositionZ);
+  outTree->Branch("angle", &angle);
   return;
 }
 

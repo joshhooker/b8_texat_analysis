@@ -637,6 +637,14 @@ void Spectra::Loop() {
         xDiff_old = xDiff;
       }
 
+      // Find the angle (use 2D angle for now)
+      // Simply use the slope of the x-component and assume the beam is straight
+      // The angle is then theta = atan(|m|) where m in the slope of the x-component (parsProton[1])
+      Float_t m_xcomponent = fabs(parsProton[1]);
+      angle = atan(m_xcomponent);
+
+      if(siDet < 10) hAngleEForward[siDet]->Fill(siEnergy, angle);
+
       // printf("%lld %d %f\n", jentry, siDet, vertexPositionY);
 
       // TGraph *hTrackProtonRaw = new TGraph();
@@ -748,6 +756,10 @@ void Spectra::Loop() {
 
   for(UInt_t i = 0; i < 10; i++) {
     hVertexSiEForward[i]->Write();
+  }
+
+  for(UInt_t i = 0; i < 10; i++) {
+    hAngleEForward[i]->Write();
   }
 
   WriteTree();
