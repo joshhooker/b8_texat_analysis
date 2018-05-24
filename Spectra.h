@@ -186,7 +186,8 @@ private:
 // Silicon Energy Calibration
 private:
   void InitSiEForwardCalibration();
-  std::pair<double, double> siEForwardCalibration[10][4] = {std::make_pair(0., 0.)};
+  std::pair<Float_t, Float_t> siEForwardCalibration[10][4] = {std::make_pair(0., 0.)};
+  std::pair<Float_t, Float_t> siELeftCalibration[6][4] = {std::make_pair(0., 0.)};
 
 // Center Pad Gain Match
 private:
@@ -220,18 +221,18 @@ private:
 private:
   void InitVariables();
   TFile *file;
-  Double_t m1;
-  Double_t m2;
-  Double_t rowConversion;
-  Double_t rowConversionOffset;
-  Double_t heightOffset;
-  Double_t driftVelocity;
-  Double_t timeResolution;
+  Float_t m1;
+  Float_t m2;
+  Float_t rowConversion;
+  Float_t rowConversionOffset;
+  Float_t heightOffset;
+  Float_t driftVelocity;
+  Float_t timeResolution;
   Long64_t entry;
-  Double_t beamEnergy;
-  Double_t density;
-  Double_t distanceHavarToSilicon;
-  Double_t numberB8;
+  Float_t beamEnergy;
+  Float_t density;
+  Float_t distanceHavarToSilicon;
+  Float_t numberB8;
 
   EnergyLoss *boronMethane;
   EnergyLoss *protonMethane;
@@ -1064,7 +1065,8 @@ inline void Spectra::InitSiEForwardCalibration() {
   Int_t var1, var2, var3;
   Double_t slope, intercept;
   while(inSiCalFile >> var1 >> var2 >> var3 >> slope >> intercept) {
-    siEForwardCalibration[var1 - 1][var2 - 1] = std::make_pair(slope, intercept);
+    if(var1 < 10) siEForwardCalibration[var1][var2] = std::make_pair(slope, intercept);
+    else siELeftCalibration[var1 - 10][var2] = std::make_pair(slope, intercept);
   }
   inSiCalFile.close();
 }
