@@ -17,6 +17,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/build")
 set(SCRIPTS
     averageBeamEnergy.out
     b8_methane.dat
+    csiCalibration.dat
     cuts.root
     EnergyLoss.dat
     gainFile.dat

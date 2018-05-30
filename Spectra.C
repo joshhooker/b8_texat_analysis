@@ -25,53 +25,80 @@ TChain* MakeChain() {
   // Alpha source test in gas
   // chain->Add(PathToFiles+"004.root");
 
-  chain->Add(PathToFiles+"175.root");
-  chain->Add(PathToFiles+"178.root");
-  chain->Add(PathToFiles+"180.root");
-  chain->Add(PathToFiles+"181.root");
-  chain->Add(PathToFiles+"182.root");
-  chain->Add(PathToFiles+"183.root");
-  chain->Add(PathToFiles+"184.root");
-  chain->Add(PathToFiles+"185.root");
-  chain->Add(PathToFiles+"186.root");
-  chain->Add(PathToFiles+"187.root");
-  chain->Add(PathToFiles+"188.root");
-  chain->Add(PathToFiles+"189.root");
-  chain->Add(PathToFiles+"190.root");
-  chain->Add(PathToFiles+"191.root");
-  chain->Add(PathToFiles+"192.root");
-  chain->Add(PathToFiles+"193.root");
-  chain->Add(PathToFiles+"195.root");
-  chain->Add(PathToFiles+"196.root");
-  chain->Add(PathToFiles+"197.root");
-  chain->Add(PathToFiles+"198.root");
-  chain->Add(PathToFiles+"199.root");
-  chain->Add(PathToFiles+"200.root");
-  chain->Add(PathToFiles+"201.root");
-  chain->Add(PathToFiles+"202.root");
-  chain->Add(PathToFiles+"203.root");
-  chain->Add(PathToFiles+"204.root");
-  chain->Add(PathToFiles+"205.root");
-  chain->Add(PathToFiles+"206.root");
-  chain->Add(PathToFiles+"207.root");
-  chain->Add(PathToFiles+"208.root");
-  chain->Add(PathToFiles+"210.root");
-  chain->Add(PathToFiles+"211.root");
-  chain->Add(PathToFiles+"212.root");
-  chain->Add(PathToFiles+"213.root");
-  chain->Add(PathToFiles+"214.root");
-  chain->Add(PathToFiles+"215.root");
-  chain->Add(PathToFiles+"216.root");
-  chain->Add(PathToFiles+"217.root");
-  chain->Add(PathToFiles+"218.root");
-  chain->Add(PathToFiles+"219.root");
-  chain->Add(PathToFiles+"220.root");
-  chain->Add(PathToFiles+"221.root");
-  chain->Add(PathToFiles+"223.root");
-  chain->Add(PathToFiles+"224.root");
+  // 12C Runs
+  // chain->Add(PathToFiles + "111.root");
+  // chain->Add(PathToFiles + "113.root");
+  // chain->Add(PathToFiles + "114.root");
+  // chain->Add(PathToFiles + "116.root");
+  // chain->Add(PathToFiles + "117.root");
+  // chain->Add(PathToFiles + "118.root");
+  // chain->Add(PathToFiles + "120.root");
+  // chain->Add(PathToFiles + "121.root");
+  // chain->Add(PathToFiles + "122.root");
+  // chain->Add(PathToFiles + "127.root");
+  // chain->Add(PathToFiles + "128.root");
+  // chain->Add(PathToFiles + "129.root");
+  // chain->Add(PathToFiles + "136.root");
+  // chain->Add(PathToFiles + "138.root");
+  // chain->Add(PathToFiles + "139.root");
+  // chain->Add(PathToFiles + "140.root");
+  // chain->Add(PathToFiles + "141.root");
+  // chain->Add(PathToFiles + "142.root");
+  // chain->Add(PathToFiles + "144.root");
+
+  // 8B beam with IC
+  // chain->Add(PathToFiles + "158.root");
+
+  // 8B Runs
+  chain->Add(PathToFiles + "175.root");
+  chain->Add(PathToFiles + "178.root");
+  chain->Add(PathToFiles + "180.root");
+  chain->Add(PathToFiles + "181.root");
+  chain->Add(PathToFiles + "182.root");
+  chain->Add(PathToFiles + "183.root");
+  chain->Add(PathToFiles + "184.root");
+  chain->Add(PathToFiles + "185.root");
+  chain->Add(PathToFiles + "186.root");
+  chain->Add(PathToFiles + "187.root");
+  chain->Add(PathToFiles + "188.root");
+  chain->Add(PathToFiles + "189.root");
+  chain->Add(PathToFiles + "190.root");
+  chain->Add(PathToFiles + "191.root");
+  chain->Add(PathToFiles + "192.root");
+  chain->Add(PathToFiles + "193.root");
+  chain->Add(PathToFiles + "195.root");
+  chain->Add(PathToFiles + "196.root");
+  chain->Add(PathToFiles + "197.root");
+  chain->Add(PathToFiles + "198.root");
+  chain->Add(PathToFiles + "199.root");
+  chain->Add(PathToFiles + "200.root");
+  chain->Add(PathToFiles + "201.root");
+  chain->Add(PathToFiles + "202.root");
+  chain->Add(PathToFiles + "203.root");
+  chain->Add(PathToFiles + "204.root");
+  chain->Add(PathToFiles + "205.root");
+  chain->Add(PathToFiles + "206.root");
+  chain->Add(PathToFiles + "207.root");
+  chain->Add(PathToFiles + "208.root");
+  chain->Add(PathToFiles + "210.root");
+  chain->Add(PathToFiles + "211.root");
+  chain->Add(PathToFiles + "212.root");
+  chain->Add(PathToFiles + "213.root");
+  chain->Add(PathToFiles + "214.root");
+  chain->Add(PathToFiles + "215.root");
+  chain->Add(PathToFiles + "216.root");
+  chain->Add(PathToFiles + "217.root");
+  chain->Add(PathToFiles + "218.root");
+  chain->Add(PathToFiles + "219.root");
+  chain->Add(PathToFiles + "220.root");
+  chain->Add(PathToFiles + "221.root");
+  chain->Add(PathToFiles + "223.root");
+  chain->Add(PathToFiles + "224.root");
+
+  // Alpha source test in vacuum
 
   // Alpha source test in gas
-  // chain->Add(PathToFiles+"232.root");
+  // chain->Add(PathToFiles + "232.root");
 
   return chain;
 }
@@ -91,27 +118,12 @@ void Spectra::Loop() {
   }
   cutFile->Close();
 
-  ////////////////
-  // Histograms //
-  ////////////////
-
-  TH2F* hMicroMegasCenterCumulative = new TH2F("MM_Center_Cumulative", "MM_Center_Cumulative", 82, -41, 41, 128, 0, 128);
-  TH2F* hMicroMegasCenterEnergyCumulative = new TH2F("MM_Center_Energy_Cumulative", "MM_Center_Energy_Cumulative", 20, -10, 10, 128, 0, 128);
-  TH2F* hMicroMegasCenterEnergyAverage = new TH2F("MM_Center_Energy_Average", "MM_Center_Energy_Average", 20, -10, 10, 128, 0, 128);
-  TH2F* hMicroMegasCenterEnergyAverageScaled = new TH2F("MM_Center_Energy_Average_Scaled", "MM_Center_Energy_Average_Scaled", 20, -10, 10, 128, 0, 128);
-  TH2F* hMicroMegasCenterTimeAverage = new TH2F("MM_Center_Time_Average", "MM_Center_Time_Average", 20, -10, 10, 128, 0, 128);
-
-  TH1F* hMicroMegasStripLeftCumulative = new TH1F("MM_Strip_Left_Cumulative", "MM_Strip_Left_Cumulative", 64, 0, 64);
-  TH1F* hMicroMegasStripRightCumulative = new TH1F("MM_Strip_Right_Cumulative", "MM_Strip_Right_Cumulative", 64, 0, 64);
-
-  TH1F* hMicroMegasChainLeftCumulative = new TH1F("MM_Chain_Left_Cumulative", "MM_Chain_Left_Cumulative", 64, 0, 64);
-  TH1F* hMicroMegasChainRightCumulative = new TH1F("MM_Chain_Right_Cumulative", "MM_Chain_Right_Cumulative", 64, 0, 64);
-
   InitChannelMap();
   InitHistograms();
   InitVariables();
 
   InitSiEForwardCalibration();
+  InitCsIECalibration();
 
   InitCentralPadGainMatch();
   InitAverageBeamEnergy();
@@ -369,15 +381,13 @@ void Spectra::Loop() {
       }
     }
 
-    // Only one silicon should fire
-    if(siDetect_.size() != 1) continue;
-
     hIonizationChamberE->Fill(icE);
     hIonizationChamberT->Fill(icT);
 
-    // if(icE<1250) continue;
-    if(icE < 1400 || icE > 1900) continue;
+    // if(icE < 1400 || icE > 1900) continue;
     if(icT < 5500 || icT > 6500) continue;
+
+    if(siDetect_.size() != 1) continue;
 
     siDet = siDetect_[0].detect;
     siQuad = siDetect_[0].quad;
@@ -387,17 +397,26 @@ void Spectra::Loop() {
     if(siDet < 10) {
       siEnergyCal = siEnergy*siEForwardCalibration[siDet][siQuad].first + siEForwardCalibration[siDet][siQuad].second;
     }
+    else {
+      siEnergyCal = siEnergy*siELeftCalibration[siDet - 10][siQuad].first + siELeftCalibration[siDet - 10][siQuad].second;
+    }
     siTime = siDetect_[0].time;
 
+    if(siEnergyCal < 1) continue;
+
     if(siDet < 10) {
-      hSiEForwardTotal[siDet]->Fill(siEnergy);
-      hSiTForwardTotal[siDet]->Fill(siTime);
+      hSiEForwardDet[siDet]->Fill(siEnergy);
+      hSiEForwardDetCal[siDet]->Fill(siEnergyCal);
+      hSiTForwardDet[siDet]->Fill(siTime);
       hSiEForward[siDet][siQuad]->Fill(siEnergy);
+      hSiEForwardCal[siDet][siQuad]->Fill(siEnergyCal);
     }
     else {
-      hSiELeftTotal[siDet - 10]->Fill(siEnergy);
-      hSiTLeftTotal[siDet - 10]->Fill(siTime);
+      hSiELeftDet[siDet - 10]->Fill(siEnergy);
+      hSiELeftDetCal[siDet - 10]->Fill(siEnergyCal);
+      hSiTLeftDet[siDet - 10]->Fill(siTime);
       hSiELeft[siDet - 10][siQuad]->Fill(siEnergy);
+      hSiELeftCal[siDet - 10][siQuad]->Fill(siEnergyCal);
     }
 
     Bool_t left = false;
@@ -413,16 +432,32 @@ void Spectra::Loop() {
       left = true;
     }
 
+    Bool_t forwardDet = false;
+    Bool_t sideDet = false;
+    if(siDet < 10) forwardDet = true;
+    else sideDet = true;
+
+    if(sideDet) continue;
+
     // Find if CsI behind Si fired
     punchthrough = false;
     csiEnergy = 0.;
+    csiEnergyCal = 0.;
     csiTime = 0.;
     for(UInt_t i = 0; i < csiDetect_.size(); i++) {
       if(csiDetect_[i].detect == siDet) {
-        punchthrough = true;
         csiEnergy = csiDetect_[i].energy;
         csiTime = csiDetect_[i].time;
-        hSiCsIForward[siDet]->Fill(siEnergy, csiDetect_[i].energy);
+        if(siDet < 10) hCsIETForward[siDet]->Fill(csiEnergy, csiTime);
+        else hCsIETLeft[siDet - 10]->Fill(csiEnergy, csiTime);
+        if(csiTime < 11000 || csiTime > 12250) continue;
+        punchthrough = true;
+        if(siDet < 10) csiEnergyCal = csiEnergy*csiEForwardCalibration[siDet].first + csiEForwardCalibration[siDet].second;
+        hSiCsIEForwardDet[siDet]->Fill(siEnergy, csiEnergy);
+        hSiCsIEForwardDetCal[siDet]->Fill(siEnergyCal, csiEnergy);
+
+        hSiCsIEForward[siDet][siQuad]->Fill(siEnergy, csiEnergy);
+        hSiCsIEForwardCal[siDet][siQuad]->Fill(siEnergyCal, csiEnergy);
       }
     }
 
@@ -430,6 +465,7 @@ void Spectra::Loop() {
     std::map<Int_t, Double_t> centralPadPosition;
     std::map<Int_t, Double_t> centralPadTotalEnergy;
     std::map<Int_t, Double_t> centralPadTime;
+    std::map<Int_t, Int_t> centralPadColumn;
     std::map<Int_t, Int_t> centralPadTotal;
     for(UInt_t i = 0; i < 128; i++) {
       centralPadTotal[i] = 0;
@@ -439,6 +475,7 @@ void Spectra::Loop() {
         centralPadPosition[mmCenterMatched_[i].row] = (mmCenterMatched_[i].column*3.5 - 8.75)*mmCenterMatched_[i].energy;
         centralPadTotalEnergy[mmCenterMatched_[i].row] = mmCenterMatched_[i].energy;
         centralPadTime[mmCenterMatched_[i].row] = mmCenterMatched_[i].time;
+        centralPadColumn[mmCenterMatched_[i].row] = mmCenterMatched_[i].column;
       }
       else {
         centralPadPosition[mmCenterMatched_[i].row] += (mmCenterMatched_[i].column*3.5 - 8.75)*mmCenterMatched_[i].energy;
@@ -462,6 +499,8 @@ void Spectra::Loop() {
       hit.energy = centralPadTotalEnergy[row];
       hit.height = heightOffset - hit.time*driftVelocity;
       hit.total = centralPadTotal[row];
+      hMicroMegasCenterCumulative->Fill(centralPadColumn[row], row);
+      hMicroMegasCenterCumulativePosition->Fill(centralPadColumn[row], hit.yPosition);
       if(row < 112) {
         mmCenterBeamTotal.push_back(hit);
       }
@@ -470,9 +509,7 @@ void Spectra::Loop() {
       }
     }
 
-    if(mmCenterBeamTotal.size() == 0) continue;
-
-    // Sorting mmCenterBeamTotal
+    // Sorting mmCenterBeamTotal by row
     if(mmCenterBeamTotal.size() > 0) {
       std::sort(mmCenterBeamTotal.begin(), mmCenterBeamTotal.end(), sortByRowMMTrack());
     }
@@ -521,37 +558,30 @@ void Spectra::Loop() {
         }
       }
       dE /= totalRows;
-      hdEEForwardCenterTotal->Fill(siEnergy, dE);
     }
     else if(right) { // Forward beam right detectors
       for(UInt_t i = 0; i < mmRightStrip_.size(); i++) {
         dE += mmRightStrip_[i].energy;
       }
       dE /= mmRightStrip_.size();
-      hdEEForwardRightTotal->Fill(siEnergy, dE);
     }
     else if(left && siDet < 10) { // Forward beam left detectors
       for(UInt_t i = 0; i < mmLeftStrip_.size(); i++) {
         dE += mmLeftStrip_[i].energy;
       }
       dE /= mmLeftStrip_.size();
-      hdEEForwardLeftTotal->Fill(siEnergy, dE);
     }
     else if(left && siDet > 9) { // Left wall detectors
       for(UInt_t i = 0; i < mmLeftStrip_.size(); i++) {
         dE += mmLeftStrip_[i].energy;
       }
       dE /= mmLeftStrip_.size();
-      hdEELeftWallTotal->Fill(siEnergy, dE);
     }
 
-    if(siDet < 10) {
-      hdEEForward[siDet]->Fill(siEnergy, dE);
-      if(!dEEForwardCut[siDet]->IsInside(siEnergy, dE)) continue;
-    }
-    else {
-      continue;
-    }
+    hdEEForward[siDet]->Fill(siEnergy, dE);
+    hdEEForwardCal[siDet]->Fill(siEnergyCal, dE);
+    hdEEForwardCalTotal[siDet]->Fill(siEnergyCal + csiEnergyCal, dE);
+    if(!dEEForwardCut[siDet]->IsInside(siEnergy, dE)) continue;
 
     // Assign proton track for side regions
     std::vector<mmTrack> protonTrack;
@@ -583,67 +613,113 @@ void Spectra::Loop() {
       // Check there were beam ions
       UInt_t mmCenterSize = mmCenterBeamTotal.size();
 
-      // Loop through beam in central region starting from last
-      Double_t beamX_old = mmCenterBeamTotal[mmCenterSize - 1].xPosition;
-      Double_t beamY_old = mmCenterBeamTotal[mmCenterSize - 1].yPosition;
-      Double_t beamZ_old = mmCenterBeamTotal[mmCenterSize - 1].height;
-      Double_t beamX = beamX_old;
-      Double_t beamY = beamY_old;
-      Double_t beamZ = beamZ_old;
-      Double_t x, y, z;
-      line(beamY, parsProton, x, y, z);
-      Double_t protonX_old = x;
-      Double_t protonX = protonX_old;
-      Double_t xDiff_old = beamX - protonX_old;
-      Double_t xDiff = xDiff_old;
-      // std::cout << jentry << '\t' << mmCenterBeamTotal.size() << '\t' << mmCenterSize - 1 << std::endl;
-      for(Int_t i = mmCenterSize - 1; i > -1; i--) {
-        beamX = mmCenterBeamTotal[i].xPosition;
-        beamY = mmCenterBeamTotal[i].yPosition;
-        beamZ = mmCenterBeamTotal[i].height;
+      if(mmCenterSize == 0) {
+        Double_t beamX_old = 0.;
+        Double_t beamY_old = 250.;
+        Double_t beamZ_old = 0.;
+        Double_t beamX = beamX_old;
+        Double_t beamY = beamY_old;
+        Double_t beamZ = beamZ_old;
+        Double_t x, y, z;
         line(beamY, parsProton, x, y, z);
-        protonX = x;
-        xDiff = beamX - protonX;
-        // printf("%lld %f %f %f %f %f %f %f\n", jentry, beamX_old, beamY_old, beamX, beamY, xDiff, xDiff_old);
-        if(xDiff_old * xDiff < 0) {
-          Double_t m = (beamY - beamY_old)/(xDiff - xDiff_old);
-          Double_t b = beamY - m*xDiff;
-          // printf("%lld %f %f %f %f %f %f %f\n", jentry, beamX_old, beamY_old, beamX, beamY, protonX, protonX_old, b);
-          vertexPositionX = beamX;
-          vertexPositionY = b;
-          vertexPositionZ = beamZ;
-          break;
+        Double_t protonX_old = x;
+        Double_t protonX = protonX_old;
+        Double_t xDiff_old = beamX - protonX_old;
+        Double_t xDiff = xDiff;
+        for(Double_t yPos = beamY_old; yPos > -300; yPos -= 1.) {
+          beamY = yPos;
+          line(beamY, parsProton, x, y, z);
+          protonX = x;
+          xDiff = beamX - protonX;
+          if(xDiff_old * xDiff_old < 0) {
+            Double_t m = (beamY - beamY_old)/(xDiff - xDiff_old);
+            Double_t b = beamY - m*xDiff;
+            vertexPositionX = beamX;
+            vertexPositionY = beamY;
+            vertexPositionZ = beamZ;
+            break;
+          }
+          beamY_old = beamY;
+          protonX_old = protonX;
+          xDiff_old = xDiff;
         }
-        beamX_old = beamX;
-        beamY_old = beamY;
-        beamZ_old = beamZ;
-        protonX_old = protonX;
-        xDiff_old = xDiff;
       }
-      for(Double_t beamY = -1; beamY > -300; beamY -= 1) {
+      else{
+        // Loop through beam in central region starting from last
+        Double_t beamX_old = mmCenterBeamTotal[mmCenterSize - 1].xPosition;
+        Double_t beamY_old = mmCenterBeamTotal[mmCenterSize - 1].yPosition;
+        Double_t beamZ_old = mmCenterBeamTotal[mmCenterSize - 1].height;
+        Double_t beamX = beamX_old;
+        Double_t beamY = beamY_old;
+        Double_t beamZ = beamZ_old;
+        Double_t x, y, z;
         line(beamY, parsProton, x, y, z);
-        protonX = x;
-        xDiff = beamX - x;
-        if(xDiff * xDiff_old < 0) {
-          Double_t m = (beamY - beamY_old)/(xDiff - xDiff_old);
-          Double_t b = beamY - m*xDiff;
-          vertexPositionX = beamX;
-          vertexPositionY = b;
-          vertexPositionZ = 0.;
-          break;
+        Double_t protonX_old = x;
+        Double_t protonX = protonX_old;
+        Double_t xDiff_old = beamX - protonX_old;
+        Double_t xDiff = xDiff_old;
+        Bool_t foundVertex = false;
+        // std::cout << jentry << '\t' << mmCenterBeamTotal.size() << '\t' << mmCenterSize - 1 << std::endl;
+        for(Int_t i = mmCenterSize - 1; i > -1; i--) {
+          beamX = mmCenterBeamTotal[i].xPosition;
+          beamY = mmCenterBeamTotal[i].yPosition;
+          beamZ = mmCenterBeamTotal[i].height;
+          line(beamY, parsProton, x, y, z);
+          protonX = x;
+          xDiff = beamX - protonX;
+          // printf("%lld %f %f %f %f %f %f\n", jentry, beamX_old, beamY_old, beamX, beamY, xDiff, xDiff_old);
+          if(xDiff_old * xDiff < 0) {
+            Double_t m = (beamY - beamY_old)/(xDiff - xDiff_old);
+            Double_t b = beamY - m*xDiff;
+            // printf("%lld %f %f %f %f %f %f %f\n", jentry, beamX_old, beamY_old, beamX, beamY, protonX, protonX_old, b);
+            vertexPositionX = beamX;
+            vertexPositionY = b;
+            vertexPositionZ = beamZ;
+            foundVertex = true;
+            break;
+          }
+          beamX_old = beamX;
+          beamY_old = beamY;
+          beamZ_old = beamZ;
+          protonX_old = protonX;
+          xDiff_old = xDiff;
         }
-        beamY_old = beamY;
-        protonX_old = protonX;
-        xDiff_old = xDiff;
+        if(!foundVertex) {
+          for(Double_t beamY = -1; beamY > -300; beamY -= 1) {
+            line(beamY, parsProton, x, y, z);
+            protonX = x;
+            xDiff = beamX - x;
+            // printf("%lld %f %f %f %f %f %f\n", jentry, beamX_old, beamY_old, beamX, beamY, xDiff, xDiff_old);
+            if(xDiff * xDiff_old < 0) {
+              Double_t m = (beamY - beamY_old)/(xDiff - xDiff_old);
+              Double_t b = beamY - m*xDiff;
+              // printf("%lld %f %f %f %f %f %f %f\n", jentry, beamX_old, beamY_old, beamX, beamY, protonX, protonX_old, b);
+              vertexPositionX = beamX;
+              vertexPositionY = b;
+              vertexPositionZ = 0.;
+              foundVertex = true;
+              break;
+            }
+            beamY_old = beamY;
+            protonX_old = protonX;
+            xDiff_old = xDiff;
+          }
+        }
       }
+
 
       // Find the angle (use 2D angle for now)
       // Simply use the slope of the x-component and assume the beam is straight
       // The angle is then theta = atan(|m|) where m in the slope of the x-component (parsProton[1])
-      Float_t m_xcomponent = fabs(parsProton[1]);
-      angle = atan(m_xcomponent);
+      // Float_t m_xcomponent = fabs(parsProton[1]);
+      // angle = atan(m_xcomponent);
 
-      if(siDet < 10) hAngleEForward[siDet]->Fill(siEnergy, angle);
+      TVector3 v1(0, 1, 0);
+      TVector3 v2(parsProton[1], 1, parsProton[3]);
+      // Float_t angle3d = v1.Angle(v2);
+      angle = v1.Angle(v2);
+
+      // std::cout << jentry << '\t' << angle << '\t' << angle3d << std::endl;
 
       // printf("%lld %d %f\n", jentry, siDet, vertexPositionY);
 
@@ -695,6 +771,12 @@ void Spectra::Loop() {
 
     if(siDet < 10) {
       hVertexSiEForward[siDet]->Fill(siEnergy, vertexPositionY);
+      hVertexSiEForwardCal[siDet]->Fill(siEnergyCal, vertexPositionY);
+
+      hAngleEForward[siDet]->Fill(siEnergy, angle);
+      hAngleEForwardCal[siDet]->Fill(siEnergyCal, angle);
+
+      hVertexAngleForward[siDet]->Fill(vertexPositionY, angle);
     }
 
     //  ** End of event by event analysis ** //
@@ -711,10 +793,17 @@ void Spectra::Loop() {
   h_track_bound->Write();
   delete h_track_bound;
 
+  hIonizationChamberE->Write();
+  hIonizationChamberT->Write();
 
+  hMicroMegasCenterCumulative->Write();
+  hMicroMegasCenterCumulativePosition->Write();
+
+  // Forward Si Detectors
   for(UInt_t i = 0; i < 10 ; i++) {
-    hSiEForwardTotal[i]->Write();
-    hSiTForwardTotal[i]->Write();
+    // hSiEForwardDet[i]->Write();
+    // hSiTForwardDet[i]->Write();
+    hSiEForwardDetCal[i]->Write();
     // for(int j=0; j<4; j++) {
       // hSiEForward[i][j]->Write();
       // hSiEForwardCal[i][j]->Write();
@@ -725,19 +814,19 @@ void Spectra::Loop() {
     // hSiCsIForward[i]->Write();
   }
 
+  // Left Si Detectors
   for(UInt_t i = 0; i < 6 ; i++) {
-    hSiELeftTotal[i]->Write();
-    hSiTLeftTotal[i]->Write();
+    // hSiELeftDet[i]->Write();
+    // hSiTLeftDet[i]->Write();
+    hSiELeftDetCal[i]->Write();
     // for(int j=0; j<4; j++) {
       // hSiELeft[i][j]->Write();
       // hSiTLeft[i][j]->Write();
     // }
     // hCsIELeft[i]->Write();
     // hCsITLeft[i]->Write();
+    // hCsIETLeft[i]->Write();
   }
-
-  hIonizationChamberE->Write();
-  hIonizationChamberT->Write();
 
   // hMicroMegasCenterCumulative->Write();
   // hMicroMegasCenterEnergyCumulative->Write();
@@ -745,21 +834,43 @@ void Spectra::Loop() {
   // hMicroMegasCenterEnergyAverageScaled->Write();
   // hMicroMegasCenterTimeAverage->Write();
 
-  hdEEForwardCenterTotal->Write();
-  hdEEForwardLeftTotal->Write();
-  hdEEForwardRightTotal->Write();
-  hdEELeftWallTotal->Write();
-
+  // Forward CsI Energy vs Time
   for(UInt_t i = 0; i < 10; i++) {
-    hdEEForward[i]->Write();
+    hCsIETForward[i]->Write();
   }
 
+  // Forward Si Energy vs CsI Energy
   for(UInt_t i = 0; i < 10; i++) {
-    hVertexSiEForward[i]->Write();
+    // hSiCsIEForwardDet[i]->Write();
+    hSiCsIEForwardDetCal[i]->Write();
+    // for(UInt_t j = 0; j < 4; j++) {
+    //   hSiCsIEForward[i][j]->Write();
+    //   hSiCsIEForwardCal[i][j]->Write();
+    // }
   }
 
+  // Forward dE vs Si Energy
   for(UInt_t i = 0; i < 10; i++) {
-    hAngleEForward[i]->Write();
+    // hdEEForward[i]->Write();
+    hdEEForwardCal[i]->Write();
+    hdEEForwardCalTotal[i]->Write();
+  }
+
+  // Forward Vertex vs Si Energy
+  for(UInt_t i = 0; i < 10; i++) {
+    // hVertexSiEForward[i]->Write();
+    hVertexSiEForwardCal[i]->Write();
+  }
+
+  // Forward Angle vs Si Energy
+  for(UInt_t i = 0; i < 10; i++) {
+    // hAngleEForward[i]->Write();
+    hAngleEForwardCal[i]->Write();
+  }
+
+  // Forward Vertex vs Angle
+  for(UInt_t i = 0; i < 10; i++) {
+    hVertexAngleForward[i]->Write();
   }
 
   WriteTree();
