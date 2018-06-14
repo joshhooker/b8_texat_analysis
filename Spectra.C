@@ -17,10 +17,10 @@ TChain* MakeChain() {
   TChain *chain = new TChain("mfmData");
 
   // Home
-  TString PathToFiles = "/hd3/research/data/run0817a/rootM2R-WaveformReduced/run";
+  // TString PathToFiles = "/hd3/research/data/run0817a/rootM2R-WaveformReduced/run";
 
   // Laptop
-  // TString PathToFiles = "/Users/joshhooker/Desktop/data/run0817a/run";
+  TString PathToFiles = "/Users/joshhooker/Desktop/data/run0817a/run";
 
   // Alpha source test in gas
   // chain->Add(PathToFiles+"004.root");
@@ -116,6 +116,10 @@ void Spectra::Loop() {
     if(i == 8) continue;
     dEEForwardCut[i] = (TCutG*)cutFile->Get(Form("dEEForward_d%dCut", i));
   }
+  TCutG *angleTotEnergyCut_d0 = (TCutG*)cutFile->Get("angleTotEnergy_d0Cut");
+  TCutG *angleTotEnergyCut_d1 = (TCutG*)cutFile->Get("angleTotEnergy_d1Cut");
+  TCutG *angleTotEnergyCut_d9 = (TCutG*)cutFile->Get("angleTotEnergy_d9Cut");
+  TCutG *angleTotEnergyCut_d019 = (TCutG*)cutFile->Get("angleTotEnergy_d019Cut");
   cutFile->Close();
 
   InitChannelMap();
@@ -461,6 +465,8 @@ void Spectra::Loop() {
       }
     }
 
+    totalEnergy = siEnergyCal + csiEnergyCal;
+
     // Reduce MM Center to one entry per row
     std::map<Int_t, Double_t> centralPadPosition;
     std::map<Int_t, Double_t> centralPadTotalEnergy;
@@ -643,6 +649,20 @@ void Spectra::Loop() {
           protonX_old = protonX;
           xDiff_old = xDiff;
         }
+        // Did not fit well
+        if(vertexPositionY == -400) {
+          Double_t m_xcomponent = fabs(parsProton[1]);
+          Double_t xAngle = atan(m_xcomponent);
+
+          Double_t yDist = siXPosForward[siDet][siQuad]/fabs(tan(xAngle));
+
+          if(250. - yDist < -400) {
+            vertexPositionY = -400.;
+          }
+          else {
+            vertexPositionY = 250. - yDist;
+          }
+        }
       }
       else{
         // Loop through beam in central region starting from last
@@ -705,7 +725,23 @@ void Spectra::Loop() {
             xDiff_old = xDiff;
           }
         }
+        // Did not fit well
+        if(vertexPositionY == -400) {
+          Double_t m_xcomponent = fabs(parsProton[1]);
+          Double_t xAngle = atan(m_xcomponent);
+
+          Double_t yDist = siXPosForward[siDet][siQuad]/fabs(tan(xAngle));
+
+          if(250. - yDist < -400) {
+            vertexPositionY = -400.;
+          }
+          else {
+            vertexPositionY = 250. - yDist;
+          }
+        }
       }
+
+
 
 
       // Find the angle (use 2D angle for now)
@@ -775,8 +811,34 @@ void Spectra::Loop() {
 
       hAngleEForward[siDet]->Fill(siEnergy, angle);
       hAngleEForwardCal[siDet]->Fill(siEnergyCal, angle);
+      hAngleEForwardCalTotal[siDet]->Fill(totalEnergy, angle);
 
       hVertexAngleForward[siDet]->Fill(vertexPositionY, angle);
+    }
+
+    // Simply calculate the CS. Just using detectors 0, 1 and 9. Average x position is 124 mm.
+    cmEnergy = 0.;
+    if(siDet == 0 || siDet == 1 || siDet == 9) {
+      if(!dEEForwardCut[siDet]->IsInside(siEnergy, dE)) continue;
+      // if(siDet == 0) {
+      //   if(!angleTotEnergyCut_d0->IsInside(totalEnergy, angle)) continue;
+      // }
+      // else if(siDet == 1) {
+      //   if(!angleTotEnergyCut_d1->IsInside(totalEnergy, angle)) continue;
+      // }
+      // else if(siDet == 9) {
+      //   if(!angleTotEnergyCut_d9->IsInside(totalEnergy, angle)) continue;
+      // }
+
+      if(!angleTotEnergyCut_d019->IsInside(totalEnergy, angle)) continue;
+
+      Float_t protonPathLength = sqrt(124*124 + vertexPositionY*vertexPositionY);
+      Float_t protonEnergy = protonMethane->AddBack(totalEnergy/1000., protonPathLength);
+      Float_t cosAngle2 = cos(angle)*cos(angle);
+      Float_t beamEnergy = protonEnergy*(m1 + m2)*(m1 + m2)/(4.*m1*m2*cosAngle2);
+      cmEnergy = beamEnergy*m2/(m1 + m2);
+
+      s1->Fill(cmEnergy);
     }
 
     //  ** End of event by event analysis ** //
@@ -865,13 +927,21 @@ void Spectra::Loop() {
   // Forward Angle vs Si Energy
   for(UInt_t i = 0; i < 10; i++) {
     // hAngleEForward[i]->Write();
-    hAngleEForwardCal[i]->Write();
+    // hAngleEForwardCal[i]->Write();
+    hAngleEForwardCalTotal[i]->Write();
   }
 
   // Forward Vertex vs Angle
   for(UInt_t i = 0; i < 10; i++) {
     hVertexAngleForward[i]->Write();
   }
+
+  DivideTargetThickness(s1);
+  ReadSolidAngle();
+  SolidAngle(s1);
+  s1->Scale(1./numberB8);
+  s1->Write();
+  WriteSpectrumToFile(s1, 3);
 
   WriteTree();
 
@@ -1205,4 +1275,89 @@ void Spectra::StripChainMatchingTimeSlopeHough(std::vector<mmTrack> &stripChainM
       }
     }
   }
+}
+
+void Spectra::DivideTargetThickness(TH1F *f) {
+  Int_t i_size = f->GetSize();
+
+  TAxis *x_axis = f->GetXaxis();
+  for(Int_t i = 1; i <= i_size - 1; i++) {
+    Float_t binLowEdge = x_axis->GetBinLowEdge(i);
+    Float_t binUpEdge = x_axis->GetBinUpEdge(i);
+    if(binLowEdge == 0.) binLowEdge += 0.001;
+    binLowEdge *= (m1 + m2)/m2;
+    binUpEdge *= (m1 + m2)/m2;
+    Float_t binContent = f->GetBinContent(i);
+    Float_t binError = f->GetBinError(i);
+    Float_t delta_x = boronMethane->CalcRange(binUpEdge, binLowEdge);
+    delta_x /= 10.;
+    Float_t molarMassMethane = 0.01604;
+    Float_t factor = 4.e-27*density*delta_x*TMath::Na()/molarMassMethane;
+    binContent /= factor;
+    binError /= factor;
+    f->SetBinContent(i, binContent);
+    f->SetBinError(i, binError);
+  }
+}
+
+void Spectra::ReadSolidAngle() {
+  std::ifstream in("csReg3.out");
+  assert(in.is_open());
+
+  Double_t var1, var2, var3, var4;
+  std::vector<Double_t> cmEnergy_, solidAngle_, labAngle_, cmAngle_;
+  while(in >> var1 >> var2 >> var3 >> var3) {
+    cmEnergy_.push_back(var1);
+    solidAngle_.push_back(var2);
+    labAngle_.push_back(var3);
+    cmAngle_.push_back(var4);
+  }
+
+  reg3SA.SetPoints(cmEnergy_, solidAngle_);
+  reg3CMAngle.SetPoints(cmEnergy_, cmAngle_);
+
+  in.close();
+}
+
+void Spectra::SolidAngle(TH1F *f) {
+  Int_t i_size = f->GetSize();
+  TAxis *x_axis = f->GetXaxis();
+
+  for(Int_t i = 1; i <= i_size - 1; i++) {
+    Float_t binCenter = x_axis->GetBinCenter(i);
+    Float_t binContent = f->GetBinContent(i);
+    Float_t binError = f->GetBinError(i);
+
+    Float_t simCS = reg3SA(binCenter);
+    std::cout << binCenter << '\t' << simCS << std::endl;
+
+    if(simCS == 0) {
+      f->SetBinContent(i, 0.);
+      f->SetBinError(i, 0.);
+    }
+    else {
+      f->SetBinContent(i, binContent/simCS);
+      f->SetBinError(i, binError/simCS);
+    }
+  }
+}
+
+void Spectra::WriteSpectrumToFile(TH1F *f, Int_t region) {
+  FILE* spectrumFile = fopen(Form("spectrum_reg%d.out", region), "w");
+
+  Int_t i_size = f->GetSize();
+  TAxis *x_axis = f->GetXaxis();
+
+  for(Int_t i = 1; i <= i_size - 1; i++) {
+    Float_t binCenter = x_axis->GetBinCenter(i);
+    Float_t binContent = f->GetBinContent(i);
+    Float_t binError = f->GetBinError(i);
+
+    Float_t cmAngle = reg3CMAngle(binCenter);
+
+    fprintf(spectrumFile, "%f %f %f %f\n", binCenter, binContent, binError, cmAngle);
+  }
+
+  fflush(spectrumFile);
+  fclose(spectrumFile);
 }

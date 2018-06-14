@@ -18,6 +18,7 @@ set(SCRIPTS
     averageBeamEnergy.out
     b8_methane.dat
     csiCalibration.dat
+    csReg3.out
     cuts.root
     EnergyLoss.dat
     gainFile.dat

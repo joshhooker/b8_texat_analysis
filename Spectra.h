@@ -228,6 +228,9 @@ private:
   // Vertex vs Angle Forward Detectors
   TH2F* hVertexAngleForward[10];
 
+  // Cross Section
+  TH1F* s1;
+
 // Silicon Energy Calibration
 private:
   void InitSiEForwardCalibration();
@@ -265,6 +268,15 @@ private:
                                    std::vector<mmStripChain> strip, Bool_t leftSide, Double_t siTime,
                                    Double_t timeWindow);
 
+// Cross Section
+private:
+  void DivideTargetThickness(TH1F *f);
+  void ReadSolidAngle();
+  void SolidAngle(TH1F *f);
+  void WriteSpectrumToFile(TH1F *f, Int_t region);
+  CubicSpline reg3SA;
+  CubicSpline reg3CMAngle;
+
 // General Variables
 private:
   void InitVariables();
@@ -281,6 +293,7 @@ private:
   Float_t density;
   Float_t distanceHavarToSilicon;
   Float_t numberB8;
+  Float_t siXPosForward[10][4];
 
   EnergyLoss *boronMethane;
   EnergyLoss *protonMethane;
@@ -299,12 +312,14 @@ private:
   Float_t csiEnergy;
   Float_t csiEnergyCal;
   Float_t csiTime;
+  Float_t totalEnergy;
   Bool_t punchthrough;
   Float_t dE;
   Float_t vertexPositionX;
   Float_t vertexPositionY;
   Float_t vertexPositionZ;
   Float_t angle;
+  Float_t cmEnergy;
 
 };
 #endif
@@ -1152,16 +1167,22 @@ inline void Spectra::InitHistograms() {
   // Angle vs E Histograms hAngleEForward[10]
   for(UInt_t i = 0; i < 10; i++) {
     TString name = Form("angleSiEForward_d%d", i);
-    hAngleEForward[i] = new TH2F(name, name, 500, 0, 4000, 500, 0, 3);
+    hAngleEForward[i] = new TH2F(name, name, 200, 0, 4000, 200, 0, 1.5);
     hAngleEForward[i]->GetXaxis()->SetTitle("Si Energy [channels]"); hAngleEForward[i]->GetXaxis()->CenterTitle();
     hAngleEForward[i]->GetYaxis()->SetTitle("Vertex [mm]"); hAngleEForward[i]->GetYaxis()->CenterTitle();
     hAngleEForward[i]->GetYaxis()->SetTitleOffset(1.4);
 
     name = Form("angleSiEForwardCal_d%d", i);
-    hAngleEForwardCal[i] = new TH2F(name, name, 500, 0, 14000, 500, 0, 3);
+    hAngleEForwardCal[i] = new TH2F(name, name, 200, 0, 20000, 200, 0, 1.5);
     hAngleEForwardCal[i]->GetXaxis()->SetTitle("Si Energy [keV]"); hAngleEForwardCal[i]->GetXaxis()->CenterTitle();
     hAngleEForwardCal[i]->GetYaxis()->SetTitle("Vertex [mm]"); hAngleEForwardCal[i]->GetYaxis()->CenterTitle();
     hAngleEForwardCal[i]->GetYaxis()->SetTitleOffset(1.4);
+
+    name = Form("angleSiEForwardCalTotal_d%d", i);
+    hAngleEForwardCalTotal[i] = new TH2F(name, name, 200, 0, 20000, 200, 0, 1.5);
+    hAngleEForwardCalTotal[i]->GetXaxis()->SetTitle("Si Energy [keV]"); hAngleEForwardCalTotal[i]->GetXaxis()->CenterTitle();
+    hAngleEForwardCalTotal[i]->GetYaxis()->SetTitle("Vertex [mm]"); hAngleEForwardCalTotal[i]->GetYaxis()->CenterTitle();
+    hAngleEForwardCalTotal[i]->GetYaxis()->SetTitleOffset(1.4);
   }
 
   // Vertex vs Angle Histograms Forward Si
@@ -1169,6 +1190,13 @@ inline void Spectra::InitHistograms() {
     TString name = Form("vertexAngleForward_d%d", i);
     hVertexAngleForward[i] = new TH2F(name, name, 500, -300, 300, 500, 0, 3);
   }
+
+  // Cross Section Histograms
+  s1 = new TH1F("s1", "Outside Forward", 70, 0, 6);
+  s1->Sumw2();
+  s1->GetXaxis()->SetTitle("Center of Mass Energy [MeV]"); s1->GetXaxis()->CenterTitle();
+  s1->GetYaxis()->SetTitle("Cross Section [b/sr]"); s1->GetYaxis()->CenterTitle();
+  s1->GetYaxis()->SetTitleOffset(1.2);
 }
 
 inline void Spectra::InitSiEForwardCalibration() {
@@ -1229,7 +1257,6 @@ inline void Spectra::InitVariables() {
   m1 = 8.; // AMU of projectile
   m2 = 1.; // AMU of target
 
-
   heightOffset = 6081.81 - 352.457; // Time of 0 height in chamber (in ns)
   driftVelocity = 0.05674449; // in mm/ns
 
@@ -1247,6 +1274,48 @@ inline void Spectra::InitVariables() {
   // Initialize EnergyLoss
   boronMethane = new EnergyLoss("b8_methane.dat");
   protonMethane = new EnergyLoss("proton_methane.dat");
+
+  // X positions of Forward Si Detector Quadrants
+  siXPosForward[0][0] = 124. + 12.5;
+  siXPosForward[0][1] = 124. - 12.5;
+  siXPosForward[0][2] = 124. - 12.5;
+  siXPosForward[0][3] = 124. + 12.5;
+  siXPosForward[1][0] = 124. + 12.5;
+  siXPosForward[1][1] = 124. - 12.5;
+  siXPosForward[1][2] = 124. - 12.5;
+  siXPosForward[1][3] = 124. + 12.5;
+  siXPosForward[2][0] = 62.2 + 12.5;
+  siXPosForward[2][1] = 62.2 + 12.5;
+  siXPosForward[2][2] = 62.2 - 12.5;
+  siXPosForward[2][3] = 62.2 - 12.5;
+  siXPosForward[3][0] = 62.2 + 12.5;
+  siXPosForward[3][1] = 62.2 - 12.5;
+  siXPosForward[3][2] = 62.2 - 12.5;
+  siXPosForward[3][3] = 62.2 + 12.5;
+  siXPosForward[4][0] = 0. + 12.5;
+  siXPosForward[4][1] = 0. + 12.5;
+  siXPosForward[4][2] = 0. + 12.5;
+  siXPosForward[4][3] = 0. + 12.5;
+  siXPosForward[5][0] = 0. + 12.5;
+  siXPosForward[5][1] = 0. + 12.5;
+  siXPosForward[5][2] = 0. + 12.5;
+  siXPosForward[5][3] = 0. + 12.5;
+  siXPosForward[6][0] = 62.2 - 12.5;
+  siXPosForward[6][1] = 62.2 - 12.5;
+  siXPosForward[6][2] = 62.2 + 12.5;
+  siXPosForward[6][3] = 62.2 + 12.5;
+  siXPosForward[7][0] = 62.2 - 12.5;
+  siXPosForward[7][1] = 62.2 + 12.5;
+  siXPosForward[7][2] = 62.2 + 12.5;
+  siXPosForward[7][3] = 62.2 - 12.5;
+  siXPosForward[8][0] = 124. - 12.5;
+  siXPosForward[8][1] = 124. + 12.5;
+  siXPosForward[8][2] = 124. + 12.5;
+  siXPosForward[8][3] = 124. - 12.5;
+  siXPosForward[9][0] = 124. - 12.5;
+  siXPosForward[9][1] = 124. + 12.5;
+  siXPosForward[9][2] = 124. + 12.5;
+  siXPosForward[9][3] = 124. - 12.5;
 }
 
 inline void Spectra::InitTree() {
@@ -1261,12 +1330,14 @@ inline void Spectra::InitTree() {
   outTree->Branch("csiEnergy", &csiEnergy);
   outTree->Branch("csiEnergyCal", &csiEnergyCal);
   outTree->Branch("csiTime", &csiTime);
+  outTree->Branch("totalEnergy", &totalEnergy);
   outTree->Branch("punchthrough", &punchthrough);
   outTree->Branch("dE", &dE);
   outTree->Branch("vertexPositionX", &vertexPositionX);
   outTree->Branch("vertexPositionY", &vertexPositionY);
   outTree->Branch("vertexPositionZ", &vertexPositionZ);
   outTree->Branch("angle", &angle);
+  outTree->Branch("cmEnergy", &cmEnergy);
   return;
 }
 
