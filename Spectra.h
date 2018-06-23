@@ -38,8 +38,8 @@
 
 #include "CubicSpline.h"
 #include "EnergyLoss.h"
-#include "FitTrack.h"
 #include "Hough2D.h"
+#include "HoughTrack.h"
 #include "TypeDef.h"
 
 // Define the parameteric line equation
@@ -195,6 +195,18 @@ private:
   TH2F* hSiCsIELeft[6];
   TH2F* hSiCsIELeftCal[6];
 
+  // Si + CsI vs Si (raw)
+  TH2F* hSumSiEForwardDet[10];
+  TH2F* hSumSiEForward[10][4];
+  TH2F* hSumSiELeftDet[6];
+  TH2F* hSumSiELeft[6][4];
+
+  // Si + CsI vs CsI (raw)
+  TH2F* hSumCsIEForwardDet[10];
+  TH2F* hSumCsIEForward[10][4];
+  TH2F* hSumCsIELeftDet[6];
+  TH2F* hSumCsIELeft[6][4];
+
   // dE vs E Forward Detectors
   TH2F* hdEEForward[10];
   TH2F* hdEEForwardCal[10];
@@ -204,6 +216,9 @@ private:
   TH2F* hdEELeft[6];
   TH2F* hdEELeftCal[6];
   TH2F* hdEELeftCalTotal[6];
+
+  // Hough Angle Forward Detectors
+  TH1F* hHoughAngle[10];
 
   // Angle vs E Forward Detectors
   TH2F* hAngleEForward[10];
@@ -1112,6 +1127,38 @@ inline void Spectra::InitHistograms() {
     }
   }
 
+  // Si + CsI (raw) vs Si (raw) Forward Detectors
+  for(UInt_t i = 0; i < 10; i++) {
+    TString name = Form("hSumSiEForward_d%d", i);
+    hSumSiEForwardDet[i] = new TH2F(name, name, 500, 0, 8000, 500, 0, 4000);
+    hSumSiEForwardDet[i]->GetXaxis()->SetTitle("Si + CsI [channels]"); hSumSiEForwardDet[i]->GetXaxis()->CenterTitle();
+    hSumSiEForwardDet[i]->GetYaxis()->SetTitle("Si [channels]"); hSumSiEForwardDet[i]->GetYaxis()->CenterTitle();
+    hSumSiEForwardDet[i]->GetYaxis()->SetTitleOffset(1.4);
+    for(UInt_t j = 0; j < 4; j++) {
+      name = Form("hSumSiEForward_d%d_q%d", i, j);
+      hSumSiEForward[i][j] = new TH2F(name, name, 500, 0, 8000, 500, 0, 4000);
+      hSumSiEForward[i][j]->GetXaxis()->SetTitle("Si + CsI [channels]"); hSumSiEForward[i][j]->GetXaxis()->CenterTitle();
+      hSumSiEForward[i][j]->GetYaxis()->SetTitle("Si [channels]"); hSumSiEForward[i][j]->GetYaxis()->CenterTitle();
+      hSumSiEForward[i][j]->GetYaxis()->SetTitleOffset(1.4);
+    }
+  }
+
+  // Si + CsI (raw) vs CsI (raw) Forward Detectors
+  for(UInt_t i = 0; i < 10; i++) {
+    TString name = Form("hSumCsIEForward_d%d", i);
+    hSumCsIEForwardDet[i] = new TH2F(name, name, 500, 0, 8000, 500, 0, 4000);
+    hSumCsIEForwardDet[i]->GetXaxis()->SetTitle("Si + CsI [channels]"); hSumCsIEForwardDet[i]->GetXaxis()->CenterTitle();
+    hSumCsIEForwardDet[i]->GetYaxis()->SetTitle("CsI [channels]"); hSumCsIEForwardDet[i]->GetYaxis()->CenterTitle();
+    hSumCsIEForwardDet[i]->GetYaxis()->SetTitleOffset(1.4);
+    for(UInt_t j = 0; j < 4; j++) {
+      name = Form("hSumCsIEForward_d%d_q%d", i, j);
+      hSumCsIEForward[i][j] = new TH2F(name, name, 500, 0, 8000, 500, 0, 4000);
+      hSumCsIEForward[i][j]->GetXaxis()->SetTitle("Si + CsI [channels]"); hSumCsIEForward[i][j]->GetXaxis()->CenterTitle();
+      hSumCsIEForward[i][j]->GetYaxis()->SetTitle("CsI [channels]"); hSumCsIEForward[i][j]->GetYaxis()->CenterTitle();
+      hSumCsIEForward[i][j]->GetYaxis()->SetTitleOffset(1.4);
+    }
+  }
+
   // dE vs E Histograms
   for(UInt_t i = 0; i < 10; i++) {
     TString name = Form("dEEForward_d%d", i);
@@ -1141,27 +1188,11 @@ inline void Spectra::InitHistograms() {
     hdEELeft[i]->GetYaxis()->SetTitleOffset(1.4);
   }
 
-  // Vertex vs E Histograms
+  // Hough Angle - Forward Detectors
   for(UInt_t i = 0; i < 10; i++) {
-    TString name = Form("vertexSiEForward_d%d", i);
-    hVertexSiEForward[i] = new TH2F(name, name, 500, 0, 4000, 500, -250, 300);
-    hVertexSiEForward[i]->GetXaxis()->SetTitle("Si Energy [channels]"); hVertexSiEForward[i]->GetXaxis()->CenterTitle();
-    hVertexSiEForward[i]->GetYaxis()->SetTitle("Vertex [mm]"); hVertexSiEForward[i]->GetYaxis()->CenterTitle();
-    hVertexSiEForward[i]->GetYaxis()->SetTitleOffset(1.4);
-
-    name = Form("vertexSiEForwardCal_d%d", i);
-    hVertexSiEForwardCal[i] = new TH2F(name, name, 500, 0, 14000, 500, -250, 300);
-    hVertexSiEForwardCal[i]->GetXaxis()->SetTitle("Si Energy [keV]"); hVertexSiEForwardCal[i]->GetXaxis()->CenterTitle();
-    hVertexSiEForwardCal[i]->GetYaxis()->SetTitle("Vertex [mm]"); hVertexSiEForwardCal[i]->GetYaxis()->CenterTitle();
-    hVertexSiEForwardCal[i]->GetYaxis()->SetTitleOffset(1.4);
-  }
-
-  for(UInt_t i = 0; i < 6; i++) {
-    TString name = Form("vertexSiELeft_d%d", i);
-    hVertexSiELeft[i] = new TH2F(name, name, 500, 0, 4000, 500, -250, 300);
-    hVertexSiELeft[i]->GetXaxis()->SetTitle("Si Energy [channels]"); hVertexSiELeft[i]->GetXaxis()->CenterTitle();
-    hVertexSiELeft[i]->GetYaxis()->SetTitle("Vertex [mm]"); hVertexSiELeft[i]->GetYaxis()->CenterTitle();
-    hVertexSiELeft[i]->GetYaxis()->SetTitleOffset(1.4);
+    TString name = Form("houghAngleSiForward_d%d", i);
+    hHoughAngle[i] = new TH1F(name, name, 180, 0, 180);
+    hHoughAngle[i]->GetXaxis()->SetTitle("Hough Angle"); hHoughAngle[i]->GetXaxis()->CenterTitle();
   }
 
   // Angle vs E Histograms hAngleEForward[10]
@@ -1183,6 +1214,29 @@ inline void Spectra::InitHistograms() {
     hAngleEForwardCalTotal[i]->GetXaxis()->SetTitle("Si Energy [keV]"); hAngleEForwardCalTotal[i]->GetXaxis()->CenterTitle();
     hAngleEForwardCalTotal[i]->GetYaxis()->SetTitle("Vertex [mm]"); hAngleEForwardCalTotal[i]->GetYaxis()->CenterTitle();
     hAngleEForwardCalTotal[i]->GetYaxis()->SetTitleOffset(1.4);
+  }
+
+  // Vertex vs E Histograms
+  for(UInt_t i = 0; i < 10; i++) {
+    TString name = Form("vertexSiEForward_d%d", i);
+    hVertexSiEForward[i] = new TH2F(name, name, 500, 0, 4000, 500, -250, 300);
+    hVertexSiEForward[i]->GetXaxis()->SetTitle("Si Energy [channels]"); hVertexSiEForward[i]->GetXaxis()->CenterTitle();
+    hVertexSiEForward[i]->GetYaxis()->SetTitle("Vertex [mm]"); hVertexSiEForward[i]->GetYaxis()->CenterTitle();
+    hVertexSiEForward[i]->GetYaxis()->SetTitleOffset(1.4);
+
+    name = Form("vertexSiEForwardCal_d%d", i);
+    hVertexSiEForwardCal[i] = new TH2F(name, name, 500, 0, 14000, 500, -250, 300);
+    hVertexSiEForwardCal[i]->GetXaxis()->SetTitle("Si Energy [keV]"); hVertexSiEForwardCal[i]->GetXaxis()->CenterTitle();
+    hVertexSiEForwardCal[i]->GetYaxis()->SetTitle("Vertex [mm]"); hVertexSiEForwardCal[i]->GetYaxis()->CenterTitle();
+    hVertexSiEForwardCal[i]->GetYaxis()->SetTitleOffset(1.4);
+  }
+
+  for(UInt_t i = 0; i < 6; i++) {
+    TString name = Form("vertexSiELeft_d%d", i);
+    hVertexSiELeft[i] = new TH2F(name, name, 500, 0, 4000, 500, -250, 300);
+    hVertexSiELeft[i]->GetXaxis()->SetTitle("Si Energy [channels]"); hVertexSiELeft[i]->GetXaxis()->CenterTitle();
+    hVertexSiELeft[i]->GetYaxis()->SetTitle("Vertex [mm]"); hVertexSiELeft[i]->GetYaxis()->CenterTitle();
+    hVertexSiELeft[i]->GetYaxis()->SetTitleOffset(1.4);
   }
 
   // Vertex vs Angle Histograms Forward Si

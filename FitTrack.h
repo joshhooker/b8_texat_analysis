@@ -59,9 +59,14 @@ public:
   void AddTrack(std::vector<mmTrack> track);
   Double_t MakeBestFit();
   Double_t MakeFit();
-  std::vector<Double_t> GetPars();
   void DisableLineFit();
   void DisableHoughFit();
+
+  std::vector<Double_t> GetPars() { return parFit;};
+  Double_t GetHoughAngleXY() {return houghAngleXY;};
+  Double_t GetHoughDXY() {return houghDXY;};
+  Double_t GetHoughAngleYZ() {return houghAngleYZ;};
+  Double_t GetHoughDYZ() {return houghDYZ;};
 
 private:
   Double_t Fit(std::vector<mmTrack> track, std::vector<Double_t> &par);
@@ -73,6 +78,11 @@ private:
   Double_t minDist;
   Bool_t fitLine;
   Bool_t fitHough;
+
+  Double_t houghAngleXY;
+  Double_t houghDXY;
+  Double_t houghAngleYZ;
+  Double_t houghDYZ;
 };
 
 

@@ -52,14 +52,10 @@ Double_t FitTrack::MakeFit() {
   return minDist;
 }
 
-std::vector<Double_t> FitTrack::GetPars() {
-  return parFit;
-}
-
 Double_t FitTrack::Fit(std::vector<mmTrack> track, std::vector<Double_t> &par) {
-  Double_t minDistLine = 100000.;
+  Double_t minDistLine = 1.e15;
   std::vector<Double_t> parLine;
-  Double_t minDistHough = 100000.;
+  Double_t minDistHough = 1.e15;
   std::vector<Double_t> parHough;
 
   if(fitLine) {
@@ -127,16 +123,19 @@ Double_t FitTrack::FitLine(std::vector<mmTrack> track, std::vector<Double_t> &pa
 Double_t FitTrack::FitHough(std::vector<mmTrack> track, std::vector<Double_t> &par) {
   par.clear();
   Hough2D *houghEvent = new Hough2D(track);
-  Double_t maxThetaXY = houghEvent->GetMaxThetaXY();
-  Double_t maxDXY = houghEvent->GetMaxDXY();
-  Double_t maxThetaYZ = houghEvent->GetMaxThetaYZ();
-  Double_t maxDYZ = houghEvent->GetMaxDYZ();
+  houghAngleXY = houghEvent->GetMaxThetaXY();
+  houghDXY = houghEvent->GetMaxDXY();
+  houghAngleYZ = houghEvent->GetMaxThetaYZ();
+  houghDYZ = houghEvent->GetMaxDYZ();
   delete houghEvent;
 
-  par.push_back(maxDXY/cos(maxThetaXY*M_PI/180.));
-  par.push_back(-sin(maxThetaXY*M_PI/180.)/cos(maxThetaXY*M_PI/180.));
-  par.push_back(maxDYZ/sin(maxThetaYZ*M_PI/180.));
-  par.push_back(-cos(maxThetaYZ*M_PI/180.)/sin(maxThetaYZ*M_PI/180.));
+  // std::cout << houghAngleXY << '\t' << houghDXY << std::endl;
+  // std::cout << houghAngleYZ << '\t' << houghDYZ << std::endl;
+
+  par.push_back(houghDXY/cos(houghAngleXY*M_PI/180.));
+  par.push_back(-sin(houghAngleXY*M_PI/180.)/cos(houghAngleXY*M_PI/180.));
+  par.push_back(houghDXY/sin(houghAngleYZ*M_PI/180.));
+  par.push_back(-cos(houghAngleYZ*M_PI/180.)/sin(houghAngleYZ*M_PI/180.));
 
   Double_t trackMinDistance = CalculateDistance(tracks[0], par);
 

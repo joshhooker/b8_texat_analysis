@@ -17,10 +17,10 @@ TChain* MakeChain() {
   TChain *chain = new TChain("mfmData");
 
   // Home
-  // TString PathToFiles = "/hd3/research/data/run0817a/rootM2R-WaveformReduced/run";
+  TString PathToFiles = "/hd3/research/data/run0817a/rootM2R-WaveformReduced/run";
 
   // Laptop
-  TString PathToFiles = "/Users/joshhooker/Desktop/data/run0817a/run";
+  // TString PathToFiles = "/Users/joshhooker/Desktop/data/run0817a/run";
 
   // Alpha source test in gas
   // chain->Add(PathToFiles+"004.root");
@@ -465,6 +465,14 @@ void Spectra::Loop() {
       }
     }
 
+    if(punchthrough) {
+      hSumSiEForwardDet[siDet]->Fill(siEnergy + csiEnergy, siEnergy);
+      hSumSiEForward[siDet][siQuad]->Fill(siEnergy + csiEnergy, siEnergy);
+
+      hSumCsIEForwardDet[siDet]->Fill(siEnergy + csiEnergy, csiEnergy);
+      hSumCsIEForward[siDet][siQuad]->Fill(siEnergy + csiEnergy, csiEnergy);
+    }
+
     totalEnergy = siEnergyCal + csiEnergyCal;
 
     // Reduce MM Center to one entry per row
@@ -587,6 +595,7 @@ void Spectra::Loop() {
     hdEEForward[siDet]->Fill(siEnergy, dE);
     hdEEForwardCal[siDet]->Fill(siEnergyCal, dE);
     hdEEForwardCalTotal[siDet]->Fill(siEnergyCal + csiEnergyCal, dE);
+
     if(!dEEForwardCut[siDet]->IsInside(siEnergy, dE)) continue;
 
     // Assign proton track for side regions
@@ -602,23 +611,51 @@ void Spectra::Loop() {
     vertexPositionX = 0.;
     vertexPositionY = -400.;
     vertexPositionZ = 0.;
+
+    Double_t houghAngleXY = 89.;
+
     if(!central) {
+
+      if(protonTrack.size() == 0) {
+        std::cout << siEnergy << '\t' << dE << std::endl;
+        continue;
+      }
       // for(UInt_t i = 0; i < protonTrack.size(); i++) {
         // printf("%f %f %f\n", protonTrack[i].xPosition, protonTrack[i].yPosition, protonTrack[i].height);
       // }
 
       // std::cout << jentry << '\t' << siDet << '\t' << mmRightChain_.size() << '\t' << mmRightStrip_.size() << '\t' << protonTrack.size() << std::endl;
 
-      FitTrack* fitProton = new FitTrack();
-      fitProton->DisableLineFit();
-      fitProton->AddTrack(protonTrack);
-      Double_t minDist = fitProton->MakeFit();
+      if(siDet < 4) {
+        mmTrack detPoint1 = {0, siXPosForward[siDet][siQuad] + 12.5, 275.34, 0, 0, 0, 0};
+        mmTrack detPoint2 = {0, siXPosForward[siDet][siQuad], 275.34, 0, 0, 0, 0};
+        mmTrack detPoint3 = {0, siXPosForward[siDet][siQuad] - 12.5, 275.34, 0, 0, 0, 0};
+        protonTrack.push_back(detPoint1);
+        protonTrack.push_back(detPoint2);
+        protonTrack.push_back(detPoint3);
+      }
+      else if(siDet > 5 && siDet < 10) {
+        mmTrack detPoint1 = {0, -siXPosForward[siDet][siQuad] + 12.5, 275.34, 0, 0, 0, 0};
+        mmTrack detPoint2 = {0, -siXPosForward[siDet][siQuad], 275.34, 0, 0, 0, 0};
+        mmTrack detPoint3 = {0, -siXPosForward[siDet][siQuad] - 12.5, 275.34, 0, 0, 0, 0};
+        protonTrack.push_back(detPoint1);
+        protonTrack.push_back(detPoint2);
+        protonTrack.push_back(detPoint3);
+      }
+
+      HoughTrack* fitProton = new HoughTrack();
+      fitProton->AddTrack(protonTrack, siDet, siQuad);
+      Double_t minDist = fitProton->FitRestricted();
       std::vector<Double_t> parsProton = fitProton->GetPars();
+      houghAngleXY = fitProton->GetHoughAngleXY();
+      hHoughAngle[siDet]->Fill(houghAngleXY);
       delete fitProton;
 
       // Check there were beam ions
       UInt_t mmCenterSize = mmCenterBeamTotal.size();
 
+      // std::cout << parsProton[0] << '\t' << parsProton[1] << std::endl;
+      // std::cout << parsProton[2] << '\t' << parsProton[3] << std::endl;
       if(mmCenterSize == 0) {
         Double_t beamX_old = 0.;
         Double_t beamY_old = 250.;
@@ -759,32 +796,34 @@ void Spectra::Loop() {
 
       // printf("%lld %d %f\n", jentry, siDet, vertexPositionY);
 
-      // TGraph *hTrackProtonRaw = new TGraph();
-      // for(UInt_t i = 0; i < protonTrack.size(); i++) {
-      //   hTrackProtonRaw->SetPoint(i, protonTrack[i].xPosition, protonTrack[i].yPosition);
-      // }
-      // hTrackProtonRaw->SetMarkerStyle(20);
-      // hTrackProtonRaw->SetMarkerColor(2);
-      // hTrackProtonRaw->SetName(Form("Proton_Raw_Track_%lld", jentry));
-      // hTrackProtonRaw->Write();
-      // delete hTrackProtonRaw;
+      // if(houghAngleXY < 92 && houghAngleXY > 90) {
+      //   TGraph *hTrackProtonRaw = new TGraph();
+      //   for(UInt_t i = 0; i < protonTrack.size(); i++) {
+      //     hTrackProtonRaw->SetPoint(i, protonTrack[i].xPosition, protonTrack[i].yPosition);
+      //   }
+      //   hTrackProtonRaw->SetMarkerStyle(20);
+      //   hTrackProtonRaw->SetMarkerColor(2);
+      //   hTrackProtonRaw->SetName(Form("Proton_Raw_Track_%lld", jentry));
+      //   hTrackProtonRaw->Write();
+      //   delete hTrackProtonRaw;
 
-      // Int_t n = 6000;
-      // Double_t t0 = -300.;
-      // Double_t dt = 300 - t0;
-      // TGraph *hTrackProtonFit = new TGraph();
-      // for(Int_t i = 0; i < n; i++) {
-      //   Double_t t = t0 + dt*i/n;
-      //   Double_t x, y, z;
-      //   line(t, parsProton, x, y, z);
-      //   // std::cout << i << '\t' << x << '\t' << y << '\t' << z << std::endl;
-      //   hTrackProtonFit->SetPoint(i, x, y);
+      //   Int_t n = 6000;
+      //   Double_t t0 = -300.;
+      //   Double_t dt = 300 - t0;
+      //   TGraph *hTrackProtonFit = new TGraph();
+      //   for(Int_t i = 0; i < n; i++) {
+      //     Double_t t = t0 + dt*i/n;
+      //     Double_t x, y, z;
+      //     line(t, parsProton, x, y, z);
+      //     // std::cout << i << '\t' << x << '\t' << y << '\t' << z << std::endl;
+      //     hTrackProtonFit->SetPoint(i, x, y);
+      //   }
+      //   hTrackProtonFit->SetMarkerStyle(20);
+      //   hTrackProtonFit->SetMarkerColor(3);
+      //   hTrackProtonFit->SetName(Form("Proton_Fit_Track_%lld", jentry));
+      //   hTrackProtonFit->Write();
+      //   delete hTrackProtonFit;
       // }
-      // hTrackProtonFit->SetMarkerStyle(20);
-      // hTrackProtonFit->SetMarkerColor(3);
-      // hTrackProtonFit->SetName(Form("Proton_Fit_Track_%lld", jentry));
-      // hTrackProtonFit->Write();
-      // delete hTrackProtonFit;
 
       // TGraph *hTrackVertex = new TGraph();
       // hTrackVertex->SetPoint(0, vertexPositionX, vertexPositionY);
@@ -819,7 +858,7 @@ void Spectra::Loop() {
     // Simply calculate the CS. Just using detectors 0, 1 and 9. Average x position is 124 mm.
     cmEnergy = 0.;
     if(siDet == 0 || siDet == 1 || siDet == 9) {
-      if(!dEEForwardCut[siDet]->IsInside(siEnergy, dE)) continue;
+      // if(!dEEForwardCut[siDet]->IsInside(siEnergy, dE)) continue;
       // if(siDet == 0) {
       //   if(!angleTotEnergyCut_d0->IsInside(totalEnergy, angle)) continue;
       // }
@@ -830,7 +869,7 @@ void Spectra::Loop() {
       //   if(!angleTotEnergyCut_d9->IsInside(totalEnergy, angle)) continue;
       // }
 
-      if(!angleTotEnergyCut_d019->IsInside(totalEnergy, angle)) continue;
+      // if(!angleTotEnergyCut_d019->IsInside(totalEnergy, angle)) continue;
 
       Float_t protonPathLength = sqrt(124*124 + vertexPositionY*vertexPositionY);
       Float_t protonEnergy = protonMethane->AddBack(totalEnergy/1000., protonPathLength);
@@ -911,11 +950,32 @@ void Spectra::Loop() {
     // }
   }
 
+  // Forward Si + CsI vs Si (raw)
+  for(UInt_t i = 0; i < 10; i++) {
+    hSumSiEForwardDet[i]->Write();
+    for(UInt_t j = 0; j < 4; j++) {
+      hSumSiEForward[i][j]->Write();
+    }
+  }
+
+  // Forward Si + CsI vs CsI (raw)
+  for(UInt_t i = 0; i < 10; i++) {
+    hSumCsIEForwardDet[i]->Write();
+    for(UInt_t j = 0; j < 4; j++) {
+      hSumCsIEForward[i][j]->Write();
+    }
+  }
+
   // Forward dE vs Si Energy
   for(UInt_t i = 0; i < 10; i++) {
     // hdEEForward[i]->Write();
     hdEEForwardCal[i]->Write();
     hdEEForwardCalTotal[i]->Write();
+  }
+
+  // Forward Hough Angle
+  for(UInt_t i = 0; i < 10; i++) {
+    hHoughAngle[i]->Write();
   }
 
   // Forward Vertex vs Si Energy
