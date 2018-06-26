@@ -15,12 +15,14 @@ Double_t distance2(Double_t x, Double_t y, Double_t z, const Double_t *p) {
 HoughTrack::HoughTrack(): minDist(1e15) {};
 
 HoughTrack::HoughTrack(std::vector<mmTrack> inputTrack, Int_t det, Int_t quad): minDist(1e15) {
+  track.clear();
   track = inputTrack;
   detFired = det;
   quadFired = quad;
 }
 
 void HoughTrack::AddTrack(std::vector<mmTrack> inputTrack, Int_t det, Int_t quad) {
+  track.clear();
   track = inputTrack;
   detFired = det;
   quadFired = quad;

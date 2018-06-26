@@ -142,7 +142,7 @@ void Spectra::Loop() {
 
   Long64_t nbytes = 0, nb = 0;
   // for(Long64_t jentry = 0; jentry < 4000; jentry++) {
-  // for(Long64_t jentry = 3928; jentry < 3929; jentry++) {
+  // for(Long64_t jentry = 3431; jentry < 3432; jentry++) {
   for(Long64_t jentry = 0; jentry < nentries; jentry++) {
     Long64_t ientry = LoadTree(jentry);
     if(ientry < 0) break;
@@ -626,29 +626,45 @@ void Spectra::Loop() {
 
       // std::cout << jentry << '\t' << siDet << '\t' << mmRightChain_.size() << '\t' << mmRightStrip_.size() << '\t' << protonTrack.size() << std::endl;
 
+
+      mmTrack detPoint1, detPoint2, detPoint3;
       if(siDet < 4) {
-        mmTrack detPoint1 = {0, siXPosForward[siDet][siQuad] + 12.5, 275.34, 0, 0, 0, 0};
-        mmTrack detPoint2 = {0, siXPosForward[siDet][siQuad], 275.34, 0, 0, 0, 0};
-        mmTrack detPoint3 = {0, siXPosForward[siDet][siQuad] - 12.5, 275.34, 0, 0, 0, 0};
-        protonTrack.push_back(detPoint1);
-        protonTrack.push_back(detPoint2);
-        protonTrack.push_back(detPoint3);
+        detPoint1 = {0, siXPosForward[siDet][siQuad] + 12.5, 275.34, 0, 0, 0, 0};
+        detPoint2 = {0, siXPosForward[siDet][siQuad], 275.34, 0, 0, 0, 0};
+        detPoint3 = {0, siXPosForward[siDet][siQuad] - 12.5, 275.34, 0, 0, 0, 0};
+        for(UInt_t j = 0; j < 1; j++) {
+          protonTrack.push_back(detPoint1);
+          protonTrack.push_back(detPoint2);
+          protonTrack.push_back(detPoint3);
+        }
       }
       else if(siDet > 5 && siDet < 10) {
-        mmTrack detPoint1 = {0, -siXPosForward[siDet][siQuad] + 12.5, 275.34, 0, 0, 0, 0};
-        mmTrack detPoint2 = {0, -siXPosForward[siDet][siQuad], 275.34, 0, 0, 0, 0};
-        mmTrack detPoint3 = {0, -siXPosForward[siDet][siQuad] - 12.5, 275.34, 0, 0, 0, 0};
-        protonTrack.push_back(detPoint1);
-        protonTrack.push_back(detPoint2);
-        protonTrack.push_back(detPoint3);
+        detPoint1 = {0, -siXPosForward[siDet][siQuad] + 12.5, 275.34, 0, 0, 0, 0};
+        detPoint2 = {0, -siXPosForward[siDet][siQuad], 275.34, 0, 0, 0, 0};
+        detPoint3 = {0, -siXPosForward[siDet][siQuad] - 12.5, 275.34, 0, 0, 0, 0};
+        for(UInt_t j = 0; j < 1; j++) {
+          protonTrack.push_back(detPoint1);
+          protonTrack.push_back(detPoint2);
+          protonTrack.push_back(detPoint3);
+        }
       }
 
       HoughTrack* fitProton = new HoughTrack();
       fitProton->AddTrack(protonTrack, siDet, siQuad);
       Double_t minDist = fitProton->FitRestricted();
+      if(minDist > 3.e+07) {
+        for(UInt_t j = 0; j < 34; j++) {
+          protonTrack.push_back(detPoint1);
+          protonTrack.push_back(detPoint2);
+          protonTrack.push_back(detPoint3);
+        }
+        fitProton->AddTrack(protonTrack, siDet, siQuad);
+        minDist = fitProton->FitRestricted();
+      }
       std::vector<Double_t> parsProton = fitProton->GetPars();
       houghAngleXY = fitProton->GetHoughAngleXY();
       hHoughAngle[siDet]->Fill(houghAngleXY);
+
       delete fitProton;
 
       // Check there were beam ions
@@ -784,19 +800,42 @@ void Spectra::Loop() {
       // Find the angle (use 2D angle for now)
       // Simply use the slope of the x-component and assume the beam is straight
       // The angle is then theta = atan(|m|) where m in the slope of the x-component (parsProton[1])
-      // Float_t m_xcomponent = fabs(parsProton[1]);
-      // angle = atan(m_xcomponent);
+      Float_t m_xcomponent = fabs(parsProton[1]);
+      angle = atan(m_xcomponent);
 
       TVector3 v1(0, 1, 0);
       TVector3 v2(parsProton[1], 1, parsProton[3]);
       // Float_t angle3d = v1.Angle(v2);
-      angle = v1.Angle(v2);
+      // angle = v1.Angle(v2);
 
       // std::cout << jentry << '\t' << angle << '\t' << angle3d << std::endl;
 
       // printf("%lld %d %f\n", jentry, siDet, vertexPositionY);
 
-      // if(houghAngleXY < 92 && houghAngleXY > 90) {
+      // if(houghAngleXY > 91) {
+
+      //   Int_t nBinsX = 360;
+      //   Int_t nBinsY = 360;
+      //   Int_t minXY, maxXY, minYZ, maxYZ;
+      //   // GetMinMaxD(protonTrack, minXY, maxXY, minYZ, maxYZ);
+      //   GetMinMaxDRestricted(protonTrack, minXY, maxXY, minYZ, maxYZ, siDet);
+
+      //   TH2I* houghXY = new TH2I(Form("houghXY_Event_%lld", jentry), Form("houghXY_Event_%lld", jentry), nBinsX, 0, 180, nBinsY, minXY, maxXY);
+      //   TH2I* houghYZ = new TH2I(Form("houghYZ_Event_%lld", jentry), Form("houghYZ_Event_%lld", jentry), nBinsX, 0, 180, nBinsY, minYZ, maxYZ);
+
+      //   // VisualizeHough(protonTrack, houghXY, houghYZ);
+      //   VisualizeHoughRestricted(protonTrack, houghXY, houghYZ, siDet);
+      //   houghXY->Write();
+
+      //   std::vector<Double_t> houghAngleXY_, houghStdDevXY_;
+      //   GetHoughStdDevXYRestricted(protonTrack, houghAngleXY_, houghStdDevXY_, siDet);
+      //   TGraph *houghXYStdDevGraph = new TGraph(houghAngleXY_.size(), &houghAngleXY_[0], &houghStdDevXY_[0]);
+      //   houghXYStdDevGraph->SetName(Form("Hough_StdDev_Event_%lld", jentry));
+      //   houghXYStdDevGraph->Write();
+
+      //   delete houghXY;
+      //   delete houghYZ;
+
       //   TGraph *hTrackProtonRaw = new TGraph();
       //   for(UInt_t i = 0; i < protonTrack.size(); i++) {
       //     hTrackProtonRaw->SetPoint(i, protonTrack[i].xPosition, protonTrack[i].yPosition);
@@ -916,10 +955,10 @@ void Spectra::Loop() {
   }
 
   // Left Si Detectors
-  for(UInt_t i = 0; i < 6 ; i++) {
+  // for(UInt_t i = 0; i < 6 ; i++) {
     // hSiELeftDet[i]->Write();
     // hSiTLeftDet[i]->Write();
-    hSiELeftDetCal[i]->Write();
+    // hSiELeftDetCal[i]->Write();
     // for(int j=0; j<4; j++) {
       // hSiELeft[i][j]->Write();
       // hSiTLeft[i][j]->Write();
@@ -927,7 +966,7 @@ void Spectra::Loop() {
     // hCsIELeft[i]->Write();
     // hCsITLeft[i]->Write();
     // hCsIETLeft[i]->Write();
-  }
+  // }
 
   // hMicroMegasCenterCumulative->Write();
   // hMicroMegasCenterEnergyCumulative->Write();
@@ -936,42 +975,42 @@ void Spectra::Loop() {
   // hMicroMegasCenterTimeAverage->Write();
 
   // Forward CsI Energy vs Time
-  for(UInt_t i = 0; i < 10; i++) {
-    hCsIETForward[i]->Write();
-  }
+  // for(UInt_t i = 0; i < 10; i++) {
+  //   hCsIETForward[i]->Write();
+  // }
 
   // Forward Si Energy vs CsI Energy
-  for(UInt_t i = 0; i < 10; i++) {
+  // for(UInt_t i = 0; i < 10; i++) {
     // hSiCsIEForwardDet[i]->Write();
-    hSiCsIEForwardDetCal[i]->Write();
+    // hSiCsIEForwardDetCal[i]->Write();
     // for(UInt_t j = 0; j < 4; j++) {
     //   hSiCsIEForward[i][j]->Write();
     //   hSiCsIEForwardCal[i][j]->Write();
     // }
-  }
+  // }
 
   // Forward Si + CsI vs Si (raw)
-  for(UInt_t i = 0; i < 10; i++) {
-    hSumSiEForwardDet[i]->Write();
-    for(UInt_t j = 0; j < 4; j++) {
-      hSumSiEForward[i][j]->Write();
-    }
-  }
+  // for(UInt_t i = 0; i < 10; i++) {
+  //   hSumSiEForwardDet[i]->Write();
+  //   for(UInt_t j = 0; j < 4; j++) {
+  //     hSumSiEForward[i][j]->Write();
+  //   }
+  // }
 
   // Forward Si + CsI vs CsI (raw)
-  for(UInt_t i = 0; i < 10; i++) {
-    hSumCsIEForwardDet[i]->Write();
-    for(UInt_t j = 0; j < 4; j++) {
-      hSumCsIEForward[i][j]->Write();
-    }
-  }
+  // for(UInt_t i = 0; i < 10; i++) {
+  //   hSumCsIEForwardDet[i]->Write();
+  //   for(UInt_t j = 0; j < 4; j++) {
+  //     hSumCsIEForward[i][j]->Write();
+  //   }
+  // }
 
   // Forward dE vs Si Energy
-  for(UInt_t i = 0; i < 10; i++) {
+  // for(UInt_t i = 0; i < 10; i++) {
     // hdEEForward[i]->Write();
-    hdEEForwardCal[i]->Write();
-    hdEEForwardCalTotal[i]->Write();
-  }
+    // hdEEForwardCal[i]->Write();
+    // hdEEForwardCalTotal[i]->Write();
+  // }
 
   // Forward Hough Angle
   for(UInt_t i = 0; i < 10; i++) {
@@ -980,27 +1019,27 @@ void Spectra::Loop() {
 
   // Forward Vertex vs Si Energy
   for(UInt_t i = 0; i < 10; i++) {
-    // hVertexSiEForward[i]->Write();
+    hVertexSiEForward[i]->Write();
     hVertexSiEForwardCal[i]->Write();
   }
 
   // Forward Angle vs Si Energy
   for(UInt_t i = 0; i < 10; i++) {
-    // hAngleEForward[i]->Write();
-    // hAngleEForwardCal[i]->Write();
+    hAngleEForward[i]->Write();
+    hAngleEForwardCal[i]->Write();
     hAngleEForwardCalTotal[i]->Write();
   }
 
   // Forward Vertex vs Angle
-  for(UInt_t i = 0; i < 10; i++) {
-    hVertexAngleForward[i]->Write();
-  }
+  // for(UInt_t i = 0; i < 10; i++) {
+  //   hVertexAngleForward[i]->Write();
+  // }
 
   DivideTargetThickness(s1);
   ReadSolidAngle();
   SolidAngle(s1);
   s1->Scale(1./numberB8);
-  s1->Write();
+  // s1->Write();
   WriteSpectrumToFile(s1, 3);
 
   WriteTree();
@@ -1389,7 +1428,7 @@ void Spectra::SolidAngle(TH1F *f) {
     Float_t binError = f->GetBinError(i);
 
     Float_t simCS = reg3SA(binCenter);
-    std::cout << binCenter << '\t' << simCS << std::endl;
+    // std::cout << binCenter << '\t' << simCS << std::endl;
 
     if(simCS == 0) {
       f->SetBinContent(i, 0.);
@@ -1420,4 +1459,206 @@ void Spectra::WriteSpectrumToFile(TH1F *f, Int_t region) {
 
   fflush(spectrumFile);
   fclose(spectrumFile);
+}
+
+void Spectra::GetMinMaxD(std::vector<mmTrack> initPoints, Int_t &minXY, Int_t &maxXY, Int_t &minYZ, Int_t &maxYZ) {
+  std::vector<xy> pointsXY;
+  std::vector<yz> pointsYZ;
+  for(UInt_t i = 0; i < initPoints.size(); i++) {
+    xy initPointsXY = {initPoints[i].xPosition, initPoints[i].yPosition};
+    yz initPointsYZ = {initPoints[i].yPosition, initPoints[i].height};
+    pointsXY.push_back(initPointsXY);
+    pointsYZ.push_back(initPointsYZ);
+  }
+
+  Double_t minDHistogramXY = 1000;
+  Double_t maxDHistogramXY = -1000;
+  Double_t minDHistogramYZ = 1000;
+  Double_t maxDHistogramYZ = -1000;
+  for(Int_t j = 0; j < 180; j++) {
+    Double_t cosj = cos(j*M_PI/180.);
+    Double_t sinj = sin(j*M_PI/180.);
+    for(UInt_t i = 0; i < pointsXY.size(); i++) {
+      Double_t d = pointsXY[i].x*cosj + pointsXY[i].y*sinj;
+      if(d < minDHistogramXY) minDHistogramXY = d;
+      if(d > maxDHistogramXY) maxDHistogramXY = d;
+    }
+    for(UInt_t i = 0; i < pointsYZ.size(); i++) {
+      Double_t d = pointsYZ[i].y*cosj + pointsYZ[i].z*sinj;
+      if(d < minDHistogramYZ) minDHistogramYZ = d;
+      if(d > maxDHistogramYZ) maxDHistogramYZ = d;
+    }
+  }
+
+  minXY = static_cast<Int_t>(minDHistogramXY);
+  maxXY = static_cast<Int_t>(maxDHistogramXY);
+  minYZ = static_cast<Int_t>(minDHistogramYZ);
+  maxYZ = static_cast<Int_t>(maxDHistogramYZ);
+}
+
+void Spectra::VisualizeHough(std::vector<mmTrack> initPoints, TH2I* fXY, TH2I* fYZ) {
+  Int_t nBinsX = 500;
+  Int_t nBinsY = 500;
+  std::vector<xy> pointsXY;
+  std::vector<yz> pointsYZ;
+  for(UInt_t i = 0; i < initPoints.size(); i++) {
+    xy initPointsXY = {initPoints[i].xPosition, initPoints[i].yPosition};
+    yz initPointsYZ = {initPoints[i].yPosition, initPoints[i].height};
+    pointsXY.push_back(initPointsXY);
+    pointsYZ.push_back(initPointsYZ);
+  }
+
+  Double_t thetaStepXY = 180./static_cast<Double_t>(nBinsX);
+
+  // Fill Hough Matrix
+  for(Double_t j = 0; j < 180; j += thetaStepXY) {
+    if(j > 89 && j < 91) continue;
+    Double_t cosj = cos(j*M_PI/180.);
+    Double_t sinj = sin(j*M_PI/180.);
+    for(UInt_t i = 0; i < pointsXY.size(); i++) {
+      Double_t d = pointsXY[i].x*cosj + pointsXY[i].y*sinj;
+      fXY->Fill(j, d);
+    }
+  }
+}
+
+void Spectra::GetMinMaxDRestricted(std::vector<mmTrack> initPoints, Int_t &minXY, Int_t &maxXY, Int_t &minYZ, Int_t &maxYZ, Int_t siDet) {
+  Int_t minAngle = 0;
+  Int_t maxAngle = 0;
+  if(siDet < 4) {
+    minAngle = 91;
+    maxAngle = 179;
+  }
+  else if(siDet > 5 && siDet < 10) {
+    minAngle = 1;
+    maxAngle = 89;
+  }
+
+  std::vector<xy> pointsXY;
+  std::vector<yz> pointsYZ;
+  for(UInt_t i = 0; i < initPoints.size(); i++) {
+    xy initPointsXY = {initPoints[i].xPosition, initPoints[i].yPosition};
+    yz initPointsYZ = {initPoints[i].yPosition, initPoints[i].height};
+    pointsXY.push_back(initPointsXY);
+    pointsYZ.push_back(initPointsYZ);
+  }
+
+  Double_t minDHistogramXY = 1000;
+  Double_t maxDHistogramXY = -1000;
+  Double_t minDHistogramYZ = 1000;
+  Double_t maxDHistogramYZ = -1000;
+  for(Int_t j = minAngle; j < maxAngle; j++) {
+    Double_t cosj = cos(j*M_PI/180.);
+    Double_t sinj = sin(j*M_PI/180.);
+    for(UInt_t i = 0; i < pointsXY.size(); i++) {
+      Double_t d = pointsXY[i].x*cosj + pointsXY[i].y*sinj;
+      if(d < minDHistogramXY) minDHistogramXY = d;
+      if(d > maxDHistogramXY) maxDHistogramXY = d;
+    }
+    for(UInt_t i = 0; i < pointsYZ.size(); i++) {
+      Double_t d = pointsYZ[i].y*cosj + pointsYZ[i].z*sinj;
+      if(d < minDHistogramYZ) minDHistogramYZ = d;
+      if(d > maxDHistogramYZ) maxDHistogramYZ = d;
+    }
+  }
+
+  minXY = static_cast<Int_t>(minDHistogramXY);
+  maxXY = static_cast<Int_t>(maxDHistogramXY);
+  minYZ = static_cast<Int_t>(minDHistogramYZ);
+  maxYZ = static_cast<Int_t>(maxDHistogramYZ);
+}
+
+void Spectra::VisualizeHoughRestricted(std::vector<mmTrack> initPoints, TH2I* fXY, TH2I* fYZ, Int_t siDet) {
+  Int_t minAngle = 0;
+  Int_t maxAngle = 180;
+  if(siDet < 4) {
+    minAngle = 91;
+    maxAngle = 179;
+  }
+  else if(siDet > 5 && siDet < 10) {
+    minAngle = 1;
+    maxAngle = 89;
+  }
+
+  Int_t nBinsX = 360;
+  Int_t nBinsY = 360;
+  std::vector<xy> pointsXY;
+  std::vector<yz> pointsYZ;
+  for(UInt_t i = 0; i < initPoints.size(); i++) {
+    xy initPointsXY = {initPoints[i].xPosition, initPoints[i].yPosition};
+    yz initPointsYZ = {initPoints[i].yPosition, initPoints[i].height};
+    pointsXY.push_back(initPointsXY);
+    pointsYZ.push_back(initPointsYZ);
+  }
+
+  Double_t thetaStepXY = 180./static_cast<Double_t>(nBinsX);
+
+  // Fill Hough Matrix
+  for(Double_t j = minAngle; j < maxAngle; j += thetaStepXY) {
+    if(j > 89 && j < 91) continue;
+    Double_t cosj = cos(j*M_PI/180.);
+    Double_t sinj = sin(j*M_PI/180.);
+    for(UInt_t i = 0; i < pointsXY.size(); i++) {
+      Double_t d = pointsXY[i].x*cosj + pointsXY[i].y*sinj;
+      fXY->Fill(j, d);
+    }
+  }
+}
+
+void Spectra::GetHoughStdDevXYRestricted(std::vector<mmTrack> initPoints, std::vector<Double_t> &angle_, std::vector<Double_t> &stdDev_, Int_t siDet) {
+
+  angle_.clear();
+  stdDev_.clear();
+
+  Int_t minAngle = 0;
+  Int_t maxAngle = 180;
+  if(siDet < 4) {
+    minAngle = 91;
+    maxAngle = 179;
+  }
+  else if(siDet > 5 && siDet < 10) {
+    minAngle = 1;
+    maxAngle = 89;
+  }
+
+  Int_t nBinsX = 360;
+  Int_t nBinsY = 360;
+  std::vector<xy> pointsXY;
+  std::vector<yz> pointsYZ;
+  for(UInt_t i = 0; i < initPoints.size(); i++) {
+    xy initPointsXY = {initPoints[i].xPosition, initPoints[i].yPosition};
+    yz initPointsYZ = {initPoints[i].yPosition, initPoints[i].height};
+    pointsXY.push_back(initPointsXY);
+    pointsYZ.push_back(initPointsYZ);
+  }
+
+  Double_t thetaStepXY = 180./static_cast<Double_t>(nBinsX);
+
+  // Fill Hough Matrix
+  for(Double_t j = minAngle; j < maxAngle; j += thetaStepXY) {
+    if(j > 89 && j < 91) continue;
+    Double_t cosj = cos(j*M_PI/180.);
+    Double_t sinj = sin(j*M_PI/180.);
+    std::vector<Double_t> dVector;
+    Double_t mean = 0.;
+    for(UInt_t i = 0; i < pointsXY.size(); i++) {
+      Double_t d = pointsXY[i].x*cosj + pointsXY[i].y*sinj;
+      mean += d;
+      dVector.push_back(d);
+    }
+    if(dVector.empty()) continue;
+
+    mean /= static_cast<Double_t>(pointsXY.size());
+    Double_t stdDev = 0.;
+    for(UInt_t i = 0; i < pointsXY.size(); i++) {
+      Double_t d = pointsXY[i].x*cosj + pointsXY[i].y*sinj;
+      stdDev += (d - mean)*(d - mean);
+    }
+    stdDev /= static_cast<Double_t>(pointsXY.size() - 1.);
+
+    angle_.push_back(j);
+    stdDev_.push_back(stdDev);
+
+  }
+
 }

@@ -283,6 +283,13 @@ private:
                                    std::vector<mmStripChain> strip, Bool_t leftSide, Double_t siTime,
                                    Double_t timeWindow);
 
+// Visualize Hough Transform
+  void GetMinMaxD(std::vector<mmTrack> initPoints, Int_t &minXY, Int_t &maxXY, Int_t &minYZ, Int_t &maxYZ);
+  void VisualizeHough(std::vector<mmTrack> initPoints, TH2I* fXY, TH2I* fYZ);
+  void GetMinMaxDRestricted(std::vector<mmTrack> initPoints, Int_t &minXY, Int_t &maxXY, Int_t &minYZ, Int_t &maxYZ, Int_t siDet);
+  void VisualizeHoughRestricted(std::vector<mmTrack> initPoints, TH2I* fXY, TH2I* fYZ, Int_t siDet);
+  void GetHoughStdDevXYRestricted(std::vector<mmTrack> initPoints, std::vector<Double_t> &angle_, std::vector<Double_t> &stdDev_, Int_t siDet);
+
 // Cross Section
 private:
   void DivideTargetThickness(TH1F *f);

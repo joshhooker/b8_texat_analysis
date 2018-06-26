@@ -1,13 +1,13 @@
 #include "Hough2D.h"
 
-Hough2D::Hough2D(): nBinsX(500), nBinsY(500) {}
+Hough2D::Hough2D(): nBinsX(360), nBinsY(360) {}
 
 Hough2D::~Hough2D() {
   delete hHoughXY;
   delete hHoughYZ;
 }
 
-Hough2D::Hough2D(std::vector<mmTrack> initPoints): nBinsX(500), nBinsY(500) {
+Hough2D::Hough2D(std::vector<mmTrack> initPoints): nBinsX(360), nBinsY(360) {
   for(UInt_t i = 0; i < initPoints.size(); i++) {
     xy initPointsXY = {initPoints[i].xPosition, initPoints[i].yPosition};
     yz initPointsYZ = {initPoints[i].yPosition, initPoints[i].height};
@@ -18,7 +18,7 @@ Hough2D::Hough2D(std::vector<mmTrack> initPoints): nBinsX(500), nBinsY(500) {
   CalculateHough();
 }
 
-Hough2D::Hough2D(std::vector<mmTrack> initPoints, Int_t det, Int_t quad): nBinsX(500), nBinsY(500) {
+Hough2D::Hough2D(std::vector<mmTrack> initPoints, Int_t det, Int_t quad): nBinsX(360), nBinsY(360) {
   for(UInt_t i = 0; i < initPoints.size(); i++) {
     xy initPointsXY = {initPoints[i].xPosition, initPoints[i].yPosition};
     yz initPointsYZ = {initPoints[i].yPosition, initPoints[i].height};
@@ -250,7 +250,7 @@ void Hough2D::CalculateHoughXYRestricted() {
 
   // Fill Hough Matrix
   // Go through the angles and find the angle with the smallest standard deviation
-  hHoughXY = new TH2I("houghXY", "houghXY", nBinsX, minAngle, maxAngle, nBinsY, minDHistogram, maxDHistogram);
+  hHoughXY = new TH2I("houghXY", "houghXY", nBinsX, 0, 180, nBinsY, minDHistogram, maxDHistogram);
   hHoughXY->GetXaxis()->SetTitle("#Theta"); hHoughXY->GetXaxis()->CenterTitle();
   hHoughXY->GetYaxis()->SetTitle("d"); hHoughXY->GetYaxis()->CenterTitle();
 
