@@ -1,6 +1,8 @@
 #ifndef TYPEDEF_H
 #define TYPEDEF_H
 
+#include <TROOT.h>
+
 typedef struct siDetect {
   Int_t detect;
   Int_t quad;

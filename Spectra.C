@@ -14,13 +14,16 @@ int main() {
 }
 
 TChain* MakeChain() {
-  TChain *chain = new TChain("mfmData");
+  auto *chain = new TChain("mfmData");
 
   // Home
   TString PathToFiles = "/hd3/research/data/run0817a/rootM2R-WaveformReduced/run";
 
-  // Laptop
+  // Mac Laptop
   // TString PathToFiles = "/Users/joshhooker/Desktop/data/run0817a/run";
+
+  // Linux Laptop
+  // TString PathToFiles = "/home/joshhooker/Desktop/data/run0817a/run";
 
   // Alpha source test in gas
   // chain->Add(PathToFiles+"004.root");
@@ -105,21 +108,38 @@ TChain* MakeChain() {
 
 void Spectra::Loop() {
 
-  if (fChain == 0) return;
+  if (fChain == nullptr) return;
 
   /////////////////
   // Set up cuts //
   /////////////////
   TFile *cutFile = TFile::Open("cuts.root");
+
+  // dE cuts
   TCutG *dEEForwardCut[10];
   for(UInt_t i = 0; i < 10; i++) {
     if(i == 8) continue;
     dEEForwardCut[i] = (TCutG*)cutFile->Get(Form("dEEForward_d%dCut", i));
   }
-  TCutG *angleTotEnergyCut_d0 = (TCutG*)cutFile->Get("angleTotEnergy_d0Cut");
-  TCutG *angleTotEnergyCut_d1 = (TCutG*)cutFile->Get("angleTotEnergy_d1Cut");
-  TCutG *angleTotEnergyCut_d9 = (TCutG*)cutFile->Get("angleTotEnergy_d9Cut");
-  TCutG *angleTotEnergyCut_d019 = (TCutG*)cutFile->Get("angleTotEnergy_d019Cut");
+
+  // Angle vs Energy Cut
+  auto *angleTotEnergyCut_d0 = (TCutG*)cutFile->Get("angleTotEnergy_d0Cut");
+  auto *angleTotEnergyCut_d1 = (TCutG*)cutFile->Get("angleTotEnergy_d1Cut");
+  auto *angleTotEnergyCut_d9 = (TCutG*)cutFile->Get("angleTotEnergy_d9Cut");
+  auto *angleTotEnergyCut_d019 = (TCutG*)cutFile->Get("angleTotEnergy_d019Cut");
+
+  // Chain/Strip vs Time Cuts
+  TCutG *timeChainForwardCut[10][4];
+  TCutG *timeStripForwardCut[10][4];
+  for(UInt_t i = 0; i < 10; i++) {
+    if(i == 4 || i == 5) continue;
+    for(UInt_t j = 0; j < 4; j++) {
+      if(i == 7 && j == 0) continue;
+      timeChainForwardCut[i][j] = (TCutG*)cutFile->Get(Form("timeChainForward_d%d_q%dCut", i, j));
+      timeStripForwardCut[i][j] = (TCutG*)cutFile->Get(Form("timeStripForward_d%d_q%dCut", i, j));
+    }
+  }
+
   cutFile->Close();
 
   InitChannelMap();
@@ -132,8 +152,6 @@ void Spectra::Loop() {
   InitCentralPadGainMatch();
   InitAverageBeamEnergy();
 
-  Bool_t individualMMHistograms = false;
-
   InitTree();
 
   Long64_t nentries = fChain->GetEntriesFast();
@@ -141,15 +159,15 @@ void Spectra::Loop() {
   printf("Starting Main Loop\n");
 
   Long64_t nbytes = 0, nb = 0;
-  // for(Long64_t jentry = 0; jentry < 4000; jentry++) {
-  // for(Long64_t jentry = 3431; jentry < 3432; jentry++) {
+//  for(Long64_t jentry = 0; jentry < 2000; jentry++) {
+//  for(Long64_t jentry = 3431; jentry < 3432; jentry++) {
   for(Long64_t jentry = 0; jentry < nentries; jentry++) {
     Long64_t ientry = LoadTree(jentry);
     if(ientry < 0) break;
     nb = fChain->GetEntry(jentry);   nbytes += nb;
     // if (Cut(ientry) < 0) continue;
 
-    if(jentry != 0 && jentry % 2000 == 0) printf("Processed %lld events\n",jentry);
+    if(jentry != 0 && jentry % 10000 == 0) printf("Processed %lld events\n", jentry);
 
     // Find hit in Si detectors
     std::vector<siDetect> siDetect_;
@@ -174,8 +192,8 @@ void Spectra::Loop() {
     std::vector<mmStripChain> mmRightChain_;
 
     // IC
-    Int_t icE = 0.;
-    Int_t icT = 0.;
+    Double_t icE = 0.;
+    Double_t icT = 0.;
 
     for(Int_t i = 0; i < mmMul; i++) {
       if(mmChan[i] == 11 || mmChan[i] == 22 || mmChan[i] == 45 || mmChan[i] == 56) continue; // Skip FPN Channels
@@ -186,6 +204,7 @@ void Spectra::Loop() {
         if(mmAsad[i] == 0) {
           // Aget0
           if(mmAget[i] == 0) {
+            if(mmEnergy[i] < 0) continue;
             std::pair<Int_t, Int_t> pad = MM_Map_Asad0_Aget0[mmChan[i]];
             mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
             mmCenter_.push_back(mmHit);
@@ -194,6 +213,7 @@ void Spectra::Loop() {
           }
           // Aget1
           else if(mmAget[i] == 1) {
+            if(mmEnergy[i] < 0) continue;
             std::pair<Int_t, Int_t> pad = MM_Map_Asad0_Aget1[mmChan[i]];
             mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
             mmCenter_.push_back(mmHit);
@@ -202,6 +222,7 @@ void Spectra::Loop() {
           }
           // Aget2
           else if(mmAget[i] == 2) {
+            if(mmEnergy[i] < 0) continue;
             std::pair<Int_t, Int_t> pad = MM_Map_Asad0_Aget2[mmChan[i]];
             mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
             mmCenter_.push_back(mmHit);
@@ -210,6 +231,7 @@ void Spectra::Loop() {
           }
           // Aget3
           else if(mmAget[i] == 3) {
+            if(mmEnergy[i] < 0) continue;
             std::pair<Int_t, Int_t> pad = MM_Map_Asad0_Aget3[mmChan[i]];
             mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
             mmCenter_.push_back(mmHit);
@@ -221,6 +243,7 @@ void Spectra::Loop() {
         else if(mmAsad[i] == 1) {
           // Aget0
           if(mmAget[i] == 0) {
+            if(mmEnergy[i] < 0) continue;
             std::pair<Int_t, Int_t> pad = MM_Map_Asad1_Aget0[mmChan[i]];
             mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
             mmCenter_.push_back(mmHit);
@@ -229,6 +252,7 @@ void Spectra::Loop() {
           }
           // Aget1
           else if(mmAget[i] == 1) {
+            if(mmEnergy[i] < 0) continue;
             std::pair<Int_t, Int_t> pad = MM_Map_Asad1_Aget1[mmChan[i]];
             mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
             mmCenter_.push_back(mmHit);
@@ -237,6 +261,7 @@ void Spectra::Loop() {
           }
           // Aget2
           else if(mmAget[i] == 2) {
+            if(mmEnergy[i] < 0) continue;
             std::pair<Int_t, Int_t> pad = MM_Map_Asad1_Aget2[mmChan[i]];
             mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
             mmCenter_.push_back(mmHit);
@@ -245,6 +270,7 @@ void Spectra::Loop() {
           }
           // Aget3
           else if(mmAget[i] == 3) {
+            if(mmEnergy[i] < 0) continue;
             std::pair<Int_t, Int_t> pad = MM_Map_Asad1_Aget3[mmChan[i]];
             mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
             mmCenter_.push_back(mmHit);
@@ -258,10 +284,12 @@ void Spectra::Loop() {
           if(mmAget[i] == 0) {
             Int_t bin = MM_Map_Asad2_Aget0[mmChan[i]];
             if(mmChan[i] < 34) { // Strips
+              if(mmEnergy[i] < 0) continue;
               mmStripChain mmHit = {bin, mmEnergy[i], mmTime[i]};
               mmLeftStrip_.push_back(mmHit);
             }
             else if(mmChan[i] > 33 && mmChan[i] < 68) { // Chains
+              if(mmEnergy[i] < 0) continue;
               mmStripChain mmHit = {bin, mmEnergy[i], mmTime[i]};
               mmLeftChain_.push_back(mmHit);
             }
@@ -270,16 +298,19 @@ void Spectra::Loop() {
           else if(mmAget[i] == 1) {
             Int_t bin = MM_Map_Asad2_Aget1[mmChan[i]];
             if(mmChan[i] < 34) { // Strips
+              if(mmEnergy[i] < 0) continue;
               mmStripChain mmHit = {bin, mmEnergy[i], mmTime[i]};
               mmLeftStrip_.push_back(mmHit);
             }
             else if(mmChan[i] > 33 && mmChan[i] < 68) { // Chains
+              if(mmEnergy[i] < 0) continue;
               mmStripChain mmHit = {bin, mmEnergy[i], mmTime[i]};
               mmLeftChain_.push_back(mmHit);
             }
           }
           // Aget2 - Outside Central Pads
           else if(mmAget[i] == 2) {
+            if(mmEnergy[i] < 0) continue;
             std::pair<Int_t, Int_t> pad = MM_Map_Asad2_Aget2[mmChan[i]];
             mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
             mmCenter_.push_back(mmHit);
@@ -288,6 +319,7 @@ void Spectra::Loop() {
           }
           // Aget3 - Outside Central Pads
           else if(mmAget[i] == 3) {
+            if(mmEnergy[i] < 0) continue;
             std::pair<Int_t, Int_t> pad = MM_Map_Asad2_Aget3[mmChan[i]];
             mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
             mmCenter_.push_back(mmHit);
@@ -301,10 +333,12 @@ void Spectra::Loop() {
           if(mmAget[i] == 0) {
             Int_t bin = MM_Map_Asad3_Aget0[mmChan[i]];
             if(mmChan[i] < 34) { // Strips
+              if(mmEnergy[i] < 0) continue;
               mmStripChain mmHit = {bin, mmEnergy[i], mmTime[i]};
               mmRightStrip_.push_back(mmHit);
             }
             else if(mmChan[i] > 33 && mmChan[i] < 68) { // Chains
+              if(mmEnergy[i] < 0) continue;
               mmStripChain mmHit = {bin, mmEnergy[i], mmTime[i]};
               mmRightChain_.push_back(mmHit);
             }
@@ -313,16 +347,19 @@ void Spectra::Loop() {
           else if(mmAget[i] == 1) {
             Int_t bin = MM_Map_Asad3_Aget1[mmChan[i]];
             if(mmChan[i] < 34) { // Strips
+              if(mmEnergy[i] < 0) continue;
               mmStripChain mmHit = {bin, mmEnergy[i], mmTime[i]};
               mmRightStrip_.push_back(mmHit);
             }
             else if(mmChan[i] > 33 && mmChan[i] < 68) { // Chains
+              if(mmEnergy[i] < 0) continue;
               mmStripChain mmHit = {bin, mmEnergy[i], mmTime[i]};
               mmRightChain_.push_back(mmHit);
             }
           }
           // Aget2
           else if(mmAget[i] == 2) {
+            if(mmEnergy[i] < 0) continue;
             std::pair<Int_t, Int_t> pad = MM_Map_Asad3_Aget2[mmChan[i]];
             mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
             mmCenter_.push_back(mmHit);
@@ -331,6 +368,7 @@ void Spectra::Loop() {
           }
           // Aget3
           else if(mmAget[i] == 3) {
+            if(mmEnergy[i] < 0) continue;
             std::pair<Int_t, Int_t> pad = MM_Map_Asad3_Aget3[mmChan[i]];
             mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
             mmCenter_.push_back(mmHit);
@@ -388,15 +426,33 @@ void Spectra::Loop() {
     hIonizationChamberE->Fill(icE);
     hIonizationChamberT->Fill(icT);
 
-    // if(icE < 1400 || icE > 1900) continue;
+    if(icE < 1400 || icE > 1900) continue;
     if(icT < 5500 || icT > 6500) continue;
 
-    if(siDetect_.size() != 1) continue;
+    //*********//
+    // Silicon //
+    //*********//
 
-    siDet = siDetect_[0].detect;
-    siQuad = siDetect_[0].quad;
-    siChannel = siDetect_[0].channel;
-    siEnergy = siDetect_[0].energy;
+    // Look at all Si that fired and gate
+    std::vector<siDetect> siDetectNew_;
+    for(auto si : siDetect_) {
+      if(si.time > 3600 && si.time < 5200) siDetectNew_.push_back(si);
+    }
+
+    // If more than 1 Si fired, get highest energy (good enough for now for (p, p))
+    siDetect highSi;
+    Double_t maxEnergy = 0.;
+    for(auto si : siDetectNew_) {
+      if(si.energy > maxEnergy) {
+        maxEnergy = si.energy;
+        highSi = si;
+      }
+    }
+
+    siDet = highSi.detect;
+    siQuad = highSi.quad;
+    siChannel = highSi.channel;
+    siEnergy = highSi.energy;
     siEnergyCal = 0.;
     if(siDet < 10) {
       siEnergyCal = siEnergy*siEForwardCalibration[siDet][siQuad].first + siEForwardCalibration[siDet][siQuad].second;
@@ -404,9 +460,9 @@ void Spectra::Loop() {
     else {
       siEnergyCal = siEnergy*siELeftCalibration[siDet - 10][siQuad].first + siELeftCalibration[siDet - 10][siQuad].second;
     }
-    siTime = siDetect_[0].time;
+    siTime = highSi.time;
 
-    if(siEnergyCal < 1) continue;
+    if(siEnergyCal < 1.) continue;
 
     if(siDet < 10) {
       hSiEForwardDet[siDet]->Fill(siEnergy);
@@ -436,32 +492,40 @@ void Spectra::Loop() {
       left = true;
     }
 
-    Bool_t forwardDet = false;
     Bool_t sideDet = false;
-    if(siDet < 10) forwardDet = true;
-    else sideDet = true;
+    if(siDet > 9) sideDet = true;
 
     if(sideDet) continue;
+
+    // Skip bad Kiev detectors
+//    if(siDet == 2 || siDet == 3 || siDet == 6 || siDet == 7) continue;
+
+    //*****//
+    // CsI //
+    //*****//
 
     // Find if CsI behind Si fired
     punchthrough = false;
     csiEnergy = 0.;
     csiEnergyCal = 0.;
     csiTime = 0.;
-    for(UInt_t i = 0; i < csiDetect_.size(); i++) {
-      if(csiDetect_[i].detect == siDet) {
-        csiEnergy = csiDetect_[i].energy;
-        csiTime = csiDetect_[i].time;
-        if(siDet < 10) hCsIETForward[siDet]->Fill(csiEnergy, csiTime);
-        else hCsIETLeft[siDet - 10]->Fill(csiEnergy, csiTime);
+    for(auto csi : csiDetect_) {
+      if(csi.detect == siDet) {
+        csiEnergy = csi.energy;
+        csiTime = csi.time;
         if(csiTime < 11000 || csiTime > 12250) continue;
         punchthrough = true;
-        if(siDet < 10) csiEnergyCal = csiEnergy*csiEForwardCalibration[siDet].first + csiEForwardCalibration[siDet].second;
-        hSiCsIEForwardDet[siDet]->Fill(siEnergy, csiEnergy);
-        hSiCsIEForwardDetCal[siDet]->Fill(siEnergyCal, csiEnergy);
-
-        hSiCsIEForward[siDet][siQuad]->Fill(siEnergy, csiEnergy);
-        hSiCsIEForwardCal[siDet][siQuad]->Fill(siEnergyCal, csiEnergy);
+        if(!sideDet) {
+          hCsIETForward[siDet]->Fill(csiEnergy, csiTime);
+          csiEnergyCal = csiEnergy*csiEForwardCalibration[siDet].first + csiEForwardCalibration[siDet].second;
+          hSiCsIEForwardDet[siDet]->Fill(siEnergy, csiEnergy);
+          hSiCsIEForwardDetCal[siDet]->Fill(siEnergyCal, csiEnergy);
+          hSiCsIEForward[siDet][siQuad]->Fill(siEnergy, csiEnergy);
+          hSiCsIEForwardCal[siDet][siQuad]->Fill(siEnergyCal, csiEnergy);
+        }
+        else {
+          hCsIETLeft[siDet - 10]->Fill(csiEnergy, csiTime);
+        }
       }
     }
 
@@ -475,7 +539,11 @@ void Spectra::Loop() {
 
     totalEnergy = siEnergyCal + csiEnergyCal;
 
-    // Reduce MM Center to one entry per row
+    //************//
+    // Micromegas //
+    //************//
+
+    // Reduce mmCenter to one entry per row
     std::map<Int_t, Double_t> centralPadPosition;
     std::map<Int_t, Double_t> centralPadTotalEnergy;
     std::map<Int_t, Double_t> centralPadTime;
@@ -484,21 +552,24 @@ void Spectra::Loop() {
     for(UInt_t i = 0; i < 128; i++) {
       centralPadTotal[i] = 0;
     }
-    for(UInt_t i = 0; i < mmCenterMatched_.size(); i++) {
-      if(centralPadTotal[mmCenterMatched_[i].row] == 0) {
-        centralPadPosition[mmCenterMatched_[i].row] = (mmCenterMatched_[i].column*3.5 - 8.75)*mmCenterMatched_[i].energy;
-        centralPadTotalEnergy[mmCenterMatched_[i].row] = mmCenterMatched_[i].energy;
-        centralPadTime[mmCenterMatched_[i].row] = mmCenterMatched_[i].time;
-        centralPadColumn[mmCenterMatched_[i].row] = mmCenterMatched_[i].column;
+    for(auto mm : mmCenterMatched_) {
+      if(centralPadTotal[mm.row] == 0) {
+        if(mm.energy < 0) continue;
+        centralPadPosition[mm.row] = (mm.column*3.5 - 8.75)*mm.energy;
+        centralPadTotalEnergy[mm.row] = mm.energy;
+        centralPadTime[mm.row] = mm.time;
+        centralPadColumn[mm.row] = mm.column;
       }
       else {
-        centralPadPosition[mmCenterMatched_[i].row] += (mmCenterMatched_[i].column*3.5 - 8.75)*mmCenterMatched_[i].energy;
-        centralPadTotalEnergy[mmCenterMatched_[i].row] += mmCenterMatched_[i].energy;
-        centralPadTime[mmCenterMatched_[i].row] += mmCenterMatched_[i].time;
+        if(mm.energy < 0) continue;
+        centralPadPosition[mm.row] += (mm.column*3.5 - 8.75)*mm.energy;
+        centralPadTotalEnergy[mm.row] += mm.energy;
+        centralPadTime[mm.row] += mm.time;
       }
-      centralPadTotal[mmCenterMatched_[i].row]++;
+      centralPadTotal[mm.row]++;
     }
 
+    // Separate beam and proton in central Micromegas
     std::vector<mmTrack> mmCenterBeamTotal;
     std::vector<mmTrack> mmCenterProton;
     std::map<Int_t, Double_t>::iterator it;
@@ -513,8 +584,8 @@ void Spectra::Loop() {
       hit.energy = centralPadTotalEnergy[row];
       hit.height = heightOffset - hit.time*driftVelocity;
       hit.total = centralPadTotal[row];
-      hMicroMegasCenterCumulative->Fill(centralPadColumn[row], row);
-      hMicroMegasCenterCumulativePosition->Fill(centralPadColumn[row], hit.yPosition);
+      hMicroMegasCenterCumulative->Fill(centralPadColumn[row] - 3, row);
+      hMicroMegasCenterCumulativePosition->Fill(hit.xPosition, hit.yPosition);
       if(row < 112) {
         mmCenterBeamTotal.push_back(hit);
       }
@@ -524,73 +595,97 @@ void Spectra::Loop() {
     }
 
     // Sorting mmCenterBeamTotal by row
-    if(mmCenterBeamTotal.size() > 0) {
+    if(!mmCenterBeamTotal.empty()) {
       std::sort(mmCenterBeamTotal.begin(), mmCenterBeamTotal.end(), sortByRowMMTrack());
     }
 
     // Sorting mmLeftChain
-    if(mmLeftChain_.size() > 0) {
+    if(!mmLeftChain_.empty()) {
       std::sort(mmLeftChain_.begin(), mmLeftChain_.end(), sortByRowMMStripChain());
     }
 
     // Sorting mmLeftStrip
-    if(mmLeftStrip_.size() > 0) {
+    if(!mmLeftStrip_.empty()) {
       std::sort(mmLeftStrip_.begin(), mmLeftStrip_.end(), sortByRowMMStripChain());
     }
 
     // Sorting mmRightChain
-    if(mmRightChain_.size() > 0) {
+    if(!mmRightChain_.empty()) {
       std::sort(mmRightChain_.begin(), mmRightChain_.end(), sortByRowMMStripChain());
     }
 
     // Sorting mmRightStrip
-    if(mmRightStrip_.size() > 0) {
+    if(!mmRightStrip_.empty()) {
       std::sort(mmRightStrip_.begin(), mmRightStrip_.end(), sortByRowMMStripChain());
     }
 
-    std::vector<mmTrack> stripChainMatchedLeft;
-    std::vector<mmTrack> stripChainMatchedRight;
-    std::vector<mmTrack> stripChainRawLeft;
-    std::vector<mmTrack> stripChainRawRight;
-    if(mmLeftChain_.size() > 0 && mmLeftStrip_.size() > 0) {
-      StripChainMatch(stripChainMatchedLeft, stripChainRawLeft, mmLeftChain_, mmLeftStrip_, true, siTime);
+    // Look at time vs column/strip. TODO: Central
+    if(left && !sideDet) {
+      // Column
+      for(auto mm : mmLeftChain_) {
+        hTimeColumnForward[siDet][siQuad]->Fill(mm.row, mm.time - siTime);
+      }
+      // Strip
+      for(auto mm : mmLeftStrip_) {
+        hTimeStripForward[siDet][siQuad]->Fill(mm.row, mm.time - siTime);
+      }
     }
-    if(mmRightChain_.size() > 0 && mmRightStrip_.size() > 0) {
-      StripChainMatch(stripChainMatchedRight, stripChainRawRight, mmRightChain_, mmRightStrip_, false, siTime);
+//    else if(central) {}
+    else if(right && !sideDet) {
+      // Column
+      for(auto mm : mmRightChain_) {
+        hTimeColumnForward[siDet][siQuad]->Fill(mm.row, mm.time - siTime);
+      }
+      // Strip
+      for(auto mm : mmRightStrip_) {
+        hTimeStripForward[siDet][siQuad]->Fill(mm.row, mm.time - siTime);
+      }
     }
 
-    // Find dE
-    dE = 0.;
-    if(central) { // Forward central detectors
-      Int_t totalRows = 0;
-      for(Int_t i = 116; i < 124; i++) {
-        if(i == 117) continue;
-        auto it = centralPadTotalEnergy.find(i);
-        if(it != centralPadTotalEnergy.end()) {
-          dE += centralPadTotalEnergy[i];
-          totalRows++;
-        }
-      }
-      dE /= totalRows;
-    }
-    else if(right) { // Forward beam right detectors
-      for(UInt_t i = 0; i < mmRightStrip_.size(); i++) {
-        dE += mmRightStrip_[i].energy;
-      }
-      dE /= mmRightStrip_.size();
-    }
-    else if(left && siDet < 10) { // Forward beam left detectors
-      for(UInt_t i = 0; i < mmLeftStrip_.size(); i++) {
-        dE += mmLeftStrip_[i].energy;
-      }
-      dE /= mmLeftStrip_.size();
-    }
-    else if(left && siDet > 9) { // Left wall detectors
-      for(UInt_t i = 0; i < mmLeftStrip_.size(); i++) {
-        dE += mmLeftStrip_[i].energy;
-      }
-      dE /= mmLeftStrip_.size();
-    }
+//    // Find dE for center, left and right regions
+//    dE = 0.;
+//    if(central) {
+//      Int_t totalRows = 0;
+//      for (Int_t i = 116; i < 124; i++) {
+//        if (i == 117) continue;
+//        auto iterator = centralPadTotalEnergy.find(i);
+//        if (iterator != centralPadTotalEnergy.end()) {
+//          dE += centralPadTotalEnergy[i];
+//          totalRows++;
+//        }
+//      }
+//      dE /= static_cast<Double_t>(totalRows);
+//    }
+//    else if(right) {
+//      for (auto mm : mmRightStrip_) {
+//        dE += mm.energy;
+//      }
+//      dE /= static_cast<Double_t>(mmRightStrip_.size());
+//    }
+//    else if(left) {
+//      for (auto mm : mmLeftStrip_) {
+//        dE += mm.energy;
+//      }
+//      dE /= static_cast<Double_t>(mmLeftStrip_.size());
+//    }
+//
+//    hdEEForward[siDet]->Fill(siEnergy, dE);
+//    hdEEForwardCal[siDet]->Fill(siEnergyCal, dE);
+
+
+    // Match strips with chains
+//    std::vector<mmTrack> stripChainMatchedLeft;
+//    std::vector<mmTrack> stripChainMatchedRight;
+//    std::vector<mmTrack> stripChainRawLeft;
+//    std::vector<mmTrack> stripChainRawRight;
+//    if(!mmLeftChain_.empty() && !mmLeftStrip_.empty()) {
+//      StripChainMatch(stripChainMatchedLeft, stripChainRawLeft, mmLeftChain_, mmLeftStrip_, true, siTime);
+//    }
+//    if(!mmRightChain_.empty() && !mmRightStrip_.empty()) {
+//      StripChainMatch(stripChainMatchedRight, stripChainRawRight, mmRightChain_, mmRightStrip_, false, siTime);
+//    }
+
+/*
 
     hdEEForward[siDet]->Fill(siEnergy, dE);
     hdEEForwardCal[siDet]->Fill(siEnergyCal, dE);
@@ -612,12 +707,10 @@ void Spectra::Loop() {
     vertexPositionY = -400.;
     vertexPositionZ = 0.;
 
-    Double_t houghAngleXY = 89.;
-
     if(!central) {
 
-      if(protonTrack.size() == 0) {
-        std::cout << siEnergy << '\t' << dE << std::endl;
+      if(protonTrack.empty()) {
+        // std::cout << siEnergy << '\t' << dE << std::endl;
         continue;
       }
       // for(UInt_t i = 0; i < protonTrack.size(); i++) {
@@ -649,26 +742,26 @@ void Spectra::Loop() {
         }
       }
 
-      HoughTrack* fitProton = new HoughTrack();
+      auto *fitProton = new HoughTrack();
       fitProton->AddTrack(protonTrack, siDet, siQuad);
       Double_t minDist = fitProton->FitRestricted();
-      if(minDist > 3.e+07) {
-        for(UInt_t j = 0; j < 34; j++) {
-          protonTrack.push_back(detPoint1);
-          protonTrack.push_back(detPoint2);
-          protonTrack.push_back(detPoint3);
-        }
-        fitProton->AddTrack(protonTrack, siDet, siQuad);
-        minDist = fitProton->FitRestricted();
-      }
+      // if(minDist > 3.e+07) {
+      //   for(UInt_t j = 0; j < 34; j++) {
+      //     protonTrack.push_back(detPoint1);
+      //     protonTrack.push_back(detPoint2);
+      //     protonTrack.push_back(detPoint3);
+      //   }
+      //   fitProton->AddTrack(protonTrack, siDet, siQuad);
+      //   minDist = fitProton->FitRestricted();
+      // }
       std::vector<Double_t> parsProton = fitProton->GetPars();
-      houghAngleXY = fitProton->GetHoughAngleXY();
+      Double_t houghAngleXY = fitProton->GetHoughAngleXY();
       hHoughAngle[siDet]->Fill(houghAngleXY);
 
       delete fitProton;
 
       // Check there were beam ions
-      UInt_t mmCenterSize = mmCenterBeamTotal.size();
+      ULong_t mmCenterSize = mmCenterBeamTotal.size();
 
       // std::cout << parsProton[0] << '\t' << parsProton[1] << std::endl;
       // std::cout << parsProton[2] << '\t' << parsProton[3] << std::endl;
@@ -794,13 +887,10 @@ void Spectra::Loop() {
         }
       }
 
-
-
-
       // Find the angle (use 2D angle for now)
       // Simply use the slope of the x-component and assume the beam is straight
       // The angle is then theta = atan(|m|) where m in the slope of the x-component (parsProton[1])
-      Float_t m_xcomponent = fabs(parsProton[1]);
+      Double_t m_xcomponent = fabs(parsProton[1]);
       angle = atan(m_xcomponent);
 
       TVector3 v1(0, 1, 0);
@@ -910,10 +1000,10 @@ void Spectra::Loop() {
 
       // if(!angleTotEnergyCut_d019->IsInside(totalEnergy, angle)) continue;
 
-      Float_t protonPathLength = sqrt(124*124 + vertexPositionY*vertexPositionY);
-      Float_t protonEnergy = protonMethane->AddBack(totalEnergy/1000., protonPathLength);
-      Float_t cosAngle2 = cos(angle)*cos(angle);
-      Float_t beamEnergy = protonEnergy*(m1 + m2)*(m1 + m2)/(4.*m1*m2*cosAngle2);
+      Double_t protonPathLength = sqrt(124*124 + vertexPositionY*vertexPositionY);
+      Double_t protonEnergy = protonMethane->AddBack(totalEnergy/1000., protonPathLength);
+      Double_t cosAngle2 = cos(angle)*cos(angle);
+      Double_t beamEnergy = protonEnergy*(m1 + m2)*(m1 + m2)/(4.*m1*m2*cosAngle2);
       cmEnergy = beamEnergy*m2/(m1 + m2);
 
       s1->Fill(cmEnergy);
@@ -921,10 +1011,12 @@ void Spectra::Loop() {
 
     //  ** End of event by event analysis ** //
     FillTree();
+
+     */
   }
 
   // TGraph boundaries
-  TGraph *h_track_bound = new TGraph();
+  auto *h_track_bound = new TGraph();
   h_track_bound->SetMarkerStyle(8);
   h_track_bound->SetMarkerColor(5);
   h_track_bound->SetPoint(0, -150, -300);
@@ -933,40 +1025,40 @@ void Spectra::Loop() {
   h_track_bound->Write();
   delete h_track_bound;
 
-  hIonizationChamberE->Write();
-  hIonizationChamberT->Write();
+//  hIonizationChamberE->Write();
+//  hIonizationChamberT->Write();
 
-  hMicroMegasCenterCumulative->Write();
-  hMicroMegasCenterCumulativePosition->Write();
+//  hMicroMegasCenterCumulative->Write();
+//  hMicroMegasCenterCumulativePosition->Write();
 
   // Forward Si Detectors
-  for(UInt_t i = 0; i < 10 ; i++) {
-    // hSiEForwardDet[i]->Write();
-    // hSiTForwardDet[i]->Write();
-    hSiEForwardDetCal[i]->Write();
-    // for(int j=0; j<4; j++) {
-      // hSiEForward[i][j]->Write();
-      // hSiEForwardCal[i][j]->Write();
-      // hSiTForward[i][j]->Write();
-    // }
-    // hCsIEForward[i]->Write();
-    // hCsITForward[i]->Write();
-    // hSiCsIForward[i]->Write();
-  }
+//  for(UInt_t i = 0; i < 10; i++) {
+//    hSiEForwardDet[i]->Write();
+//    hSiTForwardDet[i]->Write();
+//    hSiEForwardDetCal[i]->Write();
+//    for (int j = 0; j < 4; j++) {
+//      hSiEForward[i][j]->Write();
+//      hSiEForwardCal[i][j]->Write();
+//      hSiTForward[i][j]->Write();
+//    }
+//    hCsIEForward[i]->Write();
+//    hCsITForward[i]->Write();
+//    hSiCsIEForward[i]->Write();
+//  }
 
   // Left Si Detectors
-  // for(UInt_t i = 0; i < 6 ; i++) {
-    // hSiELeftDet[i]->Write();
-    // hSiTLeftDet[i]->Write();
-    // hSiELeftDetCal[i]->Write();
-    // for(int j=0; j<4; j++) {
-      // hSiELeft[i][j]->Write();
-      // hSiTLeft[i][j]->Write();
-    // }
-    // hCsIELeft[i]->Write();
-    // hCsITLeft[i]->Write();
-    // hCsIETLeft[i]->Write();
-  // }
+//  for(UInt_t i = 0; i < 6; i++) {
+//    hSiELeftDet[i]->Write();
+//    hSiTLeftDet[i]->Write();
+//    hSiELeftDetCal[i]->Write();
+//    for(UInt_t j = 0; j < 4; j++) {
+//      hSiELeft[i][j]->Write();
+//      hSiTLeft[i][j]->Write();
+//    }
+//    hCsIELeft[i]->Write();
+//    hCsITLeft[i]->Write();
+//    hCsIETLeft[i]->Write();
+//  }
 
   // hMicroMegasCenterCumulative->Write();
   // hMicroMegasCenterEnergyCumulative->Write();
@@ -979,15 +1071,15 @@ void Spectra::Loop() {
   //   hCsIETForward[i]->Write();
   // }
 
-  // Forward Si Energy vs CsI Energy
-  // for(UInt_t i = 0; i < 10; i++) {
-    // hSiCsIEForwardDet[i]->Write();
-    // hSiCsIEForwardDetCal[i]->Write();
-    // for(UInt_t j = 0; j < 4; j++) {
-    //   hSiCsIEForward[i][j]->Write();
-    //   hSiCsIEForwardCal[i][j]->Write();
-    // }
-  // }
+//   Forward Si Energy vs CsI Energy
+//   for(UInt_t i = 0; i < 10; i++) {
+//     hSiCsIEForwardDet[i]->Write();
+//     hSiCsIEForwardDetCal[i]->Write();
+//      for(UInt_t j = 0; j < 4; j++) {
+//        hSiCsIEForward[i][j]->Write();
+//        hSiCsIEForwardCal[i][j]->Write();
+//      }
+//   }
 
   // Forward Si + CsI vs Si (raw)
   // for(UInt_t i = 0; i < 10; i++) {
@@ -1006,41 +1098,49 @@ void Spectra::Loop() {
   // }
 
   // Forward dE vs Si Energy
-  // for(UInt_t i = 0; i < 10; i++) {
-    // hdEEForward[i]->Write();
-    // hdEEForwardCal[i]->Write();
-    // hdEEForwardCalTotal[i]->Write();
-  // }
+//  for(UInt_t i = 0; i < 10; i++) {
+//    hdEEForward[i]->Write();
+//    hdEEForwardCal[i]->Write();
+//    hdEEForwardCalTotal[i]->Write();
+//  }
 
   // Forward Hough Angle
-  for(UInt_t i = 0; i < 10; i++) {
-    hHoughAngle[i]->Write();
-  }
+//  for(UInt_t i = 0; i < 10; i++) {
+//    hHoughAngle[i]->Write();
+//  }
 
   // Forward Vertex vs Si Energy
-  for(UInt_t i = 0; i < 10; i++) {
-    hVertexSiEForward[i]->Write();
-    hVertexSiEForwardCal[i]->Write();
-  }
+//  for(UInt_t i = 0; i < 10; i++) {
+//    hVertexSiEForward[i]->Write();
+//    hVertexSiEForwardCal[i]->Write();
+//  }
 
   // Forward Angle vs Si Energy
-  for(UInt_t i = 0; i < 10; i++) {
-    hAngleEForward[i]->Write();
-    hAngleEForwardCal[i]->Write();
-    hAngleEForwardCalTotal[i]->Write();
-  }
+//  for(UInt_t i = 0; i < 10; i++) {
+//    hAngleEForward[i]->Write();
+//    hAngleEForwardCal[i]->Write();
+//    hAngleEForwardCalTotal[i]->Write();
+//  }
 
   // Forward Vertex vs Angle
-  // for(UInt_t i = 0; i < 10; i++) {
-  //   hVertexAngleForward[i]->Write();
-  // }
+//  for(UInt_t i = 0; i < 10; i++) {
+//    hVertexAngleForward[i]->Write();
+//  }
 
-  DivideTargetThickness(s1);
-  ReadSolidAngle();
-  SolidAngle(s1);
-  s1->Scale(1./numberB8);
-  // s1->Write();
-  WriteSpectrumToFile(s1, 3);
+  // Time vs Column/Strip Number Forward Detectors
+  for(UInt_t i = 0; i < 10; i++) {
+    for(UInt_t j = 0; j < 4; j++) {
+      hTimeColumnForward[i][j]->Write();
+      hTimeStripForward[i][j]->Write();
+    }
+  }
+
+//  DivideTargetThickness(s1);
+//  ReadSolidAngle();
+//  SolidAngle(s1);
+//  s1->Scale(1./numberB8);
+//  s1->Write();
+//  WriteSpectrumToFile(s1, 3);
 
   WriteTree();
 
@@ -1096,11 +1196,11 @@ size_t Spectra::StripChainNumberTimeBuckets(std::vector<mmStripChain> chain, std
   std::map<Int_t, Int_t> individualTimeStripMap;
   std::map<Int_t, Int_t> individualTimeChainMap;
 
-  for(UInt_t i = 0; i < chain.size(); i++) {
-    individualTimeChainMap[chain[i].time] = 1;
+  for(auto mm : chain) {
+    individualTimeChainMap[mm.time] = 1;
   }
-  for(UInt_t i = 0; i < strip.size(); i++) {
-    individualTimeStripMap[strip[i].time] = 1;
+  for(auto mm : strip) {
+    individualTimeStripMap[mm.time] = 1;
   }
 
   size_t sizeTimeChainMap = individualTimeChainMap.size();
@@ -1584,9 +1684,9 @@ void Spectra::VisualizeHoughRestricted(std::vector<mmTrack> initPoints, TH2I* fX
   Int_t nBinsY = 360;
   std::vector<xy> pointsXY;
   std::vector<yz> pointsYZ;
-  for(UInt_t i = 0; i < initPoints.size(); i++) {
-    xy initPointsXY = {initPoints[i].xPosition, initPoints[i].yPosition};
-    yz initPointsYZ = {initPoints[i].yPosition, initPoints[i].height};
+  for(auto point : initPoints) {
+    xy initPointsXY = {point.xPosition, point.yPosition};
+    yz initPointsYZ = {point.yPosition, point.height};
     pointsXY.push_back(initPointsXY);
     pointsYZ.push_back(initPointsYZ);
   }
@@ -1598,8 +1698,8 @@ void Spectra::VisualizeHoughRestricted(std::vector<mmTrack> initPoints, TH2I* fX
     if(j > 89 && j < 91) continue;
     Double_t cosj = cos(j*M_PI/180.);
     Double_t sinj = sin(j*M_PI/180.);
-    for(UInt_t i = 0; i < pointsXY.size(); i++) {
-      Double_t d = pointsXY[i].x*cosj + pointsXY[i].y*sinj;
+    for(auto point : pointsXY) {
+      Double_t d = point.x*cosj + point.y*sinj;
       fXY->Fill(j, d);
     }
   }
