@@ -34,7 +34,7 @@ typedef struct mmTrack {
   Int_t total;
 } mmTrack;
 
-typedef struct mmStripChain {
+typedef struct mmChainStrip {
   Int_t row;
   Double_t energy;
   Double_t time;

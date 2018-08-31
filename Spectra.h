@@ -56,7 +56,7 @@ struct sortByRowMMTrack {
 };
 
 struct sortByRowMMStripChain {
-  inline Bool_t operator() (const mmStripChain& struct1, const mmStripChain& struct2) {
+  inline Bool_t operator() (const mmChainStrip& struct1, const mmChainStrip& struct2) {
     return (struct1.row < struct2.row);
   }
 };
@@ -134,6 +134,14 @@ private:
   std::map<Int_t, Int_t> MM_Map_Asad3_Aget1;
   std::map<Int_t, std::pair<Int_t, Int_t> > MM_Map_Asad3_Aget2;
   std::map<Int_t, std::pair<Int_t, Int_t> > MM_Map_Asad3_Aget3;
+
+// Cuts
+  TCutG *dEEForwardCut[10];
+
+  TCutG *angleTotEnergyCut[10];
+
+  TCutG *timeChainForwardCut[10][4];
+  TCutG *timeStripForwardCut[10][4];
 
 // Histograms
 private:
@@ -224,6 +232,8 @@ private:
   TH2F* hAngleEForward[10];
   TH2F* hAngleEForwardCal[10];
   TH2F* hAngleEForwardCalTotal[10];
+  TH2F* hAngleEForwardProtonEnergy[10];
+  TH2F* hAngleEForwardCMEnergy[10];
 
   // Angle vs E Left Detectors
   TH2F* hAngleELeft[10];
@@ -244,10 +254,14 @@ private:
   TH2F* hVertexAngleForward[10];
 
   // Time vs Column Number Forward Detectors
-  TH2F* hTimeColumnForward[10][4];
+  TH2F* hTimeChainForward[10][4];
 
   // Time vs Strip Number Forward Detectors
   TH2F* hTimeStripForward[10][4];
+
+  // Forward Wall XZ Hit Positions
+  TH2F* hHitPositionsXZForward;
+  TH2F* hHitPositionsXZForwardInd[10];
 
   // Cross Section
   TH1F* s1;
@@ -270,24 +284,34 @@ private:
   void InitAverageBeamEnergy();
   Double_t averageBeamEnergy[128];
 
+// General Methods
+  Bool_t AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std::vector<mmTrack> centerBeamTotal_,
+                              std::vector<mmTrack> centerProton_, std::map<Int_t, Double_t> centralPadTotalEnergy);
+  Bool_t AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::vector<mmTrack> centerBeamTotal_,
+                           std::vector<mmChainStrip> leftChain_, std::vector<mmChainStrip> leftStrip_,
+                           std::vector<mmChainStrip> rightChain_,
+                           std::vector<mmChainStrip> rightStrip_);
+  Bool_t AnalysisLeftSide();
+
 // Strip and Chain Matching
-  void StripChainMatch(std::vector<mmTrack> &stripChainMatched, std::vector<mmTrack> &stripChainRaw, std::vector<mmStripChain> chain_,
-                       std::vector<mmStripChain> strip_, Bool_t leftSide, Double_t siTime);
-  size_t StripChainTime0TimeBuckets(std::vector<mmTrack> matched);
-  size_t StripChainNumberTimeBuckets(std::vector<mmStripChain> chain, std::vector<mmStripChain> strip);
-  void StripChainMatchingOutward(std::vector<mmTrack> &stripChainMatched, std::vector<mmStripChain> chain,
-                                 std::vector<mmStripChain> strip, Bool_t leftSide, Double_t siTime);
-  void StripChainMatchingBox(std::vector<mmTrack> &stripChainMatched, std::vector<mmStripChain> chain,
-                             std::vector<mmStripChain> strip, Bool_t leftSide, Double_t siTime);
-  void StripChainMatchingBoxTime0(std::vector<mmTrack> &stripChainMatched, std::vector<mmTrack> time0);
-  void StripChainMatchingTime(std::vector<mmTrack> &stripChainMatched, std::vector<mmStripChain> chain,
-                              std::vector<mmStripChain> strip, Bool_t leftSide, Double_t siTime, Int_t timeWindow);
-  void StripChainMatchingTimeSlopeFit(std::vector<mmTrack> &stripChainMatched, std::vector<mmStripChain> chain,
-                                   std::vector<mmStripChain> strip, Bool_t leftSide, Double_t siTime,
-                                   Double_t timeWindow);
-  void StripChainMatchingTimeSlopeHough(std::vector<mmTrack> &stripChainMatched, std::vector<mmStripChain> chain,
-                                   std::vector<mmStripChain> strip, Bool_t leftSide, Double_t siTime,
-                                   Double_t timeWindow);
+  void ChainStripMatch(std::vector<mmTrack> &chainStripMatched, std::vector<mmTrack> &chainStripRaw,
+                       std::vector<mmChainStrip> chain_,
+                       std::vector<mmChainStrip> strip_, Bool_t leftSide, Double_t siTime);
+  size_t ChainStripTime0TimeBuckets(std::vector<mmTrack> matched);
+  size_t ChainStripNumberTimeBuckets(std::vector<mmChainStrip> chain, std::vector<mmChainStrip> strip);
+  void ChainStripMatchingOutward(std::vector<mmTrack> &chainStripMatched, std::vector<mmChainStrip> chain,
+                                 std::vector<mmChainStrip> strip, Bool_t leftSide, Double_t siTime);
+  void ChainStripMatchingBox(std::vector<mmTrack> &chainStripMatched, std::vector<mmChainStrip> chain,
+                             std::vector<mmChainStrip> strip, Bool_t leftSide, Double_t siTime);
+  void ChainStripMatchingBoxTime0(std::vector<mmTrack> &chainStripMatched, std::vector<mmTrack> time0);
+  void ChainStripMatchingTime(std::vector<mmTrack> &chainStripMatched, std::vector<mmChainStrip> chain,
+                              std::vector<mmChainStrip> strip, Bool_t leftSide, Double_t siTime, Int_t timeWindow);
+  void ChainStripMatchingTimeSlopeFit(std::vector<mmTrack> &chainStripMatched, std::vector<mmChainStrip> chain,
+                                      std::vector<mmChainStrip> strip, Bool_t leftSide, Double_t siTime,
+                                      Double_t timeWindow);
+  void ChainStripMatchingTimeSlopeHough(std::vector<mmTrack> &chainStripMatched, std::vector<mmChainStrip> chain,
+                                        std::vector<mmChainStrip> strip, Bool_t leftSide, Double_t siTime,
+                                        Double_t timeWindow);
 
 // Visualize Hough Transform
   void GetMinMaxD(std::vector<mmTrack> initPoints, Int_t &minXY, Int_t &maxXY, Int_t &minYZ, Int_t &maxYZ);
@@ -320,8 +344,10 @@ private:
   Double_t beamEnergy;
   Double_t density;
   Double_t distanceHavarToSilicon;
+  Double_t distanceHavarToMM;
   Double_t numberB8;
   Double_t siXPosForward[10][4];
+  Double_t siYPosForward;
 
   EnergyLoss *boronMethane;
   EnergyLoss *protonMethane;
@@ -348,6 +374,9 @@ private:
   Double_t vertexPositionZ;
   Double_t angle;
   Double_t cmEnergy;
+  Double_t siPosX;
+  Double_t siPosY;
+  Double_t siPosZ;
 
 };
 #endif
@@ -1188,7 +1217,7 @@ inline void Spectra::InitHistograms() {
 
     name = Form("dEEForwardCalTotal_d%d", i);
     hdEEForwardCalTotal[i] = new TH2F(name, name, 500, 0, 25000, 500, 0, 4000);
-    hdEEForwardCalTotal[i]->GetXaxis()->SetTitle("Si Energy [keV]"); hdEEForwardCalTotal[i]->GetXaxis()->CenterTitle();
+    hdEEForwardCalTotal[i]->GetXaxis()->SetTitle("Total Energy [keV]"); hdEEForwardCalTotal[i]->GetXaxis()->CenterTitle();
     hdEEForwardCalTotal[i]->GetYaxis()->SetTitle("dE [channels]"); hdEEForwardCalTotal[i]->GetYaxis()->CenterTitle();
     hdEEForwardCalTotal[i]->GetYaxis()->SetTitleOffset(1.4);
   }
@@ -1211,22 +1240,34 @@ inline void Spectra::InitHistograms() {
   // Angle vs E Histograms hAngleEForward[10]
   for(UInt_t i = 0; i < 10; i++) {
     TString name = Form("angleSiEForward_d%d", i);
-    hAngleEForward[i] = new TH2F(name, name, 200, 0, 4000, 200, 0, 1.5);
+    hAngleEForward[i] = new TH2F(name, name, 200, 0, 4000, 75, 0, 1.7);
     hAngleEForward[i]->GetXaxis()->SetTitle("Si Energy [channels]"); hAngleEForward[i]->GetXaxis()->CenterTitle();
-    hAngleEForward[i]->GetYaxis()->SetTitle("Vertex [mm]"); hAngleEForward[i]->GetYaxis()->CenterTitle();
+    hAngleEForward[i]->GetYaxis()->SetTitle("Angle [rad]"); hAngleEForward[i]->GetYaxis()->CenterTitle();
     hAngleEForward[i]->GetYaxis()->SetTitleOffset(1.4);
 
     name = Form("angleSiEForwardCal_d%d", i);
-    hAngleEForwardCal[i] = new TH2F(name, name, 200, 0, 20000, 200, 0, 1.5);
+    hAngleEForwardCal[i] = new TH2F(name, name, 200, 0, 20000, 75, 0, 1.7);
     hAngleEForwardCal[i]->GetXaxis()->SetTitle("Si Energy [keV]"); hAngleEForwardCal[i]->GetXaxis()->CenterTitle();
-    hAngleEForwardCal[i]->GetYaxis()->SetTitle("Vertex [mm]"); hAngleEForwardCal[i]->GetYaxis()->CenterTitle();
+    hAngleEForwardCal[i]->GetYaxis()->SetTitle("Angle [rad]"); hAngleEForwardCal[i]->GetYaxis()->CenterTitle();
     hAngleEForwardCal[i]->GetYaxis()->SetTitleOffset(1.4);
 
     name = Form("angleSiEForwardCalTotal_d%d", i);
-    hAngleEForwardCalTotal[i] = new TH2F(name, name, 200, 0, 20000, 200, 0, 1.5);
-    hAngleEForwardCalTotal[i]->GetXaxis()->SetTitle("Si Energy [keV]"); hAngleEForwardCalTotal[i]->GetXaxis()->CenterTitle();
-    hAngleEForwardCalTotal[i]->GetYaxis()->SetTitle("Vertex [mm]"); hAngleEForwardCalTotal[i]->GetYaxis()->CenterTitle();
+    hAngleEForwardCalTotal[i] = new TH2F(name, name, 100, 0, 20000, 75, 0, 1.7);
+    hAngleEForwardCalTotal[i]->GetXaxis()->SetTitle("Total Energy [keV]"); hAngleEForwardCalTotal[i]->GetXaxis()->CenterTitle();
+    hAngleEForwardCalTotal[i]->GetYaxis()->SetTitle("Angle [rad]"); hAngleEForwardCalTotal[i]->GetYaxis()->CenterTitle();
     hAngleEForwardCalTotal[i]->GetYaxis()->SetTitleOffset(1.4);
+
+    name = Form("angleProtonEForward_d%d", i);
+    hAngleEForwardProtonEnergy[i] = new TH2F(name, name, 75, 0, 20, 50, 0, 1.7);
+    hAngleEForwardProtonEnergy[i]->GetXaxis()->SetTitle("Proton Energy at Vertex [MeV]"); hAngleEForwardProtonEnergy[i]->GetXaxis()->CenterTitle();
+    hAngleEForwardProtonEnergy[i]->GetYaxis()->SetTitle("Angle [rad]"); hAngleEForwardProtonEnergy[i]->GetYaxis()->CenterTitle();
+    hAngleEForwardProtonEnergy[i]->GetYaxis()->SetTitleOffset(1.4);
+
+    name = Form("angleCMEForward_d%d", i);
+    hAngleEForwardCMEnergy[i] = new TH2F(name, name, 100, 0, 8, 75, 0, 1.7);
+    hAngleEForwardCMEnergy[i]->GetXaxis()->SetTitle("CM Energy [MeV]"); hAngleEForwardCMEnergy[i]->GetXaxis()->CenterTitle();
+    hAngleEForwardCMEnergy[i]->GetYaxis()->SetTitle("Angle [rad]"); hAngleEForwardCMEnergy[i]->GetYaxis()->CenterTitle();
+    hAngleEForwardCMEnergy[i]->GetYaxis()->SetTitleOffset(1.4);
   }
 
   // Vertex vs E Histograms
@@ -1242,6 +1283,12 @@ inline void Spectra::InitHistograms() {
     hVertexSiEForwardCal[i]->GetXaxis()->SetTitle("Si Energy [keV]"); hVertexSiEForwardCal[i]->GetXaxis()->CenterTitle();
     hVertexSiEForwardCal[i]->GetYaxis()->SetTitle("Vertex [mm]"); hVertexSiEForwardCal[i]->GetYaxis()->CenterTitle();
     hVertexSiEForwardCal[i]->GetYaxis()->SetTitleOffset(1.4);
+
+    name = Form("vertexSiEForwardCalTotal_d%d", i);
+    hVertexSiEForwardCalTotal[i] = new TH2F(name, name, 500, 0, 20000, 500, -250, 300);
+    hVertexSiEForwardCalTotal[i]->GetXaxis()->SetTitle("Total Energy [keV]"); hVertexSiEForwardCalTotal[i]->GetXaxis()->CenterTitle();
+    hVertexSiEForwardCalTotal[i]->GetYaxis()->SetTitle("Vertex [mm]"); hVertexSiEForwardCalTotal[i]->GetYaxis()->CenterTitle();
+    hVertexSiEForwardCalTotal[i]->GetYaxis()->SetTitleOffset(1.4);
   }
 
   for(UInt_t i = 0; i < 6; i++) {
@@ -1262,11 +1309,11 @@ inline void Spectra::InitHistograms() {
   for(UInt_t i = 0; i < 10; i++) {
     for(UInt_t j = 0; j < 4; j++) {
       TString name = Form("timeColumnForward_d%d_q%d", i, j);
-      hTimeColumnForward[i][j] = new TH2F(name, name, 68, -2, 66, 75, 0, 3000);
-      hTimeColumnForward[i][j]->GetXaxis()->SetTitle("Column #"); hTimeColumnForward[i][j]->GetXaxis()->CenterTitle();
-      hTimeColumnForward[i][j]->GetYaxis()->SetTitle("Time [ns]"); hTimeColumnForward[i][j]->GetYaxis()->CenterTitle();
-      hTimeColumnForward[i][j]->GetYaxis()->SetTitleOffset(1.4);
-      hTimeColumnForward[i][j]->SetStats(kFALSE);
+      hTimeChainForward[i][j] = new TH2F(name, name, 68, -2, 66, 75, 0, 3000);
+      hTimeChainForward[i][j]->GetXaxis()->SetTitle("Chain #"); hTimeChainForward[i][j]->GetXaxis()->CenterTitle();
+      hTimeChainForward[i][j]->GetYaxis()->SetTitle("Time [ns]"); hTimeChainForward[i][j]->GetYaxis()->CenterTitle();
+      hTimeChainForward[i][j]->GetYaxis()->SetTitleOffset(1.4);
+      hTimeChainForward[i][j]->SetStats(kFALSE);
     }
   }
 
@@ -1280,6 +1327,22 @@ inline void Spectra::InitHistograms() {
       hTimeStripForward[i][j]->GetYaxis()->SetTitleOffset(1.4);
       hTimeStripForward[i][j]->SetStats(kFALSE);
     }
+  }
+
+  // Forward Wall XZ Hit Positions
+  hHitPositionsXZForward = new TH2F("hitPositionXZForward", "hitPositionXZForward", 200, -200, 200, 100, -100, 100);
+  hHitPositionsXZForward->GetXaxis()->SetTitle("X [mm]"); hHitPositionsXZForward->GetXaxis()->CenterTitle();
+  hHitPositionsXZForward->GetYaxis()->SetTitle("Z [mm]"); hHitPositionsXZForward->GetYaxis()->CenterTitle();
+  hHitPositionsXZForward->GetYaxis()->SetTitleOffset(1.4);
+  hHitPositionsXZForward->SetStats(kFALSE);
+
+  for(UInt_t i = 0; i < 10; i++) {
+    TString name = Form("hitPositionXZForward_d%d", i);
+    hHitPositionsXZForwardInd[i] = new TH2F(name, name, 200, -200, 200, 150, -150, 150);
+    hHitPositionsXZForwardInd[i]->GetXaxis()->SetTitle("X [mm]"); hHitPositionsXZForwardInd[i]->GetXaxis()->CenterTitle();
+    hHitPositionsXZForwardInd[i]->GetYaxis()->SetTitle("Z [mm]"); hHitPositionsXZForwardInd[i]->GetYaxis()->CenterTitle();
+    hHitPositionsXZForwardInd[i]->GetYaxis()->SetTitleOffset(1.4);
+    hHitPositionsXZForwardInd[i]->SetStats(kFALSE);
   }
 
   // Cross Section Histograms
@@ -1348,7 +1411,7 @@ inline void Spectra::InitVariables() {
   m1 = 8.; // AMU of projectile
   m2 = 1.; // AMU of target
 
-  heightOffset = 6081.81 - 352.457; // Time of 0 height in chamber (in ns)
+  heightOffset = 70; // Time of 0 height in chamber (in ns)
   driftVelocity = 0.05674449; // in mm/ns
 
   rowConversion = 1.75; // Side of row in mm
@@ -1361,6 +1424,7 @@ inline void Spectra::InitVariables() {
   numberB8 = 174809089.;
 
   distanceHavarToSilicon = 544.07; // Distance from Havar to Forward Silicon in mm
+  distanceHavarToMM = 268.73; // Distance from Havar to beginning of MM in mm
 
   // Initialize EnergyLoss
   boronMethane = new EnergyLoss("b8_methane.dat");
@@ -1407,6 +1471,9 @@ inline void Spectra::InitVariables() {
   siXPosForward[9][1] = 124. + 12.5;
   siXPosForward[9][2] = 124. + 12.5;
   siXPosForward[9][3] = 124. - 12.5;
+
+  // Y position of Forward Si Detectors
+  siYPosForward = 275.34;
 }
 
 inline void Spectra::InitTree() {
@@ -1429,6 +1496,8 @@ inline void Spectra::InitTree() {
   outTree->Branch("vertexPositionZ", &vertexPositionZ);
   outTree->Branch("angle", &angle);
   outTree->Branch("cmEnergy", &cmEnergy);
+  outTree->Branch("siPosX", &siPosX);
+  outTree->Branch("siPosZ", &siPosZ);
   return;
 }
 

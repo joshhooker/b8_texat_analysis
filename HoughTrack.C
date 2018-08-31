@@ -42,7 +42,7 @@ Double_t HoughTrack::Fit() {
 
   par.push_back(houghDXY/cos(houghAngleXY*M_PI/180.));
   par.push_back(-sin(houghAngleXY*M_PI/180.)/cos(houghAngleXY*M_PI/180.));
-  par.push_back(houghDXY/sin(houghAngleYZ*M_PI/180.));
+  par.push_back(houghDYZ/sin(houghAngleYZ*M_PI/180.));
   par.push_back(-cos(houghAngleYZ*M_PI/180.)/sin(houghAngleYZ*M_PI/180.));
 
   Double_t trackMinDistance = CalculateDistance();
@@ -64,7 +64,7 @@ Double_t HoughTrack::FitRestricted() {
 
   par.push_back(houghDXY/cos(houghAngleXY*M_PI/180.));
   par.push_back(-sin(houghAngleXY*M_PI/180.)/cos(houghAngleXY*M_PI/180.));
-  par.push_back(houghDXY/sin(houghAngleYZ*M_PI/180.));
+  par.push_back(houghDYZ/sin(houghAngleYZ*M_PI/180.));
   par.push_back(-cos(houghAngleYZ*M_PI/180.)/sin(houghAngleYZ*M_PI/180.));
 
   Double_t trackMinDistance = CalculateDistance();

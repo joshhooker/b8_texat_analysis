@@ -116,21 +116,17 @@ void Spectra::Loop() {
   TFile *cutFile = TFile::Open("cuts.root");
 
   // dE cuts
-  TCutG *dEEForwardCut[10];
   for(UInt_t i = 0; i < 10; i++) {
     if(i == 8) continue;
     dEEForwardCut[i] = (TCutG*)cutFile->Get(Form("dEEForward_d%dCut", i));
   }
 
   // Angle vs Energy Cut
-  auto *angleTotEnergyCut_d0 = (TCutG*)cutFile->Get("angleTotEnergy_d0Cut");
-  auto *angleTotEnergyCut_d1 = (TCutG*)cutFile->Get("angleTotEnergy_d1Cut");
-  auto *angleTotEnergyCut_d9 = (TCutG*)cutFile->Get("angleTotEnergy_d9Cut");
-  auto *angleTotEnergyCut_d019 = (TCutG*)cutFile->Get("angleTotEnergy_d019Cut");
+  angleTotEnergyCut[0] = (TCutG*)cutFile->Get("angleTotEnergy_d0Cut");
+  angleTotEnergyCut[1] = (TCutG*)cutFile->Get("angleTotEnergy_d1Cut");
+  angleTotEnergyCut[9] = (TCutG*)cutFile->Get("angleTotEnergy_d9Cut");
 
   // Chain/Strip vs Time Cuts
-  TCutG *timeChainForwardCut[10][4];
-  TCutG *timeStripForwardCut[10][4];
   for(UInt_t i = 0; i < 10; i++) {
     if(i == 4 || i == 5) continue;
     for(UInt_t j = 0; j < 4; j++) {
@@ -160,7 +156,7 @@ void Spectra::Loop() {
 
   Long64_t nbytes = 0, nb = 0;
 //  for(Long64_t jentry = 0; jentry < 2000; jentry++) {
-//  for(Long64_t jentry = 3431; jentry < 3432; jentry++) {
+//  for(Long64_t jentry = 49983; jentry < 49984; jentry++) {
   for(Long64_t jentry = 0; jentry < nentries; jentry++) {
     Long64_t ientry = LoadTree(jentry);
     if(ientry < 0) break;
@@ -180,16 +176,16 @@ void Spectra::Loop() {
     std::vector<mmCenter> mmCenterMatched_;
 
     // Beam Left Strips in Micromegas
-    std::vector<mmStripChain> mmLeftStrip_;
+    std::vector<mmChainStrip> mmLeftStrip_;
 
     // Beam Left Chains in Micromegas
-    std::vector<mmStripChain> mmLeftChain_;
+    std::vector<mmChainStrip> mmLeftChain_;
 
     // Beam Right Strips in Micromegas
-    std::vector<mmStripChain> mmRightStrip_;
+    std::vector<mmChainStrip> mmRightStrip_;
 
     // Beam Right Chains in Micromegas
-    std::vector<mmStripChain> mmRightChain_;
+    std::vector<mmChainStrip> mmRightChain_;
 
     // IC
     Double_t icE = 0.;
@@ -285,12 +281,12 @@ void Spectra::Loop() {
             Int_t bin = MM_Map_Asad2_Aget0[mmChan[i]];
             if(mmChan[i] < 34) { // Strips
               if(mmEnergy[i] < 0) continue;
-              mmStripChain mmHit = {bin, mmEnergy[i], mmTime[i]};
+              mmChainStrip mmHit = {bin, mmEnergy[i], mmTime[i]};
               mmLeftStrip_.push_back(mmHit);
             }
             else if(mmChan[i] > 33 && mmChan[i] < 68) { // Chains
               if(mmEnergy[i] < 0) continue;
-              mmStripChain mmHit = {bin, mmEnergy[i], mmTime[i]};
+              mmChainStrip mmHit = {bin, mmEnergy[i], mmTime[i]};
               mmLeftChain_.push_back(mmHit);
             }
           }
@@ -299,12 +295,12 @@ void Spectra::Loop() {
             Int_t bin = MM_Map_Asad2_Aget1[mmChan[i]];
             if(mmChan[i] < 34) { // Strips
               if(mmEnergy[i] < 0) continue;
-              mmStripChain mmHit = {bin, mmEnergy[i], mmTime[i]};
+              mmChainStrip mmHit = {bin, mmEnergy[i], mmTime[i]};
               mmLeftStrip_.push_back(mmHit);
             }
             else if(mmChan[i] > 33 && mmChan[i] < 68) { // Chains
               if(mmEnergy[i] < 0) continue;
-              mmStripChain mmHit = {bin, mmEnergy[i], mmTime[i]};
+              mmChainStrip mmHit = {bin, mmEnergy[i], mmTime[i]};
               mmLeftChain_.push_back(mmHit);
             }
           }
@@ -334,12 +330,12 @@ void Spectra::Loop() {
             Int_t bin = MM_Map_Asad3_Aget0[mmChan[i]];
             if(mmChan[i] < 34) { // Strips
               if(mmEnergy[i] < 0) continue;
-              mmStripChain mmHit = {bin, mmEnergy[i], mmTime[i]};
+              mmChainStrip mmHit = {bin, mmEnergy[i], mmTime[i]};
               mmRightStrip_.push_back(mmHit);
             }
             else if(mmChan[i] > 33 && mmChan[i] < 68) { // Chains
               if(mmEnergy[i] < 0) continue;
-              mmStripChain mmHit = {bin, mmEnergy[i], mmTime[i]};
+              mmChainStrip mmHit = {bin, mmEnergy[i], mmTime[i]};
               mmRightChain_.push_back(mmHit);
             }
           }
@@ -348,12 +344,12 @@ void Spectra::Loop() {
             Int_t bin = MM_Map_Asad3_Aget1[mmChan[i]];
             if(mmChan[i] < 34) { // Strips
               if(mmEnergy[i] < 0) continue;
-              mmStripChain mmHit = {bin, mmEnergy[i], mmTime[i]};
+              mmChainStrip mmHit = {bin, mmEnergy[i], mmTime[i]};
               mmRightStrip_.push_back(mmHit);
             }
             else if(mmChan[i] > 33 && mmChan[i] < 68) { // Chains
               if(mmEnergy[i] < 0) continue;
-              mmStripChain mmHit = {bin, mmEnergy[i], mmTime[i]};
+              mmChainStrip mmHit = {bin, mmEnergy[i], mmTime[i]};
               mmRightChain_.push_back(mmHit);
             }
           }
@@ -570,8 +566,8 @@ void Spectra::Loop() {
     }
 
     // Separate beam and proton in central Micromegas
-    std::vector<mmTrack> mmCenterBeamTotal;
-    std::vector<mmTrack> mmCenterProton;
+    std::vector<mmTrack> mmCenterBeamTotal_;
+    std::vector<mmTrack> mmCenterProton_;
     std::map<Int_t, Double_t>::iterator it;
     for(it = centralPadPosition.begin(); it != centralPadPosition.end(); it++) {
       Int_t row = it->first;
@@ -587,432 +583,31 @@ void Spectra::Loop() {
       hMicroMegasCenterCumulative->Fill(centralPadColumn[row] - 3, row);
       hMicroMegasCenterCumulativePosition->Fill(hit.xPosition, hit.yPosition);
       if(row < 112) {
-        mmCenterBeamTotal.push_back(hit);
+        mmCenterBeamTotal_.push_back(hit);
       }
       else if(row > 111) {
-        mmCenterProton.push_back(hit);
+        mmCenterProton_.push_back(hit);
       }
     }
 
-    // Sorting mmCenterBeamTotal by row
-    if(!mmCenterBeamTotal.empty()) {
-      std::sort(mmCenterBeamTotal.begin(), mmCenterBeamTotal.end(), sortByRowMMTrack());
+    Bool_t event;
+    if(central) {
+      event = AnalysisForwardCentral(mmCenterMatched_, mmCenterBeamTotal_, mmCenterProton_, centralPadTotalEnergy);
+    }
+    if((left || right) && !sideDet) {
+      event = AnalysisForwardSide(mmCenterMatched_, mmCenterBeamTotal_, mmLeftChain_, mmLeftStrip_, mmRightChain_,
+          mmRightStrip_);
     }
 
-    // Sorting mmLeftChain
-    if(!mmLeftChain_.empty()) {
-      std::sort(mmLeftChain_.begin(), mmLeftChain_.end(), sortByRowMMStripChain());
-    }
-
-    // Sorting mmLeftStrip
-    if(!mmLeftStrip_.empty()) {
-      std::sort(mmLeftStrip_.begin(), mmLeftStrip_.end(), sortByRowMMStripChain());
-    }
-
-    // Sorting mmRightChain
-    if(!mmRightChain_.empty()) {
-      std::sort(mmRightChain_.begin(), mmRightChain_.end(), sortByRowMMStripChain());
-    }
-
-    // Sorting mmRightStrip
-    if(!mmRightStrip_.empty()) {
-      std::sort(mmRightStrip_.begin(), mmRightStrip_.end(), sortByRowMMStripChain());
-    }
-
-    // Look at time vs column/strip. TODO: Central
-    if(left && !sideDet) {
-      // Column
-      for(auto mm : mmLeftChain_) {
-        hTimeColumnForward[siDet][siQuad]->Fill(mm.row, mm.time - siTime);
-      }
-      // Strip
-      for(auto mm : mmLeftStrip_) {
-        hTimeStripForward[siDet][siQuad]->Fill(mm.row, mm.time - siTime);
-      }
-    }
-//    else if(central) {}
-    else if(right && !sideDet) {
-      // Column
-      for(auto mm : mmRightChain_) {
-        hTimeColumnForward[siDet][siQuad]->Fill(mm.row, mm.time - siTime);
-      }
-      // Strip
-      for(auto mm : mmRightStrip_) {
-        hTimeStripForward[siDet][siQuad]->Fill(mm.row, mm.time - siTime);
-      }
-    }
-
-//    // Find dE for center, left and right regions
-//    dE = 0.;
-//    if(central) {
-//      Int_t totalRows = 0;
-//      for (Int_t i = 116; i < 124; i++) {
-//        if (i == 117) continue;
-//        auto iterator = centralPadTotalEnergy.find(i);
-//        if (iterator != centralPadTotalEnergy.end()) {
-//          dE += centralPadTotalEnergy[i];
-//          totalRows++;
-//        }
-//      }
-//      dE /= static_cast<Double_t>(totalRows);
-//    }
-//    else if(right) {
-//      for (auto mm : mmRightStrip_) {
-//        dE += mm.energy;
-//      }
-//      dE /= static_cast<Double_t>(mmRightStrip_.size());
-//    }
-//    else if(left) {
-//      for (auto mm : mmLeftStrip_) {
-//        dE += mm.energy;
-//      }
-//      dE /= static_cast<Double_t>(mmLeftStrip_.size());
-//    }
-//
-//    hdEEForward[siDet]->Fill(siEnergy, dE);
-//    hdEEForwardCal[siDet]->Fill(siEnergyCal, dE);
-
-
-    // Match strips with chains
-//    std::vector<mmTrack> stripChainMatchedLeft;
-//    std::vector<mmTrack> stripChainMatchedRight;
-//    std::vector<mmTrack> stripChainRawLeft;
-//    std::vector<mmTrack> stripChainRawRight;
-//    if(!mmLeftChain_.empty() && !mmLeftStrip_.empty()) {
-//      StripChainMatch(stripChainMatchedLeft, stripChainRawLeft, mmLeftChain_, mmLeftStrip_, true, siTime);
-//    }
-//    if(!mmRightChain_.empty() && !mmRightStrip_.empty()) {
-//      StripChainMatch(stripChainMatchedRight, stripChainRawRight, mmRightChain_, mmRightStrip_, false, siTime);
-//    }
-
-/*
+    if(!event) continue;
 
     hdEEForward[siDet]->Fill(siEnergy, dE);
     hdEEForwardCal[siDet]->Fill(siEnergyCal, dE);
-    hdEEForwardCalTotal[siDet]->Fill(siEnergyCal + csiEnergyCal, dE);
-
-    if(!dEEForwardCut[siDet]->IsInside(siEnergy, dE)) continue;
-
-    // Assign proton track for side regions
-    std::vector<mmTrack> protonTrack;
-    if(left) {
-      protonTrack = stripChainMatchedLeft;
-    }
-    else if(right) {
-      protonTrack = stripChainMatchedRight;
-    }
-
-    // Find vertex using the proton track in side regions
-    vertexPositionX = 0.;
-    vertexPositionY = -400.;
-    vertexPositionZ = 0.;
-
-    if(!central) {
-
-      if(protonTrack.empty()) {
-        // std::cout << siEnergy << '\t' << dE << std::endl;
-        continue;
-      }
-      // for(UInt_t i = 0; i < protonTrack.size(); i++) {
-        // printf("%f %f %f\n", protonTrack[i].xPosition, protonTrack[i].yPosition, protonTrack[i].height);
-      // }
-
-      // std::cout << jentry << '\t' << siDet << '\t' << mmRightChain_.size() << '\t' << mmRightStrip_.size() << '\t' << protonTrack.size() << std::endl;
-
-
-      mmTrack detPoint1, detPoint2, detPoint3;
-      if(siDet < 4) {
-        detPoint1 = {0, siXPosForward[siDet][siQuad] + 12.5, 275.34, 0, 0, 0, 0};
-        detPoint2 = {0, siXPosForward[siDet][siQuad], 275.34, 0, 0, 0, 0};
-        detPoint3 = {0, siXPosForward[siDet][siQuad] - 12.5, 275.34, 0, 0, 0, 0};
-        for(UInt_t j = 0; j < 1; j++) {
-          protonTrack.push_back(detPoint1);
-          protonTrack.push_back(detPoint2);
-          protonTrack.push_back(detPoint3);
-        }
-      }
-      else if(siDet > 5 && siDet < 10) {
-        detPoint1 = {0, -siXPosForward[siDet][siQuad] + 12.5, 275.34, 0, 0, 0, 0};
-        detPoint2 = {0, -siXPosForward[siDet][siQuad], 275.34, 0, 0, 0, 0};
-        detPoint3 = {0, -siXPosForward[siDet][siQuad] - 12.5, 275.34, 0, 0, 0, 0};
-        for(UInt_t j = 0; j < 1; j++) {
-          protonTrack.push_back(detPoint1);
-          protonTrack.push_back(detPoint2);
-          protonTrack.push_back(detPoint3);
-        }
-      }
-
-      auto *fitProton = new HoughTrack();
-      fitProton->AddTrack(protonTrack, siDet, siQuad);
-      Double_t minDist = fitProton->FitRestricted();
-      // if(minDist > 3.e+07) {
-      //   for(UInt_t j = 0; j < 34; j++) {
-      //     protonTrack.push_back(detPoint1);
-      //     protonTrack.push_back(detPoint2);
-      //     protonTrack.push_back(detPoint3);
-      //   }
-      //   fitProton->AddTrack(protonTrack, siDet, siQuad);
-      //   minDist = fitProton->FitRestricted();
-      // }
-      std::vector<Double_t> parsProton = fitProton->GetPars();
-      Double_t houghAngleXY = fitProton->GetHoughAngleXY();
-      hHoughAngle[siDet]->Fill(houghAngleXY);
-
-      delete fitProton;
-
-      // Check there were beam ions
-      ULong_t mmCenterSize = mmCenterBeamTotal.size();
-
-      // std::cout << parsProton[0] << '\t' << parsProton[1] << std::endl;
-      // std::cout << parsProton[2] << '\t' << parsProton[3] << std::endl;
-      if(mmCenterSize == 0) {
-        Double_t beamX_old = 0.;
-        Double_t beamY_old = 250.;
-        Double_t beamZ_old = 0.;
-        Double_t beamX = beamX_old;
-        Double_t beamY = beamY_old;
-        Double_t beamZ = beamZ_old;
-        Double_t x, y, z;
-        line(beamY, parsProton, x, y, z);
-        Double_t protonX_old = x;
-        Double_t protonX = protonX_old;
-        Double_t xDiff_old = beamX - protonX_old;
-        Double_t xDiff = xDiff;
-        for(Double_t yPos = beamY_old; yPos > -300; yPos -= 1.) {
-          beamY = yPos;
-          line(beamY, parsProton, x, y, z);
-          protonX = x;
-          xDiff = beamX - protonX;
-          if(xDiff_old * xDiff_old < 0) {
-            Double_t m = (beamY - beamY_old)/(xDiff - xDiff_old);
-            Double_t b = beamY - m*xDiff;
-            vertexPositionX = beamX;
-            vertexPositionY = beamY;
-            vertexPositionZ = beamZ;
-            break;
-          }
-          beamY_old = beamY;
-          protonX_old = protonX;
-          xDiff_old = xDiff;
-        }
-        // Did not fit well
-        if(vertexPositionY == -400) {
-          Double_t m_xcomponent = fabs(parsProton[1]);
-          Double_t xAngle = atan(m_xcomponent);
-
-          Double_t yDist = siXPosForward[siDet][siQuad]/fabs(tan(xAngle));
-
-          if(250. - yDist < -400) {
-            vertexPositionY = -400.;
-          }
-          else {
-            vertexPositionY = 250. - yDist;
-          }
-        }
-      }
-      else{
-        // Loop through beam in central region starting from last
-        Double_t beamX_old = mmCenterBeamTotal[mmCenterSize - 1].xPosition;
-        Double_t beamY_old = mmCenterBeamTotal[mmCenterSize - 1].yPosition;
-        Double_t beamZ_old = mmCenterBeamTotal[mmCenterSize - 1].height;
-        Double_t beamX = beamX_old;
-        Double_t beamY = beamY_old;
-        Double_t beamZ = beamZ_old;
-        Double_t x, y, z;
-        line(beamY, parsProton, x, y, z);
-        Double_t protonX_old = x;
-        Double_t protonX = protonX_old;
-        Double_t xDiff_old = beamX - protonX_old;
-        Double_t xDiff = xDiff_old;
-        Bool_t foundVertex = false;
-        // std::cout << jentry << '\t' << mmCenterBeamTotal.size() << '\t' << mmCenterSize - 1 << std::endl;
-        for(Int_t i = mmCenterSize - 1; i > -1; i--) {
-          beamX = mmCenterBeamTotal[i].xPosition;
-          beamY = mmCenterBeamTotal[i].yPosition;
-          beamZ = mmCenterBeamTotal[i].height;
-          line(beamY, parsProton, x, y, z);
-          protonX = x;
-          xDiff = beamX - protonX;
-          // printf("%lld %f %f %f %f %f %f\n", jentry, beamX_old, beamY_old, beamX, beamY, xDiff, xDiff_old);
-          if(xDiff_old * xDiff < 0) {
-            Double_t m = (beamY - beamY_old)/(xDiff - xDiff_old);
-            Double_t b = beamY - m*xDiff;
-            // printf("%lld %f %f %f %f %f %f %f\n", jentry, beamX_old, beamY_old, beamX, beamY, protonX, protonX_old, b);
-            vertexPositionX = beamX;
-            vertexPositionY = b;
-            vertexPositionZ = beamZ;
-            foundVertex = true;
-            break;
-          }
-          beamX_old = beamX;
-          beamY_old = beamY;
-          beamZ_old = beamZ;
-          protonX_old = protonX;
-          xDiff_old = xDiff;
-        }
-        if(!foundVertex) {
-          for(Double_t beamY = -1; beamY > -300; beamY -= 1) {
-            line(beamY, parsProton, x, y, z);
-            protonX = x;
-            xDiff = beamX - x;
-            // printf("%lld %f %f %f %f %f %f\n", jentry, beamX_old, beamY_old, beamX, beamY, xDiff, xDiff_old);
-            if(xDiff * xDiff_old < 0) {
-              Double_t m = (beamY - beamY_old)/(xDiff - xDiff_old);
-              Double_t b = beamY - m*xDiff;
-              // printf("%lld %f %f %f %f %f %f %f\n", jentry, beamX_old, beamY_old, beamX, beamY, protonX, protonX_old, b);
-              vertexPositionX = beamX;
-              vertexPositionY = b;
-              vertexPositionZ = 0.;
-              foundVertex = true;
-              break;
-            }
-            beamY_old = beamY;
-            protonX_old = protonX;
-            xDiff_old = xDiff;
-          }
-        }
-        // Did not fit well
-        if(vertexPositionY == -400) {
-          Double_t m_xcomponent = fabs(parsProton[1]);
-          Double_t xAngle = atan(m_xcomponent);
-
-          Double_t yDist = siXPosForward[siDet][siQuad]/fabs(tan(xAngle));
-
-          if(250. - yDist < -400) {
-            vertexPositionY = -400.;
-          }
-          else {
-            vertexPositionY = 250. - yDist;
-          }
-        }
-      }
-
-      // Find the angle (use 2D angle for now)
-      // Simply use the slope of the x-component and assume the beam is straight
-      // The angle is then theta = atan(|m|) where m in the slope of the x-component (parsProton[1])
-      Double_t m_xcomponent = fabs(parsProton[1]);
-      angle = atan(m_xcomponent);
-
-      TVector3 v1(0, 1, 0);
-      TVector3 v2(parsProton[1], 1, parsProton[3]);
-      // Float_t angle3d = v1.Angle(v2);
-      // angle = v1.Angle(v2);
-
-      // std::cout << jentry << '\t' << angle << '\t' << angle3d << std::endl;
-
-      // printf("%lld %d %f\n", jentry, siDet, vertexPositionY);
-
-      // if(houghAngleXY > 91) {
-
-      //   Int_t nBinsX = 360;
-      //   Int_t nBinsY = 360;
-      //   Int_t minXY, maxXY, minYZ, maxYZ;
-      //   // GetMinMaxD(protonTrack, minXY, maxXY, minYZ, maxYZ);
-      //   GetMinMaxDRestricted(protonTrack, minXY, maxXY, minYZ, maxYZ, siDet);
-
-      //   TH2I* houghXY = new TH2I(Form("houghXY_Event_%lld", jentry), Form("houghXY_Event_%lld", jentry), nBinsX, 0, 180, nBinsY, minXY, maxXY);
-      //   TH2I* houghYZ = new TH2I(Form("houghYZ_Event_%lld", jentry), Form("houghYZ_Event_%lld", jentry), nBinsX, 0, 180, nBinsY, minYZ, maxYZ);
-
-      //   // VisualizeHough(protonTrack, houghXY, houghYZ);
-      //   VisualizeHoughRestricted(protonTrack, houghXY, houghYZ, siDet);
-      //   houghXY->Write();
-
-      //   std::vector<Double_t> houghAngleXY_, houghStdDevXY_;
-      //   GetHoughStdDevXYRestricted(protonTrack, houghAngleXY_, houghStdDevXY_, siDet);
-      //   TGraph *houghXYStdDevGraph = new TGraph(houghAngleXY_.size(), &houghAngleXY_[0], &houghStdDevXY_[0]);
-      //   houghXYStdDevGraph->SetName(Form("Hough_StdDev_Event_%lld", jentry));
-      //   houghXYStdDevGraph->Write();
-
-      //   delete houghXY;
-      //   delete houghYZ;
-
-      //   TGraph *hTrackProtonRaw = new TGraph();
-      //   for(UInt_t i = 0; i < protonTrack.size(); i++) {
-      //     hTrackProtonRaw->SetPoint(i, protonTrack[i].xPosition, protonTrack[i].yPosition);
-      //   }
-      //   hTrackProtonRaw->SetMarkerStyle(20);
-      //   hTrackProtonRaw->SetMarkerColor(2);
-      //   hTrackProtonRaw->SetName(Form("Proton_Raw_Track_%lld", jentry));
-      //   hTrackProtonRaw->Write();
-      //   delete hTrackProtonRaw;
-
-      //   Int_t n = 6000;
-      //   Double_t t0 = -300.;
-      //   Double_t dt = 300 - t0;
-      //   TGraph *hTrackProtonFit = new TGraph();
-      //   for(Int_t i = 0; i < n; i++) {
-      //     Double_t t = t0 + dt*i/n;
-      //     Double_t x, y, z;
-      //     line(t, parsProton, x, y, z);
-      //     // std::cout << i << '\t' << x << '\t' << y << '\t' << z << std::endl;
-      //     hTrackProtonFit->SetPoint(i, x, y);
-      //   }
-      //   hTrackProtonFit->SetMarkerStyle(20);
-      //   hTrackProtonFit->SetMarkerColor(3);
-      //   hTrackProtonFit->SetName(Form("Proton_Fit_Track_%lld", jentry));
-      //   hTrackProtonFit->Write();
-      //   delete hTrackProtonFit;
-      // }
-
-      // TGraph *hTrackVertex = new TGraph();
-      // hTrackVertex->SetPoint(0, vertexPositionX, vertexPositionY);
-      // hTrackVertex->SetMarkerStyle(20);
-      // hTrackVertex->SetMarkerColor(4);
-      // hTrackVertex->SetName(Form("Vertex_%lld", jentry));
-      // hTrackVertex->Write();
-      // delete hTrackVertex;
-
-      // TGraph *hTrackBeam = new TGraph();
-      // for(UInt_t i = 0; i < mmCenterBeamTotal.size(); i++) {
-      //   hTrackBeam->SetPoint(i, mmCenterBeamTotal[i].xPosition, mmCenterBeamTotal[i].yPosition);
-      // }
-      // hTrackBeam->SetMarkerStyle(20);
-      // hTrackBeam->SetMarkerColor(1);
-      // hTrackBeam->SetName(Form("Beam_Track_%lld", jentry));
-      // hTrackBeam->Write();
-      // delete hTrackBeam;
-    }
-
-    if(siDet < 10) {
-      hVertexSiEForward[siDet]->Fill(siEnergy, vertexPositionY);
-      hVertexSiEForwardCal[siDet]->Fill(siEnergyCal, vertexPositionY);
-
-      hAngleEForward[siDet]->Fill(siEnergy, angle);
-      hAngleEForwardCal[siDet]->Fill(siEnergyCal, angle);
-      hAngleEForwardCalTotal[siDet]->Fill(totalEnergy, angle);
-
-      hVertexAngleForward[siDet]->Fill(vertexPositionY, angle);
-    }
-
-    // Simply calculate the CS. Just using detectors 0, 1 and 9. Average x position is 124 mm.
-    cmEnergy = 0.;
-    if(siDet == 0 || siDet == 1 || siDet == 9) {
-      // if(!dEEForwardCut[siDet]->IsInside(siEnergy, dE)) continue;
-      // if(siDet == 0) {
-      //   if(!angleTotEnergyCut_d0->IsInside(totalEnergy, angle)) continue;
-      // }
-      // else if(siDet == 1) {
-      //   if(!angleTotEnergyCut_d1->IsInside(totalEnergy, angle)) continue;
-      // }
-      // else if(siDet == 9) {
-      //   if(!angleTotEnergyCut_d9->IsInside(totalEnergy, angle)) continue;
-      // }
-
-      // if(!angleTotEnergyCut_d019->IsInside(totalEnergy, angle)) continue;
-
-      Double_t protonPathLength = sqrt(124*124 + vertexPositionY*vertexPositionY);
-      Double_t protonEnergy = protonMethane->AddBack(totalEnergy/1000., protonPathLength);
-      Double_t cosAngle2 = cos(angle)*cos(angle);
-      Double_t beamEnergy = protonEnergy*(m1 + m2)*(m1 + m2)/(4.*m1*m2*cosAngle2);
-      cmEnergy = beamEnergy*m2/(m1 + m2);
-
-      s1->Fill(cmEnergy);
-    }
+    hdEEForwardCalTotal[siDet]->Fill(totalEnergy, dE);
 
     //  ** End of event by event analysis ** //
     FillTree();
 
-     */
   }
 
   // TGraph boundaries
@@ -1060,16 +655,16 @@ void Spectra::Loop() {
 //    hCsIETLeft[i]->Write();
 //  }
 
-  // hMicroMegasCenterCumulative->Write();
-  // hMicroMegasCenterEnergyCumulative->Write();
-  // hMicroMegasCenterEnergyAverage->Write();
-  // hMicroMegasCenterEnergyAverageScaled->Write();
-  // hMicroMegasCenterTimeAverage->Write();
+//   hMicroMegasCenterCumulative->Write();
+//   hMicroMegasCenterEnergyCumulative->Write();
+//   hMicroMegasCenterEnergyAverage->Write();
+//   hMicroMegasCenterEnergyAverageScaled->Write();
+//   hMicroMegasCenterTimeAverage->Write();
 
   // Forward CsI Energy vs Time
-  // for(UInt_t i = 0; i < 10; i++) {
-  //   hCsIETForward[i]->Write();
-  // }
+//  for(UInt_t i = 0; i < 10; i++) {
+//    hCsIETForward[i]->Write();
+//  }
 
 //   Forward Si Energy vs CsI Energy
 //   for(UInt_t i = 0; i < 10; i++) {
@@ -1110,17 +705,20 @@ void Spectra::Loop() {
 //  }
 
   // Forward Vertex vs Si Energy
-//  for(UInt_t i = 0; i < 10; i++) {
+  for(UInt_t i = 0; i < 10; i++) {
 //    hVertexSiEForward[i]->Write();
 //    hVertexSiEForwardCal[i]->Write();
-//  }
+    hVertexSiEForwardCalTotal[i]->Write();
+  }
 
   // Forward Angle vs Si Energy
-//  for(UInt_t i = 0; i < 10; i++) {
+  for(UInt_t i = 0; i < 10; i++) {
 //    hAngleEForward[i]->Write();
 //    hAngleEForwardCal[i]->Write();
-//    hAngleEForwardCalTotal[i]->Write();
-//  }
+    hAngleEForwardCalTotal[i]->Write();
+    hAngleEForwardProtonEnergy[i]->Write();
+//    hAngleEForwardCMEnergy[i]->Write();
+  }
 
   // Forward Vertex vs Angle
 //  for(UInt_t i = 0; i < 10; i++) {
@@ -1128,68 +726,411 @@ void Spectra::Loop() {
 //  }
 
   // Time vs Column/Strip Number Forward Detectors
-  for(UInt_t i = 0; i < 10; i++) {
-    for(UInt_t j = 0; j < 4; j++) {
-      hTimeColumnForward[i][j]->Write();
-      hTimeStripForward[i][j]->Write();
-    }
-  }
+//  for(UInt_t i = 0; i < 10; i++) {
+//    for(UInt_t j = 0; j < 4; j++) {
+//      hTimeChainForward[i][j]->Write();
+//      hTimeStripForward[i][j]->Write();
+//    }
+//  }
 
-//  DivideTargetThickness(s1);
-//  ReadSolidAngle();
-//  SolidAngle(s1);
-//  s1->Scale(1./numberB8);
-//  s1->Write();
-//  WriteSpectrumToFile(s1, 3);
+  // Forward Wall XZ Hit Positions
+  hHitPositionsXZForward->Write();
+//  for(UInt_t i = 0; i < 10; i++) {
+//    hHitPositionsXZForwardInd[i]->Write();
+//  }
+
+  DivideTargetThickness(s1);
+  ReadSolidAngle();
+  SolidAngle(s1);
+  s1->Scale(1./numberB8);
+  s1->Write();
+  WriteSpectrumToFile(s1, 3);
 
   WriteTree();
 
   file->Close();
 }
 
-void Spectra::StripChainMatch(std::vector<mmTrack> &stripChainMatched, std::vector<mmTrack> &stripChainRaw, std::vector<mmStripChain> chain_,
-                              std::vector<mmStripChain> strip_, Bool_t leftSide, Double_t siTime) {
-  stripChainMatched.clear();
-  stripChainRaw.clear();
-  std::vector<mmTrack> totalTime0;
-  StripChainMatchingTime(totalTime0, chain_, strip_, leftSide, siTime, 0);
-  StripChainMatchingTime(stripChainRaw, chain_, strip_, leftSide, siTime, 0);
+Bool_t Spectra::AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std::vector<mmTrack> centerBeamTotal_,
+                                     std::vector<mmTrack> centerProton_, std::map<Int_t, Double_t> centralPadTotalEnergy) {
 
-  size_t numTimeBuckets = StripChainTime0TimeBuckets(totalTime0);
-  // std::cout << "Time buckets: " << numTimeBuckets << std::endl;
-  if(numTimeBuckets < 6) {
-    StripChainMatchingBoxTime0(stripChainMatched, totalTime0);
-    // std::cout << "BoxTime0: " << stripChainMatched.size() << std::endl;
+  // Find dE for center region
+  dE = 0.;
+  Int_t totalRows = 0;
+  for(Int_t i = 116; i < 124; i++) {
+    if(i == 117) continue;
+    auto iterator = centralPadTotalEnergy.find(i);
+    if(iterator != centralPadTotalEnergy.end()) {
+      dE += centralPadTotalEnergy[i];
+      totalRows++;
+    }
+    dE /= static_cast<Double_t>(totalRows);
   }
-  // else if(chain_.size() > 12 && strip_.size() > 12) {
-  //   StripChainMatchingTimeSlopeHough(stripChainMatched, chain_, strip_, leftSide, siTime, 10.);
-  //   if(stripChainMatched.size() < 2) {
-  //     stripChainMatched.clear();
-  //     StripChainMatchingBoxTime0(stripChainMatched, totalTime0);
-  //   }
-  //   // std::cout << "SlopeHough0: " << stripChainMatched.size() << std::endl;
-  // }
-  else {
-    StripChainMatchingTime(stripChainMatched, chain_, strip_, leftSide, siTime, 0);
-    // std::cout << "MatchingTime: " << stripChainMatched.size() << std::endl;
-  }
-  // std::cout << chain_.size() << '\t' << strip_.size() << '\t' << stripChainMatched.size() << std::endl;
+
+  return true;
 }
 
-size_t Spectra::StripChainTime0TimeBuckets(std::vector<mmTrack> matched) {
+Bool_t Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::vector<mmTrack> centerBeamTotal_,
+                                  std::vector<mmChainStrip> leftChain_, std::vector<mmChainStrip> leftStrip_,
+                                  std::vector<mmChainStrip> rightChain_, std::vector<mmChainStrip> rightStrip_) {
+  // Sorting mmCenterBeamTotal_ by row
+  if(!centerBeamTotal_.empty()) {
+    std::sort(centerBeamTotal_.begin(), centerBeamTotal_.end(), sortByRowMMTrack());
+  }
+
+  // Sorting mmLeftChain_
+  if(!leftChain_.empty()) {
+    std::sort(leftChain_.begin(), leftChain_.end(), sortByRowMMStripChain());
+  }
+
+  // Sorting mmLeftStrip_
+  if(!leftStrip_.empty()) {
+    std::sort(leftStrip_.begin(), leftStrip_.end(), sortByRowMMStripChain());
+  }
+
+  // Sorting mmRightChain_
+  if(!rightChain_.empty()) {
+    std::sort(rightChain_.begin(), rightChain_.end(), sortByRowMMStripChain());
+  }
+
+  // Sorting mmRightStrip_
+  if(!rightStrip_.empty()) {
+    std::sort(rightStrip_.begin(), rightStrip_.end(), sortByRowMMStripChain());
+  }
+
+  Bool_t left = false;
+  Bool_t right = false;
+  if(siDet < 4) right = true;
+  else if(siDet > 5) left = true;
+
+  // Look at time vs chain/strip
+  if(left) {
+    // Chain
+    for(auto mm : leftChain_) {
+      hTimeChainForward[siDet][siQuad]->Fill(mm.row, mm.time - siTime);
+    }
+    // Strip
+    for(auto mm : leftStrip_) {
+      hTimeStripForward[siDet][siQuad]->Fill(mm.row, mm.time - siTime);
+    }
+  }
+  else if(right) {
+    // Chain
+    for(auto mm : rightChain_) {
+      hTimeChainForward[siDet][siQuad]->Fill(mm.row, mm.time - siTime);
+    }
+    for(auto mm : rightStrip_) {
+      hTimeStripForward[siDet][siQuad]->Fill(mm.row, mm.time - siTime);
+    }
+  }
+
+  // Gate on time vs chain/strip
+  std::vector<mmChainStrip> leftChainReduced_;
+  std::vector<mmChainStrip> leftStripReduced_;
+  std::vector<mmChainStrip> rightChainReduced_;
+  std::vector<mmChainStrip> rightStripReduced_;
+  if(left) {
+    // Chain
+    for(auto mm : leftChain_) {
+      if(timeChainForwardCut[siDet][siQuad]->IsInside(mm.row, mm.time - siTime)) {
+        leftChainReduced_.push_back(mm);
+      }
+    }
+    // Strip
+    for(auto mm : leftStrip_) {
+      if(timeStripForwardCut[siDet][siQuad]->IsInside(mm.row, mm.time - siTime)) {
+        leftStripReduced_.push_back(mm);
+      }
+    }
+  }
+  else if(right) {
+    // Chain
+    for(auto mm : rightChain_) {
+      if(timeChainForwardCut[siDet][siQuad]->IsInside(mm.row, mm.time - siTime)) {
+        rightChainReduced_.push_back(mm);
+      }
+    }
+    // Strip
+    for(auto mm : rightStrip_) {
+      if(timeStripForwardCut[siDet][siQuad]->IsInside(mm.row, mm.time - siTime)) {
+        rightStripReduced_.push_back(mm);
+      }
+    }
+  }
+
+  // Find dE for left and right regions
+  dE = 0.;
+  if(left) {
+    for(auto mm: leftStripReduced_) {
+      dE += mm.energy;
+    }
+    dE /= static_cast<Double_t>(leftStripReduced_.size());
+  }
+  else if(right) {
+    for(auto mm : rightStripReduced_) {
+      dE += mm.energy;
+    }
+    dE /= static_cast<Double_t>(rightStripReduced_.size());
+  }
+
+  // Match strips with chains
+  std::vector<mmTrack> chainStripMatchedLeft;
+  std::vector<mmTrack> chainStripMatchedRight;
+  std::vector<mmTrack> chainStripRawLeft;
+  std::vector<mmTrack> chainStripRawRight;
+  if(!leftChainReduced_.empty() && !leftStripReduced_.empty()) {
+    ChainStripMatch(chainStripMatchedLeft, chainStripRawLeft, leftChainReduced_, leftStripReduced_, true, siTime);
+  }
+  if(!rightChainReduced_.empty() && !rightStripReduced_.empty()) {
+    ChainStripMatch(chainStripMatchedRight, chainStripRawRight, rightChainReduced_, rightStripReduced_, false,
+                    siTime);
+  }
+
+  if(!dEEForwardCut[siDet]->IsInside(siEnergy, dE)) return false;
+
+  // Assign proton track for side regions
+  std::vector<mmTrack> protonTrack;
+  if(left) {
+    protonTrack = chainStripMatchedLeft;
+  }
+  else if(right) {
+    protonTrack = chainStripMatchedRight;
+  }
+
+  // Find vertex using the proton track in side regions
+  vertexPositionX = 0.;
+  vertexPositionY = -400.;
+  vertexPositionZ = 0.;
+
+  Double_t protonEnergy = 0.;
+
+  if(protonTrack.empty()) return false;
+
+  auto *fitProton = new HoughTrack();
+  fitProton->AddTrack(protonTrack, siDet, siQuad);
+  Double_t minDist = fitProton->FitRestricted();
+  std::vector<Double_t> parsProton = fitProton->GetPars();
+  Double_t houghAngleXY = fitProton->GetHoughAngleXY();
+  Double_t houghAngleYZ = fitProton->GetHoughAngleYZ();
+  hHoughAngle[siDet]->Fill(houghAngleXY);
+
+  delete fitProton;
+
+  ULong_t mmCenterSize = centerBeamTotal_.size();
+
+  if(mmCenterSize == 0) {
+    Double_t beamX_old = 0.;
+    Double_t beamY_old = 250.;
+    Double_t beamZ_old = 0.;
+    Double_t beamX = beamX_old;
+    Double_t beamY = beamY_old;
+    Double_t beamZ = beamZ_old;
+    Double_t x, y, z;
+    line(beamY, parsProton, x, y, z);
+    Double_t protonX_old = x;
+    Double_t protonX = protonX_old;
+    Double_t xDiff_old = beamX - protonX_old;
+    Double_t xDiff = xDiff_old;
+    Double_t yPos = beamY_old;
+    while(yPos > -300.) {
+      beamY = yPos;
+      line(beamY, parsProton, x, y, z);
+      protonX = x;
+      xDiff = beamX - protonX;
+      if(xDiff_old*xDiff < 0) {
+        Double_t m = (beamY - beamY_old)/(xDiff - xDiff_old);
+        Double_t b = beamY - m*xDiff;
+        vertexPositionX = beamX;
+        vertexPositionY = beamY;
+        vertexPositionZ = beamZ;
+        break;
+      }
+      beamY_old = beamY;
+      protonX_old = protonX;
+      xDiff_old = xDiff;
+      yPos -= 1.;
+    }
+    // Did not fit well
+    if(vertexPositionY == -400) {
+      Double_t m_xcomponent = fabs(parsProton[1]);
+      Double_t xAngle = atan(m_xcomponent);
+
+      Double_t yDist = siXPosForward[siDet][siQuad]/fabs(tan(xAngle));
+
+      if(250. - yDist < -400) {
+        vertexPositionY = -400.;
+      }
+      else {
+        vertexPositionY = 250. - yDist;
+      }
+    }
+  }
+  else {
+    // Loop through beam in central region starting from last
+    Double_t beamX_old = centerBeamTotal_[mmCenterSize - 1].xPosition;
+    Double_t beamY_old = centerBeamTotal_[mmCenterSize - 1].yPosition;
+    Double_t beamZ_old = centerBeamTotal_[mmCenterSize - 1].height;
+    Double_t beamX = beamX_old;
+    Double_t beamY = beamY_old;
+    Double_t beamZ = beamZ_old;
+    Double_t x, y, z;
+    line(beamY, parsProton, x, y, z);
+    Double_t protonX_old = x;
+    Double_t protonX = protonX_old;
+    Double_t xDiff_old = beamX - protonX_old;
+    Double_t xDiff = xDiff_old;
+    Bool_t foundVertex = false;
+    for(ULong_t i = mmCenterSize - 1; i > -1; i--) {
+      beamX = centerBeamTotal_[i].xPosition;
+      beamY = centerBeamTotal_[i].yPosition;
+      beamZ = centerBeamTotal_[i].height;
+      line(beamY, parsProton, x, y, z);
+      protonX = x;
+      xDiff = beamX - protonX;
+      if(xDiff_old*xDiff < 0) {
+        Double_t m = (beamY - beamY_old)/(xDiff - xDiff_old);
+        Double_t b = beamY - m*xDiff;
+        vertexPositionX = beamX;
+        vertexPositionY = b;
+        vertexPositionZ = beamZ;
+        foundVertex = true;
+        break;
+      }
+      beamX_old = beamX;
+      beamY_old = beamY;
+      beamZ_old = beamZ;
+      protonX_old = protonX;
+      xDiff_old = xDiff;
+    }
+    if(!foundVertex) {
+      Double_t beamY = -1.;
+      while(beamY > -300.) {
+        line(beamY, parsProton, x, y, z);
+        protonX = x;
+        xDiff = beamX - x;
+        if(xDiff*xDiff_old < 0) {
+          Double_t m = (beamY - beamY_old)/(xDiff - xDiff_old);
+          Double_t b = beamY - m*xDiff;
+          vertexPositionX = beamX;
+          vertexPositionY = b;
+          vertexPositionZ = 0.;
+          break;
+        }
+        beamY_old = beamY;
+        protonX_old = protonX;
+        xDiff_old = xDiff;
+        beamY -= 1.;
+      }
+    }
+    // Did not fit well
+    if(vertexPositionY == -400) {
+      Double_t m_xcomponent = fabs(parsProton[1]);
+      Double_t xAngle = atan(m_xcomponent);
+
+      Double_t yDist = siXPosForward[siDet][siQuad]/fabs(tan(xAngle));
+
+      if(250. - yDist < -400) {
+        vertexPositionY = -400.;
+      }
+      else {
+        vertexPositionY = 250. - yDist;
+      }
+    }
+  }
+
+  // Plot XZ hit position of forward non-central detectors
+  Double_t x, y, z;
+  line(siYPosForward, parsProton, x, y, z);
+  siPosX = x;
+  siPosY = siYPosForward;
+  siPosZ = z;
+  hHitPositionsXZForward->Fill(x, z);
+  hHitPositionsXZForwardInd[siDet]->Fill(x, z);
+
+  Double_t vertexToSi = siYPosForward - vertexPositionY;
+
+  Double_t siX, siY, siZ;
+  line(siYPosForward, parsProton, siX, siY, siZ);
+  Double_t angleX = atan(fabs(siX)/(vertexToSi));
+  Double_t angleZ = atan(fabs(siZ)/(vertexToSi));
+  Double_t cosAngle = cos(angleX)*cos(angleZ);
+
+  angle = acos(cosAngle);
+  Double_t pathLength = vertexToSi/cosAngle;
+
+  if(pathLength < 0) pathLength = 200.;
+  if(pathLength > 700) pathLength = 700.;
+
+  protonEnergy = protonMethane->AddBack(totalEnergy/1000., pathLength);
+  Double_t beamEnergy = protonEnergy*(m1 + m2)*(m1 + m2)/(4.*m1*m2*cosAngle*cosAngle);
+
+  cmEnergy = beamEnergy*m2/(m1 + m2);
+
+  hVertexSiEForward[siDet]->Fill(siEnergy, vertexPositionY);
+  hVertexSiEForwardCal[siDet]->Fill(siEnergyCal, vertexPositionY);
+  hVertexSiEForwardCalTotal[siDet]->Fill(totalEnergy, vertexPositionY);
+
+  hAngleEForward[siDet]->Fill(siEnergy, angle);
+  hAngleEForwardCal[siDet]->Fill(siEnergyCal, angle);
+  hAngleEForwardCalTotal[siDet]->Fill(totalEnergy, angle);
+  hAngleEForwardProtonEnergy[siDet]->Fill(protonEnergy, angle);
+
+  hVertexAngleForward[siDet]->Fill(vertexPositionY, angle);
+
+  if(siDet == 0 || siDet == 1 || siDet == 9) {
+    if(angleTotEnergyCut[siDet]->IsInside(protonEnergy, angle)) {
+      s1->Fill(cmEnergy);
+    }
+    s1->Fill(cmEnergy);
+  }
+
+  return true;
+}
+
+void Spectra::ChainStripMatch(std::vector<mmTrack> &chainStripMatched, std::vector<mmTrack> &chainStripRaw,
+                              std::vector<mmChainStrip> chain_,
+                              std::vector<mmChainStrip> strip_, Bool_t leftSide, Double_t siTime) {
+  chainStripMatched.clear();
+  chainStripRaw.clear();
+  std::vector<mmTrack> totalTime0;
+  ChainStripMatchingTime(totalTime0, chain_, strip_, leftSide, siTime, 0);
+  ChainStripMatchingTime(chainStripRaw, chain_, strip_, leftSide, siTime, 0);
+
+  size_t numTimeBuckets = ChainStripTime0TimeBuckets(totalTime0);
+  // std::cout << "Time buckets: " << numTimeBuckets << std::endl;
+  if(numTimeBuckets < 4) {
+    ChainStripMatchingBoxTime0(chainStripMatched, totalTime0);
+    // std::cout << "BoxTime0: " << chainStripMatched.size() << std::endl;
+  }
+  // else if(chain_.size() > 12 && strip_.size() > 12) {
+  //   ChainStripMatchingTimeSlopeHough(chainStripMatched, chain_, strip_, leftSide, siTime, 10.);
+  //   if(chainStripMatched.size() < 2) {
+  //     chainStripMatched.clear();
+  //     ChainStripMatchingBoxTime0(chainStripMatched, totalTime0);
+  //   }
+  //   // std::cout << "SlopeHough0: " << chainStripMatched.size() << std::endl;
+  // }
+  else {
+    ChainStripMatchingTime(chainStripMatched, chain_, strip_, leftSide, siTime, 0);
+    // std::cout << "MatchingTime: " << chainStripMatched.size() << std::endl;
+  }
+  // std::cout << chain_.size() << '\t' << strip_.size() << '\t' << chainStripMatched.size() << std::endl;
+}
+
+size_t Spectra::ChainStripTime0TimeBuckets(std::vector<mmTrack> matched) {
   // Function that finds the number of different time buckets for the time0 algorithm
   // This is used if you want to change the strip/chain matching algorithm (if all on the same plane)
 
   std::map<Int_t, Int_t> timeMap;
 
-  for(UInt_t i = 0; i < matched.size(); i++) {
-    timeMap[matched[i].time] = 1;
+  for(auto mm : matched) {
+    timeMap[mm.time] = 1;
   }
 
   return timeMap.size();
 }
 
-size_t Spectra::StripChainNumberTimeBuckets(std::vector<mmStripChain> chain, std::vector<mmStripChain> strip) {
+size_t Spectra::ChainStripNumberTimeBuckets(std::vector<mmChainStrip> chain, std::vector<mmChainStrip> strip) {
   // Function that finds the number of different time buckets for strips and chains
   // This is used if you want to change the strip/chain matching algorithm (if all on the same plane)
 
@@ -1209,20 +1150,20 @@ size_t Spectra::StripChainNumberTimeBuckets(std::vector<mmStripChain> chain, std
   return std::min(sizeTimeChainMap, sizeTimeStripMap);
 }
 
-void Spectra::StripChainMatchingOutward(std::vector<mmTrack> &stripChainMatched, std::vector<mmStripChain> chain,
-                                        std::vector<mmStripChain> strip, Bool_t leftSide, Double_t siTime) {
+void Spectra::ChainStripMatchingOutward(std::vector<mmTrack> &chainStripMatched, std::vector<mmChainStrip> chain,
+                                        std::vector<mmChainStrip> strip, Bool_t leftSide, Double_t siTime) {
   // Function to match strips and chains outward. Meaning that the matched strips and chains must be moving away from the central region
   // Strip and chains need to be sorted for this
   // Position transform = 10.5 + 1.75/2 + 1.75*chain (chain starting at 0)
   // Row transform = (strip - 1)*2
   // Row position transform = Row * rowConversion + rowConversionOffset
 
-  std::vector<mmStripChain> stripCopy = strip;
+  std::vector<mmChainStrip> stripCopy = strip;
   for(UInt_t i = 0; i < chain.size(); i++) {
     Double_t timeChain = chain[i].time;
     // Look in the strip vector for this time
-    std::vector<mmStripChain>::iterator it = std::find_if(stripCopy.begin(), stripCopy.end(),
-      [timeChain] (const mmStripChain& d) { return d.time == timeChain; });
+    auto it = std::find_if(stripCopy.begin(), stripCopy.end(),
+      [timeChain] (const mmChainStrip& d) { return d.time == timeChain; });
     if(it != stripCopy.end()) {
       Double_t position = 10.5 + 1.75/2 + 1.75*chain[i].row;
       if(leftSide) position = -position;
@@ -1236,15 +1177,15 @@ void Spectra::StripChainMatchingOutward(std::vector<mmTrack> &stripChainMatched,
       hit.height = heightOffset - hit.time*driftVelocity;
       hit.total = 1;
       // if(fabs(hit.position) > 150) std::cout << chain[i].row << '\t' << (*it).row << '\t' << hit.time/1000. << std::endl;
-      stripChainMatched.push_back(hit);
+      chainStripMatched.push_back(hit);
       stripCopy.erase(stripCopy.begin(), stripCopy.begin() + std::distance(stripCopy.begin(), it) + 1);
     }
     else continue;
   }
 }
 
-void Spectra::StripChainMatchingBox(std::vector<mmTrack> &stripChainMatched, std::vector<mmStripChain> chain,
-                                    std::vector<mmStripChain> strip, Bool_t leftSide, Double_t siTime) {
+void Spectra::ChainStripMatchingBox(std::vector<mmTrack> &chainStripMatched, std::vector<mmChainStrip> chain,
+                                    std::vector<mmChainStrip> strip, Bool_t leftSide, Double_t siTime) {
   // Function to match strips and chains. This is the simplest algorithm, making two points in the side
   // region which is where the particle entered and exited.
   // Strips and chains need to be sorted for this
@@ -1255,7 +1196,7 @@ void Spectra::StripChainMatchingBox(std::vector<mmTrack> &stripChainMatched, std
   Size_t stripSize = strip.size();
 
   Double_t position0 = 10.5 + 1.75/2 + 1.75*chain[0].row;
-  if(leftSide) position0 = -position0;
+  if(leftSide) position0 = -1.*position0;
   Int_t row0 = strip[0].row*2;
   mmTrack hit0 = {0, 0., 0., 0., 0., 0., 0};
   hit0.row = row0;
@@ -1267,7 +1208,7 @@ void Spectra::StripChainMatchingBox(std::vector<mmTrack> &stripChainMatched, std
   hit0.total = 1;
 
   Double_t position1 = 10.5 + 1.75/2 + 1.75*chain[chainSize - 1].row;
-  if(leftSide) position1 = -position1;
+  if(leftSide) position1 = -1.*position1;
   Int_t row1 = strip[stripSize - 1].row*2;
   mmTrack hit1 = {0, 0., 0., 0., 0., 0., 0};
   hit1.row = row1;
@@ -1278,19 +1219,19 @@ void Spectra::StripChainMatchingBox(std::vector<mmTrack> &stripChainMatched, std
   hit1.height = heightOffset - hit1.time*driftVelocity;
   hit1.total = 1;
 
-  stripChainMatched.push_back(hit0);
-  stripChainMatched.push_back(hit1);
+  chainStripMatched.push_back(hit0);
+  chainStripMatched.push_back(hit1);
 }
 
-void Spectra::StripChainMatchingBoxTime0(std::vector<mmTrack> &stripChainMatched, std::vector<mmTrack> time0) {
+void Spectra::ChainStripMatchingBoxTime0(std::vector<mmTrack> &chainStripMatched, std::vector<mmTrack> time0) {
   UInt_t size = time0.size();
   if(size == 0) return;
-  stripChainMatched.push_back(time0[0]);
-  stripChainMatched.push_back(time0[size - 1]);
+  chainStripMatched.push_back(time0[0]);
+  chainStripMatched.push_back(time0[size - 1]);
 }
 
-void Spectra::StripChainMatchingTime(std::vector<mmTrack> &stripChainMatched, std::vector<mmStripChain> chain,
-                                     std::vector<mmStripChain> strip, Bool_t leftSide, Double_t siTime,
+void Spectra::ChainStripMatchingTime(std::vector<mmTrack> &chainStripMatched, std::vector<mmChainStrip> chain,
+                                     std::vector<mmChainStrip> strip, Bool_t leftSide, Double_t siTime,
                                      Int_t timeWindow) {
   // Function to match strips and chains. Chains and strips are matched if their time is within the timeWindow parameter
   // The timeWindow parameter is the window of time buckets to look for using the timeResolution parameter
@@ -1299,44 +1240,32 @@ void Spectra::StripChainMatchingTime(std::vector<mmTrack> &stripChainMatched, st
   // Row transform = strip*2
   // Row position transform = Row * rowConversion + rowConversionOffset
 
-  // Remove all strips and chains with time outside boundary
-  std::vector<mmStripChain> stripReduced;
-  std::vector<mmStripChain> chainReduced;
-  for(UInt_t i = 0; i < strip.size(); i++) {
-    if(strip[i].time < 4000 || strip[i].time > 7000) continue;
-    stripReduced.push_back(strip[i]);
-  }
-  for(UInt_t i = 0; i < chain.size(); i++) {
-    if(chain[i].time < 4000 || chain[i].time > 7000) continue;
-    chainReduced.push_back(chain[i]);
-  }
-
-  for(UInt_t i = 0; i < chainReduced.size(); i++) {
-    Double_t timeChain = chainReduced[i].time;
+  for(auto chainVec : chain) {
+    Double_t timeChain = chainVec.time;
     // Loop over strips and find strips when the time is within the timeWindow
-    for(UInt_t j = 0; j < stripReduced.size(); j++) {
-      if((stripReduced[j].time > timeChain - timeWindow*timeResolution - timeResolution/2.) &&
-          (stripReduced[j].time < timeChain + timeWindow*timeResolution + timeResolution/2.)) {
+    for(auto stripVec : strip) {
+      if((stripVec.time > timeChain - timeWindow*timeResolution - timeResolution/2.) &&
+          (stripVec.time < timeChain + timeWindow*timeResolution + timeResolution/2.)) {
         mmTrack hit = {0, 0., 0., 0., 0., 0., 0};
-        Double_t position = 10.5 + 1.75/2 + 1.75*chainReduced[i].row;
+        Double_t position = 10.5 + 1.75/2 + 1.75*chainVec.row;
         if(leftSide) position = -position;
-        Int_t row = stripReduced[j].row*2;
+        Int_t row = stripVec.row*2;
         hit.row = row;
         hit.xPosition = position;
         hit.yPosition = hit.row*rowConversion + rowConversionOffset;
-        hit.time = chainReduced[i].time - siTime;
-        hit.energy = stripReduced[j].energy;
+        hit.time = chainVec.time - siTime;
+        hit.energy = stripVec.energy;
         hit.height = heightOffset - hit.time*driftVelocity;
         hit.total = 1;
-        stripChainMatched.push_back(hit);
+        chainStripMatched.push_back(hit);
       }
     }
   }
 }
 
-void Spectra::StripChainMatchingTimeSlopeFit(std::vector<mmTrack> &stripChainMatched, std::vector<mmStripChain> chain,
-                                          std::vector<mmStripChain> strip, Bool_t leftSide, Double_t siTime,
-                                          Double_t timeWindow) {
+void Spectra::ChainStripMatchingTimeSlopeFit(std::vector<mmTrack> &chainStripMatched, std::vector<mmChainStrip> chain,
+                                             std::vector<mmChainStrip> strip, Bool_t leftSide, Double_t siTime,
+                                             Double_t timeWindow) {
   // Function to match strips and chains by fitting with time individually
   // Then is able to correlate strips and chains by time. Requires multiple time steps in both strips and chains
   // After the fit, it goes through each chain and finds strips based off of the fit when match within the timeWindow input parameter
@@ -1344,34 +1273,38 @@ void Spectra::StripChainMatchingTimeSlopeFit(std::vector<mmTrack> &stripChainMat
   // Row transform = (strip - 1)*2
   // Row position transform = Row * rowConversion + rowConversionOffset
 
-  TGraph* hStrip = new TGraph();
-  TGraph* hChain = new TGraph();
-
-  // Fill hStrip
-  for(UInt_t i = 0; i < strip.size(); i++) {
-    hStrip->SetPoint(i, strip[i].row, strip[i].time);
-  }
+  auto *hChain = new TGraph();
+  auto *hStrip = new TGraph();
 
   // Fill hChain
-  for(UInt_t i = 0; i < chain.size(); i++) {
-    hChain->SetPoint(i, chain[i].row, chain[i].time);
+  Int_t i = 0;
+  for(auto mm : chain) {
+    hChain->SetPoint(i, mm.row, mm.time);
+    i++;
+  }
+
+  // Fill hStrip
+  i = 0;
+  for(auto mm : strip) {
+    hStrip->SetPoint(i, mm.row, mm.time);
+    i++;
   }
 
   // Fit each with a 1-D polynomial
-  hStrip->Fit("pol1", "Q");
   hChain->Fit("pol1", "Q");
-  TF1 *fitStrip = hStrip->GetFunction("pol1");
+  hStrip->Fit("pol1", "Q");
   TF1 *fitChain = hChain->GetFunction("pol1");
+  TF1 *fitStrip = hStrip->GetFunction("pol1");
 
-  hStrip->SetName(Form("hStrip_%lld", entry));
   hChain->SetName(Form("hChain_%lld", entry));
-//  hStrip->Write();
+  hStrip->SetName(Form("hStrip_%lld", entry));
 //  hChain->Write();
+//  hStrip->Write();
 
-  Double_t stripP0 = fitStrip->GetParameter(0);
-  Double_t stripP1 = fitStrip->GetParameter(1);
   Double_t chainP0 = fitChain->GetParameter(0);
   Double_t chainP1 = fitChain->GetParameter(1);
+  Double_t stripP0 = fitStrip->GetParameter(0);
+  Double_t stripP1 = fitStrip->GetParameter(1);
 
   // Loop through chains and find strips within timeWindow
   for(UInt_t i = 0; i < chain.size(); i++) {
@@ -1393,7 +1326,7 @@ void Spectra::StripChainMatchingTimeSlopeFit(std::vector<mmTrack> &stripChainMat
         hit.energy = strip[j].energy;
         hit.height = heightOffset - hit.time*driftVelocity;
         hit.total = 1;
-        stripChainMatched.push_back(hit);
+        chainStripMatched.push_back(hit);
       }
     }
   }
@@ -1405,9 +1338,9 @@ void Spectra::StripChainMatchingTimeSlopeFit(std::vector<mmTrack> &stripChainMat
   delete hChain;
 }
 
-void Spectra::StripChainMatchingTimeSlopeHough(std::vector<mmTrack> &stripChainMatched, std::vector<mmStripChain> chain,
-                                             std::vector<mmStripChain> strip, Bool_t leftSide, Double_t siTime,
-                                             Double_t timeWindow) {
+void Spectra::ChainStripMatchingTimeSlopeHough(std::vector<mmTrack> &chainStripMatched, std::vector<mmChainStrip> chain,
+                                               std::vector<mmChainStrip> strip, Bool_t leftSide, Double_t siTime,
+                                               Double_t timeWindow) {
   // Function to match strips and chains by fitting with time individually (using Hough 2D)
   // Then is able to correlate strips and chains by time. Requires multiple time steps in both strips and chains
   // After the fit, it goes through each chain and finds strips based off of the fit when match within the timeWindow input parameter
@@ -1416,29 +1349,29 @@ void Spectra::StripChainMatchingTimeSlopeHough(std::vector<mmTrack> &stripChainM
   // Row position transform = Row * rowConversion + rowConversionOffset
 
   std::vector<mmTrack> newChain;
-  for(UInt_t i = 0; i < chain.size(); i++) {
+  for(auto mm : chain) {
     mmTrack hit = {0, 0., 0., 0., 0., 0., 0};
-    hit.xPosition = chain[i].row;
-    hit.yPosition = chain[i].time/timeResolution; // Convert to time buckets
+    hit.xPosition = mm.row;
+    hit.yPosition = mm.time/timeResolution; // Convert to time buckets
     newChain.push_back(hit);
   }
 
   std::vector<mmTrack> newStrip;
-  for(UInt_t i = 0; i < strip.size(); i++) {
+  for(auto mm : strip) {
     mmTrack hit = {0, 0., 0., 0., 0., 0., 0};
-    hit.xPosition = strip[i].row;
-    hit.yPosition = strip[i].time/timeResolution; // Convert to time buckets
+    hit.xPosition = mm.row;
+    hit.yPosition = mm.time/timeResolution; // Convert to time buckets
     newStrip.push_back(hit);
   }
 
-  Hough2D *houghChain = new Hough2D();
+  auto *houghChain = new Hough2D();
   houghChain->SetPoints(newChain);
   houghChain->CalculateHoughXY();
   Double_t chainTheta = houghChain->GetMaxThetaXY();
   Double_t chainD = houghChain->GetMaxDXY();
   delete houghChain;
 
-  Hough2D *houghStrip = new Hough2D();
+  auto *houghStrip = new Hough2D();
   houghStrip->SetPoints(newStrip);
   houghStrip->CalculateHoughXY();
   Double_t stripTheta = houghStrip->GetMaxThetaXY();
@@ -1470,7 +1403,7 @@ void Spectra::StripChainMatchingTimeSlopeHough(std::vector<mmTrack> &stripChainM
         hit.energy = strip[j].energy;
         hit.height = heightOffset - hit.time*driftVelocity;
         hit.total = 1;
-        stripChainMatched.push_back(hit);
+        chainStripMatched.push_back(hit);
       }
     }
   }
@@ -1481,17 +1414,17 @@ void Spectra::DivideTargetThickness(TH1F *f) {
 
   TAxis *x_axis = f->GetXaxis();
   for(Int_t i = 1; i <= i_size - 1; i++) {
-    Float_t binLowEdge = x_axis->GetBinLowEdge(i);
-    Float_t binUpEdge = x_axis->GetBinUpEdge(i);
+    Double_t binLowEdge = x_axis->GetBinLowEdge(i);
+    Double_t binUpEdge = x_axis->GetBinUpEdge(i);
     if(binLowEdge == 0.) binLowEdge += 0.001;
     binLowEdge *= (m1 + m2)/m2;
     binUpEdge *= (m1 + m2)/m2;
-    Float_t binContent = f->GetBinContent(i);
-    Float_t binError = f->GetBinError(i);
-    Float_t delta_x = boronMethane->CalcRange(binUpEdge, binLowEdge);
+    Double_t binContent = f->GetBinContent(i);
+    Double_t binError = f->GetBinError(i);
+    Double_t delta_x = boronMethane->CalcRange(binUpEdge, binLowEdge);
     delta_x /= 10.;
-    Float_t molarMassMethane = 0.01604;
-    Float_t factor = 4.e-27*density*delta_x*TMath::Na()/molarMassMethane;
+    Double_t molarMassMethane = 0.01604;
+    Double_t factor = 4.e-27*density*delta_x*TMath::Na()/molarMassMethane;
     binContent /= factor;
     binError /= factor;
     f->SetBinContent(i, binContent);
@@ -1523,11 +1456,11 @@ void Spectra::SolidAngle(TH1F *f) {
   TAxis *x_axis = f->GetXaxis();
 
   for(Int_t i = 1; i <= i_size - 1; i++) {
-    Float_t binCenter = x_axis->GetBinCenter(i);
-    Float_t binContent = f->GetBinContent(i);
-    Float_t binError = f->GetBinError(i);
+    Double_t binCenter = x_axis->GetBinCenter(i);
+    Double_t binContent = f->GetBinContent(i);
+    Double_t binError = f->GetBinError(i);
 
-    Float_t simCS = reg3SA(binCenter);
+    Double_t simCS = reg3SA(binCenter);
     // std::cout << binCenter << '\t' << simCS << std::endl;
 
     if(simCS == 0) {
@@ -1548,11 +1481,11 @@ void Spectra::WriteSpectrumToFile(TH1F *f, Int_t region) {
   TAxis *x_axis = f->GetXaxis();
 
   for(Int_t i = 1; i <= i_size - 1; i++) {
-    Float_t binCenter = x_axis->GetBinCenter(i);
-    Float_t binContent = f->GetBinContent(i);
-    Float_t binError = f->GetBinError(i);
+    Double_t binCenter = x_axis->GetBinCenter(i);
+    Double_t binContent = f->GetBinContent(i);
+    Double_t binError = f->GetBinError(i);
 
-    Float_t cmAngle = reg3CMAngle(binCenter);
+    Double_t cmAngle = reg3CMAngle(binCenter);
 
     fprintf(spectrumFile, "%f %f %f %f\n", binCenter, binContent, binError, cmAngle);
   }
