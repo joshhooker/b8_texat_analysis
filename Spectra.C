@@ -140,6 +140,7 @@ void Spectra::Loop() {
 
   InitChannelMap();
   InitHistograms();
+  InitCanvas();
   InitVariables();
 
   InitSiEForwardCalibration();
@@ -155,7 +156,7 @@ void Spectra::Loop() {
   printf("Starting Main Loop\n");
 
   Long64_t nbytes = 0, nb = 0;
-//  for(Long64_t jentry = 0; jentry < 2000; jentry++) {
+//  for(Long64_t jentry = 0; jentry < 10000; jentry++) {
 //  for(Long64_t jentry = 49983; jentry < 49984; jentry++) {
   for(Long64_t jentry = 0; jentry < nentries; jentry++) {
     Long64_t ientry = LoadTree(jentry);
@@ -590,7 +591,7 @@ void Spectra::Loop() {
       }
     }
 
-    Bool_t event;
+    Bool_t event = false;
     if(central) {
       event = AnalysisForwardCentral(mmCenterMatched_, mmCenterBeamTotal_, mmCenterProton_, centralPadTotalEnergy);
     }
@@ -600,10 +601,6 @@ void Spectra::Loop() {
     }
 
     if(!event) continue;
-
-    hdEEForward[siDet]->Fill(siEnergy, dE);
-    hdEEForwardCal[siDet]->Fill(siEnergyCal, dE);
-    hdEEForwardCalTotal[siDet]->Fill(totalEnergy, dE);
 
     //  ** End of event by event analysis ** //
     FillTree();
@@ -693,11 +690,11 @@ void Spectra::Loop() {
   // }
 
   // Forward dE vs Si Energy
-//  for(UInt_t i = 0; i < 10; i++) {
-//    hdEEForward[i]->Write();
-//    hdEEForwardCal[i]->Write();
-//    hdEEForwardCalTotal[i]->Write();
-//  }
+  for(UInt_t i = 0; i < 10; i++) {
+    hdEEForward[i]->Write();
+    hdEEForwardCal[i]->Write();
+    hdEEForwardCalTotal[i]->Write();
+  }
 
   // Forward Hough Angle
 //  for(UInt_t i = 0; i < 10; i++) {
@@ -716,7 +713,7 @@ void Spectra::Loop() {
 //    hAngleEForward[i]->Write();
 //    hAngleEForwardCal[i]->Write();
     hAngleEForwardCalTotal[i]->Write();
-    hAngleEForwardProtonEnergy[i]->Write();
+//    hAngleEForwardProtonEnergy[i]->Write();
 //    hAngleEForwardCMEnergy[i]->Write();
   }
 
@@ -733,6 +730,11 @@ void Spectra::Loop() {
 //    }
 //  }
 
+  // Time vs Central Row Forward Detectors
+//  for(UInt_t i = 0; i < 10; i++) {
+//    hTimeCentralForward[i]->Write();
+//  }
+
   // Forward Wall XZ Hit Positions
   hHitPositionsXZForward->Write();
 //  for(UInt_t i = 0; i < 10; i++) {
@@ -745,6 +747,13 @@ void Spectra::Loop() {
   s1->Scale(1./numberB8);
   s1->Write();
   WriteSpectrumToFile(s1, 3);
+
+  centralCanvas1->Modified();
+  centralCanvas1->Write();
+  centralCanvas2->Modified();
+  centralCanvas2->Write();
+  centralCanvas3->Modified();
+  centralCanvas3->Write();
 
   WriteTree();
 
@@ -767,6 +776,24 @@ Bool_t Spectra::AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std
     dE /= static_cast<Double_t>(totalRows);
   }
 
+  hdEEForward[siDet]->Fill(siEnergy, dE);
+  hdEEForwardCal[siDet]->Fill(siEnergyCal, dE);
+  hdEEForwardCalTotal[siDet]->Fill(totalEnergy, dE);
+
+  if(!dEEForwardCut[siDet]->IsInside(siEnergy, dE)) return false;
+
+  for(auto mm : centerMatched_) {
+    hTimeCentralForward[siDet]->Fill(mm.row, mm.time - siTime);
+  }
+
+  if(!centerMatched_.empty()) {
+    std::sort(centerMatched_.begin(), centerMatched_.end(), sortByRowMMCenter());
+  }
+
+  DrawCanvas(totalCentralCanvas, centerMatched_, centerBeamTotal_);
+
+  totalCentralCanvas++;
+
   return true;
 }
 
@@ -780,22 +807,22 @@ Bool_t Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::v
 
   // Sorting mmLeftChain_
   if(!leftChain_.empty()) {
-    std::sort(leftChain_.begin(), leftChain_.end(), sortByRowMMStripChain());
+    std::sort(leftChain_.begin(), leftChain_.end(), sortByRowMMChainStrip());
   }
 
   // Sorting mmLeftStrip_
   if(!leftStrip_.empty()) {
-    std::sort(leftStrip_.begin(), leftStrip_.end(), sortByRowMMStripChain());
+    std::sort(leftStrip_.begin(), leftStrip_.end(), sortByRowMMChainStrip());
   }
 
   // Sorting mmRightChain_
   if(!rightChain_.empty()) {
-    std::sort(rightChain_.begin(), rightChain_.end(), sortByRowMMStripChain());
+    std::sort(rightChain_.begin(), rightChain_.end(), sortByRowMMChainStrip());
   }
 
   // Sorting mmRightStrip_
   if(!rightStrip_.empty()) {
-    std::sort(rightStrip_.begin(), rightStrip_.end(), sortByRowMMStripChain());
+    std::sort(rightStrip_.begin(), rightStrip_.end(), sortByRowMMChainStrip());
   }
 
   Bool_t left = false;
@@ -873,6 +900,16 @@ Bool_t Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::v
     dE /= static_cast<Double_t>(rightStripReduced_.size());
   }
 
+  hdEEForward[siDet]->Fill(siEnergy, dE);
+  hdEEForwardCal[siDet]->Fill(siEnergyCal, dE);
+  hdEEForwardCalTotal[siDet]->Fill(totalEnergy, dE);
+
+  if(!dEEForwardCut[siDet]->IsInside(totalEnergy, dE)) return false;
+
+  for(auto mm : centerMatched_) {
+    hTimeCentralForward[siDet]->Fill(mm.row, mm.time - siTime);
+  }
+
   // Match strips with chains
   std::vector<mmTrack> chainStripMatchedLeft;
   std::vector<mmTrack> chainStripMatchedRight;
@@ -885,8 +922,6 @@ Bool_t Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::v
     ChainStripMatch(chainStripMatchedRight, chainStripRawRight, rightChainReduced_, rightStripReduced_, false,
                     siTime);
   }
-
-  if(!dEEForwardCut[siDet]->IsInside(siEnergy, dE)) return false;
 
   // Assign proton track for side regions
   std::vector<mmTrack> protonTrack;
@@ -1051,11 +1086,17 @@ Bool_t Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::v
 
   Double_t siX, siY, siZ;
   line(siYPosForward, parsProton, siX, siY, siZ);
-  Double_t angleX = atan(fabs(siX)/(vertexToSi));
-  Double_t angleZ = atan(fabs(siZ)/(vertexToSi));
-  Double_t cosAngle = cos(angleX)*cos(angleZ);
 
-  angle = acos(cosAngle);
+  // Double_t angleX = atan(fabs(siX)/(vertexToSi));
+  // Double_t angleZ = atan(fabs(siZ)/(vertexToSi));
+  // Double_t cosAngle = cos(angleX)*cos(angleZ);
+  // angle = acos(cosAngle);
+
+  TVector3 v1(siX, vertexToSi, siZ);
+  TVector3 v2(0, vertexToSi, 0);
+  angle = v1.Angle(v2);
+  Double_t cosAngle = cos(angle);
+
   Double_t pathLength = vertexToSi/cosAngle;
 
   if(pathLength < 0) pathLength = 200.;
@@ -1081,7 +1122,6 @@ Bool_t Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::v
     if(angleTotEnergyCut[siDet]->IsInside(protonEnergy, angle)) {
       s1->Fill(cmEnergy);
     }
-    s1->Fill(cmEnergy);
   }
 
   return true;

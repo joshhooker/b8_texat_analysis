@@ -49,14 +49,20 @@ void line(Double_t t, std::vector<Double_t> p, Double_t &x, Double_t &y, Double_
   z = p[2] + p[3]*t;
 }
 
-struct sortByRowMMTrack {
-  inline Bool_t operator() (const mmTrack& struct1, const mmTrack& struct2) {
+struct sortByRowMMChainStrip {
+  inline Bool_t operator() (const mmChainStrip& struct1, const mmChainStrip& struct2) {
     return (struct1.row < struct2.row);
   }
 };
 
-struct sortByRowMMStripChain {
-  inline Bool_t operator() (const mmChainStrip& struct1, const mmChainStrip& struct2) {
+struct sortByRowMMCenter {
+  inline Bool_t operator() (const mmCenter& struct1, const mmCenter& struct2) {
+    return (struct1.row < struct2.row);
+  }
+};
+
+struct sortByRowMMTrack {
+  inline Bool_t operator() (const mmTrack& struct1, const mmTrack& struct2) {
     return (struct1.row < struct2.row);
   }
 };
@@ -244,6 +250,8 @@ private:
   TH2F* hVertexSiEForward[10];
   TH2F* hVertexSiEForwardCal[10];
   TH2F* hVertexSiEForwardCalTotal[10];
+  TH2F* hVertexSiERegion3;
+  TH2F* hVertexCMERegion3;
 
   // Vertex vs E Left Detectors
   TH2F* hVertexSiELeft[6];
@@ -259,12 +267,26 @@ private:
   // Time vs Strip Number Forward Detectors
   TH2F* hTimeStripForward[10][4];
 
+  // Time vs Central Region Forward Detectors
+  TH2F* hTimeCentralForward[10];
+
   // Forward Wall XZ Hit Positions
   TH2F* hHitPositionsXZForward;
   TH2F* hHitPositionsXZForwardInd[10];
 
   // Cross Section
   TH1F* s1;
+
+// TCanvas
+
+  // For central pads
+  void InitCanvas();
+  void DrawCanvas(Int_t count, std::vector<mmCenter> centerMatched_, std::vector<mmTrack> centerBeamTotal_);
+  Int_t totalCentralCanvas;
+  TCanvas* centralCanvas1;
+  TCanvas* centralCanvas2;
+  TCanvas* centralCanvas3;
+  TCanvas* centralCanvas4;
 
 // Silicon Energy Calibration
 private:
@@ -1291,6 +1313,16 @@ inline void Spectra::InitHistograms() {
     hVertexSiEForwardCalTotal[i]->GetYaxis()->SetTitleOffset(1.4);
   }
 
+  hVertexSiERegion3 = new TH2F("vertexSiERegion3", "vertexSiERegion3", 500, 0, 20000, 500, -250, 300);
+  hVertexSiERegion3->GetXaxis()->SetTitle("Si Energy [keV]"); hVertexSiERegion3->GetXaxis()->CenterTitle();
+  hVertexSiERegion3->GetYaxis()->SetTitle("Vertex [mm]"); hVertexSiERegion3->GetYaxis()->CenterTitle();
+  hVertexSiERegion3->GetYaxis()->SetTitleOffset(1.4); hVertexSiERegion3->SetStats(false);
+
+  hVertexCMERegion3 = new TH2F("vertexCMERegion3", "vertexCMERegion3", 500, 0, 6, 500, -250, 300);
+  hVertexCMERegion3->GetXaxis()->SetTitle("CM Energy [MeV]"); hVertexCMERegion3->GetXaxis()->CenterTitle();
+  hVertexCMERegion3->GetYaxis()->SetTitle("Vertex [mm]"); hVertexCMERegion3->GetYaxis()->CenterTitle();
+  hVertexCMERegion3->GetYaxis()->SetTitleOffset(1.4); hVertexCMERegion3->SetStats(false);
+
   for(UInt_t i = 0; i < 6; i++) {
     TString name = Form("vertexSiELeft_d%d", i);
     hVertexSiELeft[i] = new TH2F(name, name, 500, 0, 4000, 500, -250, 300);
@@ -1313,7 +1345,7 @@ inline void Spectra::InitHistograms() {
       hTimeChainForward[i][j]->GetXaxis()->SetTitle("Chain #"); hTimeChainForward[i][j]->GetXaxis()->CenterTitle();
       hTimeChainForward[i][j]->GetYaxis()->SetTitle("Time [ns]"); hTimeChainForward[i][j]->GetYaxis()->CenterTitle();
       hTimeChainForward[i][j]->GetYaxis()->SetTitleOffset(1.4);
-      hTimeChainForward[i][j]->SetStats(kFALSE);
+      hTimeChainForward[i][j]->SetStats(false);
     }
   }
 
@@ -1325,8 +1357,18 @@ inline void Spectra::InitHistograms() {
       hTimeStripForward[i][j]->GetXaxis()->SetTitle("Strip #"); hTimeStripForward[i][j]->GetXaxis()->CenterTitle();
       hTimeStripForward[i][j]->GetYaxis()->SetTitle("Time [ns]"); hTimeStripForward[i][j]->GetYaxis()->CenterTitle();
       hTimeStripForward[i][j]->GetYaxis()->SetTitleOffset(1.4);
-      hTimeStripForward[i][j]->SetStats(kFALSE);
+      hTimeStripForward[i][j]->SetStats(false);
     }
+  }
+
+  // Time vs Central Region Forward Detectors
+  for(UInt_t i = 0; i < 10; i++) {
+    TString name = Form("timeCentralForward_d%d", i);
+    hTimeCentralForward[i] = new TH2F(name, name, 130, -2, 128, 75, 0, 3000);
+    hTimeCentralForward[i]->GetXaxis()->SetTitle("Row #"); hTimeCentralForward[i]->GetXaxis()->CenterTitle();
+    hTimeCentralForward[i]->GetYaxis()->SetTitle("Time [ns]"); hTimeCentralForward[i]->GetYaxis()->CenterTitle();
+    hTimeCentralForward[i]->GetYaxis()->SetTitleOffset(1.4);
+    hTimeCentralForward[i]->SetStats(false);
   }
 
   // Forward Wall XZ Hit Positions
@@ -1334,7 +1376,7 @@ inline void Spectra::InitHistograms() {
   hHitPositionsXZForward->GetXaxis()->SetTitle("X [mm]"); hHitPositionsXZForward->GetXaxis()->CenterTitle();
   hHitPositionsXZForward->GetYaxis()->SetTitle("Z [mm]"); hHitPositionsXZForward->GetYaxis()->CenterTitle();
   hHitPositionsXZForward->GetYaxis()->SetTitleOffset(1.4);
-  hHitPositionsXZForward->SetStats(kFALSE);
+  hHitPositionsXZForward->SetStats(false);
 
   for(UInt_t i = 0; i < 10; i++) {
     TString name = Form("hitPositionXZForward_d%d", i);
@@ -1342,7 +1384,7 @@ inline void Spectra::InitHistograms() {
     hHitPositionsXZForwardInd[i]->GetXaxis()->SetTitle("X [mm]"); hHitPositionsXZForwardInd[i]->GetXaxis()->CenterTitle();
     hHitPositionsXZForwardInd[i]->GetYaxis()->SetTitle("Z [mm]"); hHitPositionsXZForwardInd[i]->GetYaxis()->CenterTitle();
     hHitPositionsXZForwardInd[i]->GetYaxis()->SetTitleOffset(1.4);
-    hHitPositionsXZForwardInd[i]->SetStats(kFALSE);
+    hHitPositionsXZForwardInd[i]->SetStats(false);
   }
 
   // Cross Section Histograms
@@ -1351,6 +1393,128 @@ inline void Spectra::InitHistograms() {
   s1->GetXaxis()->SetTitle("Center of Mass Energy [MeV]"); s1->GetXaxis()->CenterTitle();
   s1->GetYaxis()->SetTitle("Cross Section [b/sr]"); s1->GetYaxis()->CenterTitle();
   s1->GetYaxis()->SetTitleOffset(1.2);
+}
+
+inline void Spectra::InitCanvas() {
+  totalCentralCanvas = 0;
+  centralCanvas1 = new TCanvas("central1", "central1", 800, 600);
+  centralCanvas1->Divide(4, 4);
+  centralCanvas1->Update();
+
+  centralCanvas2 = new TCanvas("central2", "central2", 800, 600);
+  centralCanvas2->Divide(4, 4);
+  centralCanvas2->Update();
+
+  centralCanvas3 = new TCanvas("central3", "central3", 800, 600);
+  centralCanvas3->Divide(4, 4);
+  centralCanvas3->Update();
+
+  centralCanvas4 = new TCanvas("central4", "central4", 800, 600);
+  centralCanvas4->Divide(4, 4);
+  centralCanvas4->Update();
+}
+
+inline void Spectra::DrawCanvas(Int_t count, std::vector<mmCenter> centerMatched_, std::vector<mmTrack> centerBeamTotal_) {
+  // Make maps of different central columns
+  std::map<Int_t, std::map<Int_t, Double_t> > centralEnergyMap;
+  for(auto mm : centerMatched_) {
+    if(mm.row > 111) continue;
+    centralEnergyMap[mm.column][mm.row] = mm.energy;
+  }
+
+  TMultiGraph* mgColumn = new TMultiGraph();
+  TGraph* graphColumn0 = new TGraph();
+  TGraph* graphColumn1 = new TGraph();
+  TGraph* graphColumn2 = new TGraph();
+  TGraph* graphColumn3 = new TGraph();
+  TGraph* graphColumn4 = new TGraph();
+  TGraph* graphColumn5 = new TGraph();
+  Int_t i = 0;
+  for(auto map : centralEnergyMap[0]) {
+    graphColumn0->SetPoint(i, map.first, map.second);
+    i++;
+  }
+  i = 0;
+  for(auto map : centralEnergyMap[1]) {
+    graphColumn1->SetPoint(i, map.first, map.second);
+    i++;
+  }
+  i = 0;
+  for(auto map : centralEnergyMap[2]) {
+    graphColumn2->SetPoint(i, map.first, map.second);
+    i++;
+  }
+  i = 0;
+  for(auto map : centralEnergyMap[3]) {
+    graphColumn3->SetPoint(i, map.first, map.second);
+    i++;
+  }
+  i = 0;
+  for(auto map : centralEnergyMap[4]) {
+    graphColumn4->SetPoint(i, map.first, map.second);
+    i++;
+  }
+  i = 0;
+  for(auto map : centralEnergyMap[5]) {
+    graphColumn5->SetPoint(i, map.first, map.second);
+    i++;
+  }
+
+  TGraph* graphColumnTot = new TGraph();
+  i = 0;
+  for(auto mm : centerBeamTotal_) {
+    graphColumnTot->SetPoint(i, mm.row, mm.energy);
+    i++;
+  }
+
+
+  graphColumn0->SetLineColor(28);
+  graphColumn1->SetLineColor(3);
+  graphColumn2->SetLineColor(4);
+  graphColumn3->SetLineColor(6);
+  graphColumn4->SetLineColor(7);
+  graphColumn5->SetLineColor(9);
+  graphColumnTot->SetLineColor(1);
+
+  if(count < 16) {
+    centralCanvas1->cd(count + 1);
+    if(graphColumn0->GetN() > 0) mgColumn->Add(graphColumn0);
+    if(graphColumn1->GetN() > 0) mgColumn->Add(graphColumn1);
+    if(graphColumn2->GetN() > 0) mgColumn->Add(graphColumn2);
+    if(graphColumn3->GetN() > 0) mgColumn->Add(graphColumn3);
+    if(graphColumn4->GetN() > 0) mgColumn->Add(graphColumn4);
+    if(graphColumn5->GetN() > 0) mgColumn->Add(graphColumn5);
+    if(graphColumnTot->GetN() > 0) mgColumn->Add(graphColumnTot);
+    mgColumn->GetXaxis()->SetLimits(0, 128);
+    mgColumn->Draw("a");
+    centralCanvas1->Update();
+  }
+  else if(count > 16 && count < 32) {
+    centralCanvas2->cd(count + 1 - 16);
+    if(graphColumn0->GetN() > 0) mgColumn->Add(graphColumn0);
+    if(graphColumn1->GetN() > 0) mgColumn->Add(graphColumn1);
+    if(graphColumn2->GetN() > 0) mgColumn->Add(graphColumn2);
+    if(graphColumn3->GetN() > 0) mgColumn->Add(graphColumn3);
+    if(graphColumn4->GetN() > 0) mgColumn->Add(graphColumn4);
+    if(graphColumn5->GetN() > 0) mgColumn->Add(graphColumn5);
+    if(graphColumnTot->GetN() > 0) mgColumn->Add(graphColumnTot);
+    mgColumn->GetXaxis()->SetLimits(0, 128);
+    mgColumn->Draw("a");
+    centralCanvas2->Update();
+  }
+  else if(count > 32 && count < 48) {
+    centralCanvas3->cd(count + 1 - 32);
+    if(graphColumn0->GetN() > 0) mgColumn->Add(graphColumn0);
+    if(graphColumn1->GetN() > 0) mgColumn->Add(graphColumn1);
+    if(graphColumn2->GetN() > 0) mgColumn->Add(graphColumn2);
+    if(graphColumn3->GetN() > 0) mgColumn->Add(graphColumn3);
+    if(graphColumn4->GetN() > 0) mgColumn->Add(graphColumn4);
+    if(graphColumn5->GetN() > 0) mgColumn->Add(graphColumn5);
+    if(graphColumnTot->GetN() > 0) mgColumn->Add(graphColumnTot);
+    mgColumn->GetXaxis()->SetLimits(0, 128);
+    mgColumn->Draw("a");
+    centralCanvas3->Update();
+  }
 }
 
 inline void Spectra::InitSiEForwardCalibration() {
