@@ -468,13 +468,6 @@ void Spectra::Loop() {
       hSiEForward[siDet][siQuad]->Fill(siEnergy);
       hSiEForwardCal[siDet][siQuad]->Fill(siEnergyCal);
     }
-    else {
-      hSiELeftDet[siDet - 10]->Fill(siEnergy);
-      hSiELeftDetCal[siDet - 10]->Fill(siEnergyCal);
-      hSiTLeftDet[siDet - 10]->Fill(siTime);
-      hSiELeft[siDet - 10][siQuad]->Fill(siEnergy);
-      hSiELeftCal[siDet - 10][siQuad]->Fill(siEnergyCal);
-    }
 
     Bool_t left = false;
     Bool_t central = false;
@@ -519,9 +512,6 @@ void Spectra::Loop() {
           hSiCsIEForwardDetCal[siDet]->Fill(siEnergyCal, csiEnergy);
           hSiCsIEForward[siDet][siQuad]->Fill(siEnergy, csiEnergy);
           hSiCsIEForwardCal[siDet][siQuad]->Fill(siEnergyCal, csiEnergy);
-        }
-        else {
-          hCsIETLeft[siDet - 10]->Fill(csiEnergy, csiTime);
         }
       }
     }
