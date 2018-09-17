@@ -160,10 +160,12 @@ private:
   // Micromegas - Central
   TH2F* hMicroMegasCenterCumulative;
   TH2F* hMicroMegasCenterCumulativePosition;
+  TH2F* hMicroMegasCenterCumulativePositionRaw;
   TH2F* hMicroMegasCenterEnergyCumulative;
   TH2F* hMicroMegasCenterEnergyAverage;
   TH2F* hMicroMegasCenterEnergyAverageScaled;
-  TH2F* hMicroMegasCenterTimeAverage;
+  TH2F* hMicroMegasCenterTime;
+  TH2F* hMicroMegasCenterHeight;
 
   // Micromegas - Left
   TH1F* hMicroMegasStripLeftCumulative;
@@ -220,7 +222,7 @@ private:
   TH2F* hVertexSiEForward[10];
   TH2F* hVertexSiEForwardCal[10];
   TH2F* hVertexSiEForwardCalTotal[10];
-  TH2F* hVertexSiERegion3;
+  TH2F* hVertexSiETotalRegion3;
   TH2F* hVertexCMERegion3;
 
   // Vertex vs Angle Forward Detectors
@@ -280,7 +282,8 @@ private:
                            std::vector<mmChainStrip> rightStrip_);
   Bool_t AnalysisLeftSide();
 
-// Strip and Chain Matching
+// MicroMegas Functions
+  std::vector<mmCenter> CenterReduceNoise(std::vector<mmCenter> center);
   void ChainStripMatch(std::vector<mmTrack> &chainStripMatched, std::vector<mmTrack> &chainStripRaw,
                        std::vector<mmChainStrip> chain_,
                        std::vector<mmChainStrip> strip_, Bool_t leftSide, Double_t siTime);
@@ -976,11 +979,13 @@ inline void Spectra::InitHistograms() {
 
   // Micromegas - Central
   hMicroMegasCenterCumulative = new TH2F("MM_Center_Cumulative", "MM_Center_Cumulative", 10, -5, 5, 128, 0, 128);
-  hMicroMegasCenterCumulativePosition = new TH2F("MM_Center_Cumulative_Position", "MM_Center_Cumulative_Position", 40, -20, 20, 143, 0, 250.25);
+  hMicroMegasCenterCumulativePosition = new TH2F("MM_Center_Cumulative_Position", "MM_Center_Cumulative_Position", 24, -21, 21, 143, 0, 250.25);
+  hMicroMegasCenterCumulativePositionRaw = new TH2F("MM_Center_Cumulative_Position_Raw", "MM_Center_Cumulative_Position_Raw", 24, -21, 21, 143, 0, 250.25);
   hMicroMegasCenterEnergyCumulative = new TH2F("MM_Center_Energy_Cumulative", "MM_Center_Energy_Cumulative", 20, -10, 10, 128, 0, 128);
   hMicroMegasCenterEnergyAverage = new TH2F("MM_Center_Energy_Average", "MM_Center_Energy_Average", 20, -10, 10, 128, 0, 128);
   hMicroMegasCenterEnergyAverageScaled = new TH2F("MM_Center_Energy_Average_Scaled", "MM_Center_Energy_Average_Scaled", 20, -10, 10, 128, 0, 128);
-  hMicroMegasCenterTimeAverage = new TH2F("MM_Center_Time_Average", "MM_Center_Time_Average", 20, -10, 10, 128, 0, 128);
+  hMicroMegasCenterTime = new TH2F("MM_Center_Time", "MM_Center_Time", 130, -1, 129, 250, 0, 10000);
+  hMicroMegasCenterHeight = new TH2F("MM_Center_Height", "MM_Center_Height", 130, -1, 129, 160, -200, 200);
 
   // Micromegas - Left
   hMicroMegasStripLeftCumulative = new TH1F("MM_Strip_Left_Cumulative", "MM_Strip_Left_Cumulative", 64, 0, 64);
@@ -1183,30 +1188,30 @@ inline void Spectra::InitHistograms() {
   // Vertex vs E Histograms
   for(UInt_t i = 0; i < 10; i++) {
     TString name = Form("vertexSiEForward_d%d", i);
-    hVertexSiEForward[i] = new TH2F(name, name, 500, 0, 4000, 500, -250, 300);
+    hVertexSiEForward[i] = new TH2F(name, name, 500, 0, 4000, 500, -450, 300);
     hVertexSiEForward[i]->GetXaxis()->SetTitle("Si Energy [channels]"); hVertexSiEForward[i]->GetXaxis()->CenterTitle();
     hVertexSiEForward[i]->GetYaxis()->SetTitle("Vertex [mm]"); hVertexSiEForward[i]->GetYaxis()->CenterTitle();
     hVertexSiEForward[i]->GetYaxis()->SetTitleOffset(1.4); hVertexSiEForward[i]->SetStats(false);
 
     name = Form("vertexSiEForwardCal_d%d", i);
-    hVertexSiEForwardCal[i] = new TH2F(name, name, 500, 0, 16000, 500, -250, 300);
+    hVertexSiEForwardCal[i] = new TH2F(name, name, 500, 0, 16000, 500, -450, 300);
     hVertexSiEForwardCal[i]->GetXaxis()->SetTitle("Si Energy [keV]"); hVertexSiEForwardCal[i]->GetXaxis()->CenterTitle();
     hVertexSiEForwardCal[i]->GetYaxis()->SetTitle("Vertex [mm]"); hVertexSiEForwardCal[i]->GetYaxis()->CenterTitle();
     hVertexSiEForwardCal[i]->GetYaxis()->SetTitleOffset(1.4); hVertexSiEForwardCal[i]->SetStats(false);
 
     name = Form("vertexSiEForwardCalTotal_d%d", i);
-    hVertexSiEForwardCalTotal[i] = new TH2F(name, name, 500, 0, 20000, 500, -250, 300);
+    hVertexSiEForwardCalTotal[i] = new TH2F(name, name, 500, 0, 20000, 500, -450, 300);
     hVertexSiEForwardCalTotal[i]->GetXaxis()->SetTitle("Total Energy [keV]"); hVertexSiEForwardCalTotal[i]->GetXaxis()->CenterTitle();
     hVertexSiEForwardCalTotal[i]->GetYaxis()->SetTitle("Vertex [mm]"); hVertexSiEForwardCalTotal[i]->GetYaxis()->CenterTitle();
     hVertexSiEForwardCalTotal[i]->GetYaxis()->SetTitleOffset(1.4); hVertexSiEForwardCalTotal[i]->SetStats(false);
   }
 
-  hVertexSiERegion3 = new TH2F("vertexSiERegion3", "vertexSiERegion3", 500, 0, 20000, 500, -250, 300);
-  hVertexSiERegion3->GetXaxis()->SetTitle("Si Energy [keV]"); hVertexSiERegion3->GetXaxis()->CenterTitle();
-  hVertexSiERegion3->GetYaxis()->SetTitle("Vertex [mm]"); hVertexSiERegion3->GetYaxis()->CenterTitle();
-  hVertexSiERegion3->GetYaxis()->SetTitleOffset(1.4); hVertexSiERegion3->SetStats(false);
+  hVertexSiETotalRegion3 = new TH2F("vertexSiERegion3", "vertexSiERegion3", 500, 0, 20000, 500, -450, 300);
+  hVertexSiETotalRegion3->GetXaxis()->SetTitle("Total Energy [keV]"); hVertexSiETotalRegion3->GetXaxis()->CenterTitle();
+  hVertexSiETotalRegion3->GetYaxis()->SetTitle("Vertex [mm]"); hVertexSiETotalRegion3->GetYaxis()->CenterTitle();
+  hVertexSiETotalRegion3->GetYaxis()->SetTitleOffset(1.4); hVertexSiETotalRegion3->SetStats(false);
 
-  hVertexCMERegion3 = new TH2F("vertexCMERegion3", "vertexCMERegion3", 500, 0, 6, 500, -250, 300);
+  hVertexCMERegion3 = new TH2F("vertexCMERegion3", "vertexCMERegion3", 500, 0, 6, 500, -450, 300);
   hVertexCMERegion3->GetXaxis()->SetTitle("CM Energy [MeV]"); hVertexCMERegion3->GetXaxis()->CenterTitle();
   hVertexCMERegion3->GetYaxis()->SetTitle("Vertex [mm]"); hVertexCMERegion3->GetYaxis()->CenterTitle();
   hVertexCMERegion3->GetYaxis()->SetTitleOffset(1.4); hVertexCMERegion3->SetStats(false);
