@@ -754,12 +754,9 @@ void Spectra::Loop() {
   s1->Write();
   WriteSpectrumToFile(s1, 3);
 
-  centralCanvas1->Modified();
-  centralCanvas1->Write();
-  centralCanvas2->Modified();
-  centralCanvas2->Write();
-  centralCanvas3->Modified();
-  centralCanvas3->Write();
+  for(Int_t i = 0; i < centerEnergyCanvasNum; i++) {
+    centerEnergyCanvas[i]->Write();
+  }
 
   WriteTree();
 
@@ -795,10 +792,6 @@ Bool_t Spectra::AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std
   if(!centerMatched_.empty()) {
     std::sort(centerMatched_.begin(), centerMatched_.end(), sortByRowMMCenter());
   }
-
-  DrawCanvas(totalCentralCanvas, centerMatched_, centerBeamTotal_);
-
-  totalCentralCanvas++;
 
   return true;
 }

@@ -15,13 +15,13 @@ link_directories(${ROOT_LIBRARY_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/build")
 
 set(SCRIPTS
-    averageBeamEnergy.out
+    averageBeamEnergy.dat
     b8_methane.dat
+    centerGain.dat
     csiCalibration.dat
     csReg3.out
     cuts.root
     EnergyLoss.dat
-    gainFile.dat
     proton_methane.dat
     siCalibration.dat
     )

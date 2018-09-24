@@ -246,14 +246,24 @@ private:
 
 // TCanvas
 
-  // For central pads
   void InitCanvas();
-  void DrawCanvas(Int_t count, std::vector<mmCenter> centerMatched_, std::vector<mmTrack> centerBeamTotal_);
-  Int_t totalCentralCanvas;
-  TCanvas* centralCanvas1;
-  TCanvas* centralCanvas2;
-  TCanvas* centralCanvas3;
-  TCanvas* centralCanvas4;
+
+  // For central pads
+  void DrawCenterEnergyCanvas(Int_t count, std::vector<mmCenter> centerMatched_, std::vector<mmTrack> centerBeamTotal_);
+  Int_t totalCenterEnergyCanvas;
+  Int_t centerEnergyCanvasNum, centerEnergyCanvasXYNum, centerEnergyCanvasXNum, centerEnergyCanvasYNum;
+  TCanvas* centerEnergyCanvas[5];
+
+  void DrawCenterEnergyCanvasScaled(Int_t count, std::vector<mmCenter> centerMatched_, std::vector<mmTrack> centerBeamTotal_);
+  Int_t totalCenterEnergyCanvasScaled;
+  Int_t centerEnergyCanvasNumScaled, centerEnergyCanvasXYNumScaled, centerEnergyCanvasXNumScaled, centerEnergyCanvasYNumScaled;
+  TCanvas* centerEnergyCanvasScaled[5];
+
+  void DrawCenterNoiseCanvas(Int_t count, std::vector<mmCenter> centerReduced_,
+                             std::vector<mmCenter> centerReducedNoise_);
+  Int_t totalCenterNoiseCanvas;
+  Int_t centerNoiseCanvasNum, centerNoiseCanvasXYNum, centerNoiseCanvasXNum, centerNoiseCanvasYNum;
+  TCanvas* centerNoiseCanvas[10];
 
 // Silicon Energy Calibration
 private:
@@ -271,7 +281,7 @@ private:
 
 // Beam Average Central Pads
   void InitAverageBeamEnergy();
-  Double_t averageBeamEnergy[128];
+  Double_t averageBeamEnergy[6][128];
 
 // General Methods
   Bool_t AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std::vector<mmTrack> centerBeamTotal_,
@@ -1281,25 +1291,45 @@ inline void Spectra::InitHistograms() {
 }
 
 inline void Spectra::InitCanvas() {
-  totalCentralCanvas = 0;
-  centralCanvas1 = new TCanvas("central1", "central1", 800, 600);
-  centralCanvas1->Divide(4, 4);
-  centralCanvas1->Update();
+  totalCenterEnergyCanvas = 0;
+  centerEnergyCanvasNum = static_cast<Int_t>(sizeof(centerEnergyCanvas)/sizeof(centerEnergyCanvas[0]));
+  centerEnergyCanvasXNum = 4;
+  centerEnergyCanvasYNum = 4;
+  centerEnergyCanvasXYNum = centerEnergyCanvasXNum*centerEnergyCanvasYNum;
+  for(Int_t i = 0; i < centerEnergyCanvasNum; i++) {
+    TString name = Form("centerEnergy%d", i + 1);
+    centerEnergyCanvas[i] = new TCanvas(name, name, 1600, 1200);
+    centerEnergyCanvas[i]->Divide(centerEnergyCanvasXNum, centerEnergyCanvasYNum);
+    centerEnergyCanvas[i]->Update();
+  }
 
-  centralCanvas2 = new TCanvas("central2", "central2", 800, 600);
-  centralCanvas2->Divide(4, 4);
-  centralCanvas2->Update();
+  totalCenterEnergyCanvasScaled = 0;
+  centerEnergyCanvasNumScaled = static_cast<Int_t>(sizeof(centerEnergyCanvasScaled)/sizeof(centerEnergyCanvasScaled[0]));
+  centerEnergyCanvasXNumScaled = 4;
+  centerEnergyCanvasYNumScaled = 4;
+  centerEnergyCanvasXYNumScaled = centerEnergyCanvasXNumScaled*centerEnergyCanvasYNumScaled;
+  for(Int_t i = 0; i < centerEnergyCanvasNumScaled; i++) {
+    TString name = Form("centerEnergyScaled%d", i + 1);
+    centerEnergyCanvasScaled[i] = new TCanvas(name, name, 1600, 1200);
+    centerEnergyCanvasScaled[i]->Divide(centerEnergyCanvasXNumScaled, centerEnergyCanvasYNumScaled);
+    centerEnergyCanvasScaled[i]->Update();
+  }
 
-  centralCanvas3 = new TCanvas("central3", "central3", 800, 600);
-  centralCanvas3->Divide(4, 4);
-  centralCanvas3->Update();
-
-  centralCanvas4 = new TCanvas("central4", "central4", 800, 600);
-  centralCanvas4->Divide(4, 4);
-  centralCanvas4->Update();
+  totalCenterNoiseCanvas = 0;
+  centerNoiseCanvasNum = static_cast<Int_t>(sizeof(centerNoiseCanvas)/sizeof(centerNoiseCanvas[0]));
+  centerNoiseCanvasXNum = 4;
+  centerNoiseCanvasYNum = 4;
+  centerNoiseCanvasXYNum = centerNoiseCanvasXNum*centerNoiseCanvasYNum;
+  for(Int_t i = 0; i < centerNoiseCanvasNum; i++) {
+    TString name = Form("centerNoise%d", i + 1);
+    centerNoiseCanvas[i] = new TCanvas(name, name, 1600, 1200);
+    centerNoiseCanvas[i]->Divide(centerNoiseCanvasXNum, centerNoiseCanvasYNum);
+    centerNoiseCanvas[i]->Update();
+  }
 }
 
-inline void Spectra::DrawCanvas(Int_t count, std::vector<mmCenter> centerMatched_, std::vector<mmTrack> centerBeamTotal_) {
+inline void Spectra::DrawCenterEnergyCanvas(Int_t count, std::vector<mmCenter> centerMatched_,
+                                            std::vector<mmTrack> centerBeamTotal_) {
   // Make maps of different central columns
   std::map<Int_t, std::map<Int_t, Double_t> > centralEnergyMap;
   for(auto mm : centerMatched_) {
@@ -1352,6 +1382,83 @@ inline void Spectra::DrawCanvas(Int_t count, std::vector<mmCenter> centerMatched
     i++;
   }
 
+  graphColumn0->SetLineColor(28);
+  graphColumn1->SetLineColor(3);
+  graphColumn2->SetLineColor(4);
+  graphColumn3->SetLineColor(6);
+  graphColumn4->SetLineColor(7);
+  graphColumn5->SetLineColor(9);
+  graphColumnTot->SetLineColor(1);
+
+  if(count < centerEnergyCanvasNum*centerEnergyCanvasXYNum) {
+    Int_t histNum = count/centerEnergyCanvasXYNum;
+    centerEnergyCanvas[histNum]->cd(count + 1 - histNum*centerEnergyCanvasXYNum);
+    if(graphColumn0->GetN() > 0) mgColumn->Add(graphColumn0);
+    if(graphColumn1->GetN() > 0) mgColumn->Add(graphColumn1);
+    if(graphColumn2->GetN() > 0) mgColumn->Add(graphColumn2);
+    if(graphColumn3->GetN() > 0) mgColumn->Add(graphColumn3);
+    if(graphColumn4->GetN() > 0) mgColumn->Add(graphColumn4);
+    if(graphColumn5->GetN() > 0) mgColumn->Add(graphColumn5);
+    if(graphColumnTot->GetN() > 0) mgColumn->Add(graphColumnTot);
+    mgColumn->GetXaxis()->SetLimits(0, 128);
+    mgColumn->Draw("a");
+    centerEnergyCanvas[histNum]->Update();
+  }
+}
+
+inline void Spectra::DrawCenterEnergyCanvasScaled(Int_t count, std::vector<mmCenter> centerMatched_,
+                                                  std::vector<mmTrack> centerBeamTotal_) {
+  // Make maps of different central columns
+  std::map<Int_t, std::map<Int_t, Double_t> > centralEnergyMap;
+  for(auto mm : centerMatched_) {
+    if(mm.row > 111) continue;
+    centralEnergyMap[mm.column][mm.row] = mm.energy;
+  }
+
+  TMultiGraph* mgColumn = new TMultiGraph();
+  TGraph* graphColumn0 = new TGraph();
+  TGraph* graphColumn1 = new TGraph();
+  TGraph* graphColumn2 = new TGraph();
+  TGraph* graphColumn3 = new TGraph();
+  TGraph* graphColumn4 = new TGraph();
+  TGraph* graphColumn5 = new TGraph();
+  Int_t i = 0;
+  for(auto map : centralEnergyMap[0]) {
+    graphColumn0->SetPoint(i, map.first, map.second);
+    i++;
+  }
+  i = 0;
+  for(auto map : centralEnergyMap[1]) {
+    graphColumn1->SetPoint(i, map.first, map.second);
+    i++;
+  }
+  i = 0;
+  for(auto map : centralEnergyMap[2]) {
+    graphColumn2->SetPoint(i, map.first, map.second);
+    i++;
+  }
+  i = 0;
+  for(auto map : centralEnergyMap[3]) {
+    graphColumn3->SetPoint(i, map.first, map.second);
+    i++;
+  }
+  i = 0;
+  for(auto map : centralEnergyMap[4]) {
+    graphColumn4->SetPoint(i, map.first, map.second);
+    i++;
+  }
+  i = 0;
+  for(auto map : centralEnergyMap[5]) {
+    graphColumn5->SetPoint(i, map.first, map.second);
+    i++;
+  }
+
+  TGraph* graphColumnTot = new TGraph();
+  i = 0;
+  for(auto mm : centerBeamTotal_) {
+    graphColumnTot->SetPoint(i, mm.row, mm.energy);
+    i++;
+  }
 
   graphColumn0->SetLineColor(28);
   graphColumn1->SetLineColor(3);
@@ -1361,8 +1468,9 @@ inline void Spectra::DrawCanvas(Int_t count, std::vector<mmCenter> centerMatched
   graphColumn5->SetLineColor(9);
   graphColumnTot->SetLineColor(1);
 
-  if(count < 16) {
-    centralCanvas1->cd(count + 1);
+  if(count < centerEnergyCanvasNumScaled*centerEnergyCanvasXYNumScaled) {
+    Int_t histNum = count/centerEnergyCanvasXYNumScaled;
+    centerEnergyCanvasScaled[histNum]->cd(count + 1 - histNum*centerEnergyCanvasXYNumScaled);
     if(graphColumn0->GetN() > 0) mgColumn->Add(graphColumn0);
     if(graphColumn1->GetN() > 0) mgColumn->Add(graphColumn1);
     if(graphColumn2->GetN() > 0) mgColumn->Add(graphColumn2);
@@ -1372,33 +1480,44 @@ inline void Spectra::DrawCanvas(Int_t count, std::vector<mmCenter> centerMatched
     if(graphColumnTot->GetN() > 0) mgColumn->Add(graphColumnTot);
     mgColumn->GetXaxis()->SetLimits(0, 128);
     mgColumn->Draw("a");
-    centralCanvas1->Update();
+    centerEnergyCanvasScaled[histNum]->Update();
   }
-  else if(count > 16 && count < 32) {
-    centralCanvas2->cd(count + 1 - 16);
-    if(graphColumn0->GetN() > 0) mgColumn->Add(graphColumn0);
-    if(graphColumn1->GetN() > 0) mgColumn->Add(graphColumn1);
-    if(graphColumn2->GetN() > 0) mgColumn->Add(graphColumn2);
-    if(graphColumn3->GetN() > 0) mgColumn->Add(graphColumn3);
-    if(graphColumn4->GetN() > 0) mgColumn->Add(graphColumn4);
-    if(graphColumn5->GetN() > 0) mgColumn->Add(graphColumn5);
-    if(graphColumnTot->GetN() > 0) mgColumn->Add(graphColumnTot);
-    mgColumn->GetXaxis()->SetLimits(0, 128);
-    mgColumn->Draw("a");
-    centralCanvas2->Update();
+}
+
+inline void Spectra::DrawCenterNoiseCanvas(Int_t count, std::vector<mmCenter> centerReduced_,
+                                           std::vector<mmCenter> centerReducedNoise_) {
+  TMultiGraph* mgCenter = new TMultiGraph();
+  TGraph* graphReduced = new TGraph();
+  TGraph* graphReducedNoise = new TGraph();
+
+  Int_t i = 0;
+  for(auto mm : centerReduced_) {
+    graphReduced->SetPoint(i, mm.column - 3, mm.row);
+    i++;
   }
-  else if(count > 32 && count < 48) {
-    centralCanvas3->cd(count + 1 - 32);
-    if(graphColumn0->GetN() > 0) mgColumn->Add(graphColumn0);
-    if(graphColumn1->GetN() > 0) mgColumn->Add(graphColumn1);
-    if(graphColumn2->GetN() > 0) mgColumn->Add(graphColumn2);
-    if(graphColumn3->GetN() > 0) mgColumn->Add(graphColumn3);
-    if(graphColumn4->GetN() > 0) mgColumn->Add(graphColumn4);
-    if(graphColumn5->GetN() > 0) mgColumn->Add(graphColumn5);
-    if(graphColumnTot->GetN() > 0) mgColumn->Add(graphColumnTot);
-    mgColumn->GetXaxis()->SetLimits(0, 128);
-    mgColumn->Draw("a");
-    centralCanvas3->Update();
+  i = 0;
+  for(auto mm : centerReducedNoise_) {
+    graphReducedNoise->SetPoint(i, mm.column - 3, mm.row);
+    i++;
+  }
+
+  graphReduced->SetMarkerColor(1);
+  graphReduced->SetMarkerStyle(8);
+  graphReducedNoise->SetMarkerColor(2);
+  graphReducedNoise->SetMarkerStyle(7);
+
+  if(count < centerNoiseCanvasNum*centerNoiseCanvasXYNum) {
+    Int_t histNum = count/centerNoiseCanvasXYNum;
+    TString name = Form("Event_%lld", entry);
+    mgCenter->SetTitle(name);
+    centerNoiseCanvas[histNum]->cd(count + 1 - histNum*centerNoiseCanvasXYNum);
+    if(graphReduced->GetN() > 0) mgCenter->Add(graphReduced);
+    if(graphReducedNoise->GetN() > 0) mgCenter->Add(graphReducedNoise);
+    mgCenter->GetXaxis()->SetLimits(-5, 5);
+    mgCenter->SetMinimum(-1);
+    mgCenter->SetMaximum(130);
+    mgCenter->Draw("ap");
+    centerNoiseCanvas[histNum]->Update();
   }
 }
 
@@ -1430,24 +1549,24 @@ inline void Spectra::InitCsIECalibration() {
 
 inline void Spectra::InitCentralPadGainMatch() {
   printf("Reading Central Pad Gain Matching File\n");
-  std::ifstream inGainFile("gainFile.dat");
+  std::ifstream inGainFile("centerGain.dat");
   assert(inGainFile.is_open());
   Int_t varI, varJ;
   Double_t varScale;
   while(inGainFile >> varI >> varJ >> varScale) {
-    scale[varI][varJ] = varScale;
+    scale[varJ][varI] = varScale;
   }
   inGainFile.close();
 }
 
 inline void Spectra::InitAverageBeamEnergy() {
   printf("Reading Average Beam Energy File\n");
-  std::ifstream inBeamFile("averageBeamEnergy.out");
+  std::ifstream inBeamFile("averageBeamEnergy.dat");
   assert(inBeamFile.is_open());
-  Int_t varJ;
+  Int_t varI, varJ;
   Double_t varE;
-  while(inBeamFile >> varJ >> varE) {
-    averageBeamEnergy[varJ] = varE;
+  while(inBeamFile >> varI >> varJ >> varE) {
+    averageBeamEnergy[varJ][varI] = varE;
   }
 }
 
