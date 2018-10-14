@@ -3,8 +3,13 @@
 *.pcm
 .DS_Store
 .idea/
+alpha_calibration/
+azureConversion/
 averageBeamProperties/
 averageBeamTime.out
 build/
+calcSolidAngle/
 calcExcitationEnergy/
 cmake-build-debug/
+compareGrisha/
+pictures/
