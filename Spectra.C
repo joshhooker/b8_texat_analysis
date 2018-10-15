@@ -26,7 +26,7 @@ TChain* MakeChain() {
   // TString PathToFiles = "/home/joshhooker/Desktop/data/run0817a/run";
 
   // Alpha source test in gas
-  chain->Add(PathToFiles+"004.root");
+  // chain->Add(PathToFiles+"004.root");
 
   // 12C Runs
   // chain->Add(PathToFiles + "111.root");
@@ -53,50 +53,50 @@ TChain* MakeChain() {
   // chain->Add(PathToFiles + "158.root");
 
   // 8B Runs
-//  chain->Add(PathToFiles + "175.root");
-//  chain->Add(PathToFiles + "178.root");
-//  chain->Add(PathToFiles + "180.root");
-//  chain->Add(PathToFiles + "181.root");
-//  chain->Add(PathToFiles + "182.root");
-//  chain->Add(PathToFiles + "183.root");
-//  chain->Add(PathToFiles + "184.root");
-//  chain->Add(PathToFiles + "185.root");
-//  chain->Add(PathToFiles + "186.root");
-//  chain->Add(PathToFiles + "187.root");
-//  chain->Add(PathToFiles + "188.root");
-//  chain->Add(PathToFiles + "189.root");
-//  chain->Add(PathToFiles + "190.root");
-//  chain->Add(PathToFiles + "191.root");
-//  chain->Add(PathToFiles + "192.root");
-//  chain->Add(PathToFiles + "193.root");
-//  chain->Add(PathToFiles + "195.root");
-//  chain->Add(PathToFiles + "196.root");
-//  chain->Add(PathToFiles + "197.root");
-//  chain->Add(PathToFiles + "198.root");
-//  chain->Add(PathToFiles + "199.root");
-//  chain->Add(PathToFiles + "200.root");
-//  chain->Add(PathToFiles + "201.root");
-//  chain->Add(PathToFiles + "202.root");
-//  chain->Add(PathToFiles + "203.root");
-//  chain->Add(PathToFiles + "204.root");
-//  chain->Add(PathToFiles + "205.root");
-//  chain->Add(PathToFiles + "206.root");
-//  chain->Add(PathToFiles + "207.root");
-//  chain->Add(PathToFiles + "208.root");
-//  chain->Add(PathToFiles + "210.root");
-//  chain->Add(PathToFiles + "211.root");
-//  chain->Add(PathToFiles + "212.root");
-//  chain->Add(PathToFiles + "213.root");
-//  chain->Add(PathToFiles + "214.root");
-//  chain->Add(PathToFiles + "215.root");
-//  chain->Add(PathToFiles + "216.root");
-//  chain->Add(PathToFiles + "217.root");
-//  chain->Add(PathToFiles + "218.root");
-//  chain->Add(PathToFiles + "219.root");
-//  chain->Add(PathToFiles + "220.root");
-//  chain->Add(PathToFiles + "221.root");
-//  chain->Add(PathToFiles + "223.root");
-//  chain->Add(PathToFiles + "224.root");
+  chain->Add(PathToFiles + "175.root");
+  chain->Add(PathToFiles + "178.root");
+  chain->Add(PathToFiles + "180.root");
+  chain->Add(PathToFiles + "181.root");
+  chain->Add(PathToFiles + "182.root");
+  chain->Add(PathToFiles + "183.root");
+  chain->Add(PathToFiles + "184.root");
+  chain->Add(PathToFiles + "185.root");
+  chain->Add(PathToFiles + "186.root");
+  chain->Add(PathToFiles + "187.root");
+  chain->Add(PathToFiles + "188.root");
+  chain->Add(PathToFiles + "189.root");
+  chain->Add(PathToFiles + "190.root");
+  chain->Add(PathToFiles + "191.root");
+  chain->Add(PathToFiles + "192.root");
+  chain->Add(PathToFiles + "193.root");
+  chain->Add(PathToFiles + "195.root");
+  chain->Add(PathToFiles + "196.root");
+  chain->Add(PathToFiles + "197.root");
+  chain->Add(PathToFiles + "198.root");
+  chain->Add(PathToFiles + "199.root");
+  chain->Add(PathToFiles + "200.root");
+  chain->Add(PathToFiles + "201.root");
+  chain->Add(PathToFiles + "202.root");
+  chain->Add(PathToFiles + "203.root");
+  chain->Add(PathToFiles + "204.root");
+  chain->Add(PathToFiles + "205.root");
+  chain->Add(PathToFiles + "206.root");
+  chain->Add(PathToFiles + "207.root");
+  chain->Add(PathToFiles + "208.root");
+  chain->Add(PathToFiles + "210.root");
+  chain->Add(PathToFiles + "211.root");
+  chain->Add(PathToFiles + "212.root");
+  chain->Add(PathToFiles + "213.root");
+  chain->Add(PathToFiles + "214.root");
+  chain->Add(PathToFiles + "215.root");
+  chain->Add(PathToFiles + "216.root");
+  chain->Add(PathToFiles + "217.root");
+  chain->Add(PathToFiles + "218.root");
+  chain->Add(PathToFiles + "219.root");
+  chain->Add(PathToFiles + "220.root");
+  chain->Add(PathToFiles + "221.root");
+  chain->Add(PathToFiles + "223.root");
+  chain->Add(PathToFiles + "224.root");
 
   // Alpha source test in vacuum
 
@@ -136,6 +136,9 @@ void Spectra::Loop() {
     }
   }
 
+  cwtE_CentralCut = (TCutG*)cutFile->Get("cwtE_CentralCut");
+  cwtE_CentralProtonCut = (TCutG*)cutFile->Get("cwtE_CentralProtonCut");
+
   cutFile->Close();
 
   InitChannelMap();
@@ -156,7 +159,7 @@ void Spectra::Loop() {
   printf("Starting Main Loop\n");
 
   Long64_t nbytes = 0, nb = 0;
-//  for(Long64_t jentry = 0; jentry < 50; jentry++) {
+//  for(Long64_t jentry = 0; jentry < 200; jentry++) {
 //  for(Long64_t jentry = 49983; jentry < 49984; jentry++) {
   for(Long64_t jentry = 0; jentry < nentries; jentry++) {
     Long64_t ientry = LoadTree(jentry);
@@ -531,10 +534,17 @@ void Spectra::Loop() {
       if(mm.row < 2) continue;
       if(mm.row < 112) {
         if(time < 900 || time > 1600) continue;
+        if(mm.energy < 200) continue;
+        hCWTECentral->Fill(mm.energy, mm.cwt);
+        if(!cwtE_CentralCut->IsInside(mm.energy, mm.cwt)) continue;
         mmCenterMatchedReduced_.push_back(mm);
       }
+      // These should not fire
+      else if(mm.row > 111 && (mm.column == 0 || mm.column == 5)) continue;
       else {
         if(time > 2500) continue;
+        hCWTECentral->Fill(mm.energy, mm.cwt);
+        if(!cwtE_CentralProtonCut->IsInside(mm.energy, mm.cwt)) continue;
         mmCenterMatchedReduced_.push_back(mm);
       }
     }

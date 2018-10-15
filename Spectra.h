@@ -151,6 +151,9 @@ private:
   TCutG *timeChainForwardCut[10][4];
   TCutG *timeStripForwardCut[10][4];
 
+  TCutG *cwtE_CentralCut;
+  TCutG *cwtE_CentralProtonCut;
+
 // Histograms
 private:
   void InitHistograms();
@@ -1288,7 +1291,7 @@ inline void Spectra::InitHistograms() {
     hHitPositionsXZForwardInd[i]->SetStats(false);
   }
 
-  hCWTECentral = new TH2F("pa328ECentral", "pa328ECentral", 500, 0, 4000, 1000, 0, 0.1);
+  hCWTECentral = new TH2F("cwtECentral", "cwtECentral", 500, 0, 4000, 1000, 0, 0.1);
   hCWTECentral->GetXaxis()->SetTitle("Energy [channels]"); hCWTECentral->GetXaxis()->CenterTitle();
   hCWTECentral->GetYaxis()->SetTitle("CWT"); hCWTECentral->GetYaxis()->CenterTitle();
   hCWTECentral->GetYaxis()->SetTitleOffset(1.4);
