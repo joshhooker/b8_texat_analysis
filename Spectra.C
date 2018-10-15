@@ -26,7 +26,7 @@ TChain* MakeChain() {
   // TString PathToFiles = "/home/joshhooker/Desktop/data/run0817a/run";
 
   // Alpha source test in gas
-  // chain->Add(PathToFiles+"004.root");
+  chain->Add(PathToFiles+"004.root");
 
   // 12C Runs
   // chain->Add(PathToFiles + "111.root");
@@ -53,50 +53,50 @@ TChain* MakeChain() {
   // chain->Add(PathToFiles + "158.root");
 
   // 8B Runs
-  chain->Add(PathToFiles + "175.root");
-  chain->Add(PathToFiles + "178.root");
-  chain->Add(PathToFiles + "180.root");
-  chain->Add(PathToFiles + "181.root");
-  chain->Add(PathToFiles + "182.root");
-  chain->Add(PathToFiles + "183.root");
-  chain->Add(PathToFiles + "184.root");
-  chain->Add(PathToFiles + "185.root");
-  chain->Add(PathToFiles + "186.root");
-  chain->Add(PathToFiles + "187.root");
-  chain->Add(PathToFiles + "188.root");
-  chain->Add(PathToFiles + "189.root");
-  chain->Add(PathToFiles + "190.root");
-  chain->Add(PathToFiles + "191.root");
-  chain->Add(PathToFiles + "192.root");
-  chain->Add(PathToFiles + "193.root");
-  chain->Add(PathToFiles + "195.root");
-  chain->Add(PathToFiles + "196.root");
-  chain->Add(PathToFiles + "197.root");
-  chain->Add(PathToFiles + "198.root");
-  chain->Add(PathToFiles + "199.root");
-  chain->Add(PathToFiles + "200.root");
-  chain->Add(PathToFiles + "201.root");
-  chain->Add(PathToFiles + "202.root");
-  chain->Add(PathToFiles + "203.root");
-  chain->Add(PathToFiles + "204.root");
-  chain->Add(PathToFiles + "205.root");
-  chain->Add(PathToFiles + "206.root");
-  chain->Add(PathToFiles + "207.root");
-  chain->Add(PathToFiles + "208.root");
-  chain->Add(PathToFiles + "210.root");
-  chain->Add(PathToFiles + "211.root");
-  chain->Add(PathToFiles + "212.root");
-  chain->Add(PathToFiles + "213.root");
-  chain->Add(PathToFiles + "214.root");
-  chain->Add(PathToFiles + "215.root");
-  chain->Add(PathToFiles + "216.root");
-  chain->Add(PathToFiles + "217.root");
-  chain->Add(PathToFiles + "218.root");
-  chain->Add(PathToFiles + "219.root");
-  chain->Add(PathToFiles + "220.root");
-  chain->Add(PathToFiles + "221.root");
-  chain->Add(PathToFiles + "223.root");
-  chain->Add(PathToFiles + "224.root");
+//  chain->Add(PathToFiles + "175.root");
+//  chain->Add(PathToFiles + "178.root");
+//  chain->Add(PathToFiles + "180.root");
+//  chain->Add(PathToFiles + "181.root");
+//  chain->Add(PathToFiles + "182.root");
+//  chain->Add(PathToFiles + "183.root");
+//  chain->Add(PathToFiles + "184.root");
+//  chain->Add(PathToFiles + "185.root");
+//  chain->Add(PathToFiles + "186.root");
+//  chain->Add(PathToFiles + "187.root");
+//  chain->Add(PathToFiles + "188.root");
+//  chain->Add(PathToFiles + "189.root");
+//  chain->Add(PathToFiles + "190.root");
+//  chain->Add(PathToFiles + "191.root");
+//  chain->Add(PathToFiles + "192.root");
+//  chain->Add(PathToFiles + "193.root");
+//  chain->Add(PathToFiles + "195.root");
+//  chain->Add(PathToFiles + "196.root");
+//  chain->Add(PathToFiles + "197.root");
+//  chain->Add(PathToFiles + "198.root");
+//  chain->Add(PathToFiles + "199.root");
+//  chain->Add(PathToFiles + "200.root");
+//  chain->Add(PathToFiles + "201.root");
+//  chain->Add(PathToFiles + "202.root");
+//  chain->Add(PathToFiles + "203.root");
+//  chain->Add(PathToFiles + "204.root");
+//  chain->Add(PathToFiles + "205.root");
+//  chain->Add(PathToFiles + "206.root");
+//  chain->Add(PathToFiles + "207.root");
+//  chain->Add(PathToFiles + "208.root");
+//  chain->Add(PathToFiles + "210.root");
+//  chain->Add(PathToFiles + "211.root");
+//  chain->Add(PathToFiles + "212.root");
+//  chain->Add(PathToFiles + "213.root");
+//  chain->Add(PathToFiles + "214.root");
+//  chain->Add(PathToFiles + "215.root");
+//  chain->Add(PathToFiles + "216.root");
+//  chain->Add(PathToFiles + "217.root");
+//  chain->Add(PathToFiles + "218.root");
+//  chain->Add(PathToFiles + "219.root");
+//  chain->Add(PathToFiles + "220.root");
+//  chain->Add(PathToFiles + "221.root");
+//  chain->Add(PathToFiles + "223.root");
+//  chain->Add(PathToFiles + "224.root");
 
   // Alpha source test in vacuum
 
@@ -204,33 +204,37 @@ void Spectra::Loop() {
           // Aget0
           if(mmAget[i] == 0) {
             std::pair<Int_t, Int_t> pad = MM_Map_Asad0_Aget0[mmChan[i]];
-            mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
+            mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i], mmPa[i][3]/mmPa[i][1]};
             mmCenter_.push_back(mmHit);
-            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i]};
+            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i],
+                                     mmPa[i][3]/mmPa[i][1]};
             mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget1
           else if(mmAget[i] == 1) {
             std::pair<Int_t, Int_t> pad = MM_Map_Asad0_Aget1[mmChan[i]];
-            mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
+            mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i], mmPa[i][3]/mmPa[i][1]};
             mmCenter_.push_back(mmHit);
-            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i]};
+            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i],
+                                     mmPa[i][3]/mmPa[i][1]};
             mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget2
           else if(mmAget[i] == 2) {
             std::pair<Int_t, Int_t> pad = MM_Map_Asad0_Aget2[mmChan[i]];
-            mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
+            mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i], mmPa[i][3]/mmPa[i][1]};
             mmCenter_.push_back(mmHit);
-            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i]};
+            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i],
+                                     mmPa[i][3]/mmPa[i][1]};
             mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget3
           else if(mmAget[i] == 3) {
             std::pair<Int_t, Int_t> pad = MM_Map_Asad0_Aget3[mmChan[i]];
-            mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
+            mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i], mmPa[i][3]/mmPa[i][1]};
             mmCenter_.push_back(mmHit);
-            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i]};
+            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i],
+                                     mmPa[i][3]/mmPa[i][1]};
             mmCenterMatched_.push_back(mmHitMatched);
           }
         }
@@ -239,33 +243,37 @@ void Spectra::Loop() {
           // Aget0
           if(mmAget[i] == 0) {
             std::pair<Int_t, Int_t> pad = MM_Map_Asad1_Aget0[mmChan[i]];
-            mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
+            mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i], mmPa[i][3]/mmPa[i][1]};
             mmCenter_.push_back(mmHit);
-            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i]};
+            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i],
+                                     mmPa[i][3]/mmPa[i][1]};
             mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget1
           else if(mmAget[i] == 1) {
             std::pair<Int_t, Int_t> pad = MM_Map_Asad1_Aget1[mmChan[i]];
-            mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
+            mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i], mmPa[i][3]/mmPa[i][1]};
             mmCenter_.push_back(mmHit);
-            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i]};
+            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i],
+                                     mmPa[i][3]/mmPa[i][1]};
             mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget2
           else if(mmAget[i] == 2) {
             std::pair<Int_t, Int_t> pad = MM_Map_Asad1_Aget2[mmChan[i]];
-            mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
+            mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i], mmPa[i][3]/mmPa[i][1]};
             mmCenter_.push_back(mmHit);
-            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i]};
+            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i],
+                                     mmPa[i][3]/mmPa[i][1]};
             mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget3
           else if(mmAget[i] == 3) {
             std::pair<Int_t, Int_t> pad = MM_Map_Asad1_Aget3[mmChan[i]];
-            mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
+            mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i], mmPa[i][3]/mmPa[i][1]};
             mmCenter_.push_back(mmHit);
-            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i]};
+            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i],
+                                     mmPa[i][3]/mmPa[i][1]};
             mmCenterMatched_.push_back(mmHitMatched);
           }
         }
@@ -298,17 +306,19 @@ void Spectra::Loop() {
           // Aget2 - Outside Central Pads
           else if(mmAget[i] == 2) {
             std::pair<Int_t, Int_t> pad = MM_Map_Asad2_Aget2[mmChan[i]];
-            mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
+            mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i], mmPa[i][3]/mmPa[i][1]};
             mmCenter_.push_back(mmHit);
-            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i]};
+            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i],
+                                     mmPa[i][3]/mmPa[i][1]};
             mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget3 - Outside Central Pads
           else if(mmAget[i] == 3) {
             std::pair<Int_t, Int_t> pad = MM_Map_Asad2_Aget3[mmChan[i]];
-            mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
+            mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i], mmPa[i][3]/mmPa[i][1]};
             mmCenter_.push_back(mmHit);
-            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i]};
+            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i],
+                                     mmPa[i][3]/mmPa[i][1]};
             mmCenterMatched_.push_back(mmHitMatched);
           }
         }
@@ -341,17 +351,19 @@ void Spectra::Loop() {
           // Aget2
           else if(mmAget[i] == 2) {
             std::pair<Int_t, Int_t> pad = MM_Map_Asad3_Aget2[mmChan[i]];
-            mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
+            mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i], mmPa[i][3]/mmPa[i][1]};
             mmCenter_.push_back(mmHit);
-            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i]};
+            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i],
+                                     mmPa[i][3]/mmPa[i][1]};
             mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget3
           else if(mmAget[i] == 3) {
             std::pair<Int_t, Int_t> pad = MM_Map_Asad3_Aget3[mmChan[i]];
-            mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i]};
+            mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i], mmPa[i][3]/mmPa[i][1]};
             mmCenter_.push_back(mmHit);
-            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i]};
+            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i],
+                                     mmPa[i][3]/mmPa[i][1]};
             mmCenterMatched_.push_back(mmHitMatched);
           }
         }
@@ -639,7 +651,6 @@ void Spectra::Loop() {
 //    }
 //    hCsIEForward[i]->Write();
 //    hCsITForward[i]->Write();
-//    hSiCsIEForward[i]->Write();
 //  }
 
   // Left Si Detectors
@@ -694,11 +705,11 @@ void Spectra::Loop() {
   // }
 
   // Forward dE vs Si Energy
-  for(UInt_t i = 0; i < 10; i++) {
+//  for(UInt_t i = 0; i < 10; i++) {
 //    hdEEForward[i]->Write();
 //    hdEEForwardCal[i]->Write();
-    hdEEForwardCalTotal[i]->Write();
-  }
+//    hdEEForwardCalTotal[i]->Write();
+//  }
 
   // Forward Hough Angle
 //  for(UInt_t i = 0; i < 10; i++) {
@@ -706,22 +717,22 @@ void Spectra::Loop() {
 //  }
 
   // Forward Vertex vs Si Energy
-  for(UInt_t i = 0; i < 10; i++) {
+//  for(UInt_t i = 0; i < 10; i++) {
 //    hVertexSiEForward[i]->Write();
 //    hVertexSiEForwardCal[i]->Write();
-    hVertexSiEForwardCalTotal[i]->Write();
-  }
-  hVertexSiETotalRegion3->Write();
-  hVertexCMERegion3->Write();
+//    hVertexSiEForwardCalTotal[i]->Write();
+//  }
+//  hVertexSiETotalRegion3->Write();
+//  hVertexCMERegion3->Write();
 
   // Forward Angle vs Si Energy
-  for(UInt_t i = 0; i < 10; i++) {
+//  for(UInt_t i = 0; i < 10; i++) {
 //    hAngleEForward[i]->Write();
 //    hAngleEForwardCal[i]->Write();
-    hAngleEForwardCalTotal[i]->Write();
+//    hAngleEForwardCalTotal[i]->Write();
 //    hAngleEForwardProtonEnergy[i]->Write();
 //    hAngleEForwardCMEnergy[i]->Write();
-  }
+//  }
 
   // Forward Vertex vs Angle
 //  for(UInt_t i = 0; i < 10; i++) {
@@ -742,10 +753,15 @@ void Spectra::Loop() {
 //  }
 
   // Forward Wall XZ Hit Positions
-  hHitPositionsXZForward->Write();
+//  hHitPositionsXZForward->Write();
 //  for(UInt_t i = 0; i < 10; i++) {
 //    hHitPositionsXZForwardInd[i]->Write();
 //  }
+
+  hCWTECentral->Write();
+  hPa168ECentral->Write();
+  hPa164ECentral->Write();
+  hPa84ECentral->Write();
 
   DivideTargetThickness(s1);
   ReadSolidAngle();

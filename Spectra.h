@@ -83,16 +83,18 @@ public :
   Int_t           mmAget[2000];   //[mmMul]
   Int_t           mmChan[2000];   //[mmMul]
   Float_t         mmTime[2000];   //[mmMul]
-  Float_t         mmEnergy[2000];   //[mmMul]
+  Float_t         mmEnergy[2000]; //[mmMul]
+  Float_t         mmPa[2000][5];  //[mmMul][5]
 
   // List of branches
-  TBranch        *b_mmMul;   //!
+  TBranch        *b_mmMul;    //!
   TBranch        *b_mmCobo;   //!
   TBranch        *b_mmAsad;   //!
   TBranch        *b_mmAget;   //!
   TBranch        *b_mmChan;   //!
   TBranch        *b_mmTime;   //!
-  TBranch        *b_mmEnergy;   //!
+  TBranch        *b_mmEnergy; //!
+  TBranch        *b_mmPa;     //!
 
   Spectra(TTree *tree=0);
   ~Spectra();
@@ -240,6 +242,9 @@ private:
   // Forward Wall XZ Hit Positions
   TH2F* hHitPositionsXZForward;
   TH2F* hHitPositionsXZForwardInd[10];
+
+  // Central Micromegas Energy vs Pa
+  TH2F* hCWTECentral;
 
   // Cross Section
   TH1F* s1;
@@ -441,6 +446,7 @@ inline void Spectra::Init(TTree *tree) {
   fChain->SetBranchAddress("mmChan", mmChan, &b_mmChan);
   fChain->SetBranchAddress("mmTime", mmTime, &b_mmTime);
   fChain->SetBranchAddress("mmEnergy", mmEnergy, &b_mmEnergy);
+  fChain->SetBranchAddress("mmPa", mmPa, &b_mmPa);
   Notify();
 }
 
@@ -1281,6 +1287,12 @@ inline void Spectra::InitHistograms() {
     hHitPositionsXZForwardInd[i]->GetYaxis()->SetTitleOffset(1.4);
     hHitPositionsXZForwardInd[i]->SetStats(false);
   }
+
+  hCWTECentral = new TH2F("pa328ECentral", "pa328ECentral", 500, 0, 4000, 1000, 0, 0.1);
+  hCWTECentral->GetXaxis()->SetTitle("Energy [channels]"); hCWTECentral->GetXaxis()->CenterTitle();
+  hCWTECentral->GetYaxis()->SetTitle("CWT"); hCWTECentral->GetYaxis()->CenterTitle();
+  hCWTECentral->GetYaxis()->SetTitleOffset(1.4);
+  hCWTECentral->SetStats(false);
 
   // Cross Section Histograms
   s1 = new TH1F("s1", "Outside Forward", 70, 0, 6);

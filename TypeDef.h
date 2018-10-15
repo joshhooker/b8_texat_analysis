@@ -22,6 +22,7 @@ typedef struct mmCenter {
   Int_t row;
   Double_t energy;
   Double_t time;
+  Double_t cwt;
 } mmCenter;
 
 typedef struct mmTrack {
