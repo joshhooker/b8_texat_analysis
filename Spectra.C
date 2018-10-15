@@ -759,9 +759,6 @@ void Spectra::Loop() {
 //  }
 
   hCWTECentral->Write();
-  hPa168ECentral->Write();
-  hPa164ECentral->Write();
-  hPa84ECentral->Write();
 
   DivideTargetThickness(s1);
   ReadSolidAngle();
