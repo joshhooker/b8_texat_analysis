@@ -381,7 +381,7 @@ void Spectra::Loop() {
             Int_t detect = siForwardMap[mmChan[i]].first;
             Int_t quad = siForwardMap[mmChan[i]].second;
             Int_t channel = mmChan[i];
-            siDetect siHit = {detect, quad, channel, mmEnergy[i], mmTime[i]};
+            siDetect siHit = {detect, quad, channel, mmEnergy[i], mmTime[i], mmPa[i][3]/mmPa[i][1]};
             siDetect_.push_back(siHit);
           }
           // Beam Left Detectors
@@ -390,7 +390,7 @@ void Spectra::Loop() {
             Int_t detect = siLeftMap[mmChan[i]].first;
             Int_t quad = siLeftMap[mmChan[i]].second;
             Int_t channel = mmChan[i];
-            siDetect siHit = {detect+10, quad, channel, mmEnergy[i], mmTime[i]};
+            siDetect siHit = {detect+10, quad, channel, mmEnergy[i], mmTime[i], mmPa[i][3]/mmPa[i][1]};
             siDetect_.push_back(siHit);
           }
         }
@@ -430,6 +430,7 @@ void Spectra::Loop() {
     // Look at all Si that fired and gate
     std::vector<siDetect> siDetectNew_;
     for(auto si : siDetect_) {
+      hCWTSiE->Fill(si.energy, si.cwt);
       if(si.time > 3600 && si.time < 5200) siDetectNew_.push_back(si);
     }
 
@@ -616,7 +617,7 @@ void Spectra::Loop() {
 
     Bool_t event = false;
     if(central) {
-      event = AnalysisForwardCentral(mmCenterMatched_, mmCenterBeamTotal_, mmCenterProton_, centralPadTotalEnergy);
+      event = AnalysisForwardCentral(mmCenterMatchedReducedNoise_, mmCenterBeamTotal_, mmCenterProton_, centralPadTotalEnergy);
     }
     if((left || right) && !sideDet) {
       event = AnalysisForwardSide(mmCenterMatched_, mmCenterBeamTotal_, mmLeftChain_, mmLeftStrip_, mmRightChain_,
@@ -715,11 +716,11 @@ void Spectra::Loop() {
   // }
 
   // Forward dE vs Si Energy
-//  for(UInt_t i = 0; i < 10; i++) {
+  for(UInt_t i = 0; i < 10; i++) {
 //    hdEEForward[i]->Write();
 //    hdEEForwardCal[i]->Write();
-//    hdEEForwardCalTotal[i]->Write();
-//  }
+    hdEEForwardCalTotal[i]->Write();
+  }
 
   // Forward Hough Angle
 //  for(UInt_t i = 0; i < 10; i++) {
@@ -769,6 +770,7 @@ void Spectra::Loop() {
 //  }
 
   hCWTECentral->Write();
+  hCWTSiE->Write();
 
   DivideTargetThickness(s1);
   ReadSolidAngle();
@@ -792,15 +794,14 @@ Bool_t Spectra::AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std
   // Find dE for center region
   dE = 0.;
   Int_t totalRows = 0;
-  for(Int_t i = 116; i < 124; i++) {
-    if(i == 117) continue;
-    auto iterator = centralPadTotalEnergy.find(i);
-    if(iterator != centralPadTotalEnergy.end()) {
-      dE += centralPadTotalEnergy[i];
+  for(auto mm : centerProton_) {
+    if(mm.row > 116 && mm.row < 124 && mm.row != 117) {
+      if(mm.energy < 50) continue;
+      dE += mm.energy;
       totalRows++;
     }
-    dE /= static_cast<Double_t>(totalRows);
   }
+  dE /= static_cast<Double_t>(totalRows);
 
   hdEEForward[siDet]->Fill(siEnergy, dE);
   hdEEForwardCal[siDet]->Fill(siEnergyCal, dE);
@@ -808,13 +809,8 @@ Bool_t Spectra::AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std
 
   if(!dEEForwardCut[siDet]->IsInside(siEnergy, dE)) return false;
 
-  for(auto mm : centerMatched_) {
-    hTimeCentralForward[siDet]->Fill(mm.row, mm.time - siTime);
-  }
-
-  if(!centerMatched_.empty()) {
-    std::sort(centerMatched_.begin(), centerMatched_.end(), sortByRowMMCenter());
-  }
+  DrawCenterEnergyCanvas(totalCenterEnergyCanvas, centerMatched_, centerBeamTotal_);
+  totalCenterEnergyCanvas++;
 
   return true;
 }

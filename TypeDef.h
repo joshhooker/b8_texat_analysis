@@ -9,6 +9,7 @@ typedef struct siDetect {
   Int_t channel;
   Double_t energy;
   Double_t time;
+  Double_t cwt;
 } siDetect;
 
 typedef struct csiDetect {

@@ -249,6 +249,9 @@ private:
   // Central Micromegas Energy vs Pa
   TH2F* hCWTECentral;
 
+  // Silicon Energy vs Pa
+  TH2F* hCWTSiE;
+
   // Cross Section
   TH1F* s1;
 
@@ -1296,6 +1299,12 @@ inline void Spectra::InitHistograms() {
   hCWTECentral->GetYaxis()->SetTitle("CWT"); hCWTECentral->GetYaxis()->CenterTitle();
   hCWTECentral->GetYaxis()->SetTitleOffset(1.4);
   hCWTECentral->SetStats(false);
+
+  hCWTSiE = new TH2F("cwtSiE", "cwtSiE", 500, 0, 4000, 1000, 0, 0.1);
+  hCWTSiE->GetXaxis()->SetTitle("Energy [channels]"); hCWTSiE->GetXaxis()->CenterTitle();
+  hCWTSiE->GetYaxis()->SetTitle("CWT"); hCWTSiE->GetYaxis()->CenterTitle();
+  hCWTSiE->GetYaxis()->SetTitleOffset(1.4);
+  hCWTSiE->SetStats(false);
 
   // Cross Section Histograms
   s1 = new TH1F("s1", "Outside Forward", 70, 0, 6);
