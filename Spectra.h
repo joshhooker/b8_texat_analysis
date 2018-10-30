@@ -34,6 +34,7 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <math.h>
 #include <sstream>
 
 #include "CubicSpline.h"
@@ -265,10 +266,12 @@ private:
   Int_t centerEnergyCanvasNum, centerEnergyCanvasXYNum, centerEnergyCanvasXNum, centerEnergyCanvasYNum;
   TCanvas* centerEnergyCanvas[5];
 
-  void DrawCenterEnergyCanvasScaled(Int_t count, std::vector<mmCenter> centerMatched_, std::vector<mmTrack> centerBeamTotal_);
-  Int_t totalCenterEnergyCanvasScaled;
-  Int_t centerEnergyCanvasNumScaled, centerEnergyCanvasXYNumScaled, centerEnergyCanvasXNumScaled, centerEnergyCanvasYNumScaled;
-  TCanvas* centerEnergyCanvasScaled[5];
+  // Beam track
+  void DrawCenterBeamCanvas(Int_t count, std::vector<mmTrack> centerBeamTrack_, std::vector<Double_t> pars,
+      Int_t lastRow);
+  Int_t totalCenterBeamCanvas;
+  Int_t centerBeamCanvasNum, centerBeamCanvasXYNum, centerBeamCanvasXNum, centerBeamCanvasYNum;
+  TCanvas* centerBeamCanvas[5];
 
   void DrawCenterNoiseCanvas(Int_t count, std::vector<mmCenter> centerReduced_,
                              std::vector<mmCenter> centerReducedNoise_);
@@ -305,6 +308,9 @@ private:
 
 // MicroMegas Functions
   std::vector<mmCenter> CenterReduceNoise(std::vector<mmCenter> center);
+  void CorrectCenterEnergy(std::vector<mmTrack> &centerMatched_, std::vector<Double_t> parsBeam, Int_t lastRow);
+  Double_t GaussianCDF(Double_t x, Double_t mean, Double_t sigma);
+
   void ChainStripMatch(std::vector<mmTrack> &chainStripMatched, std::vector<mmTrack> &chainStripRaw,
                        std::vector<mmChainStrip> chain_,
                        std::vector<mmChainStrip> strip_, Bool_t leftSide, Double_t siTime);
@@ -359,6 +365,8 @@ private:
   Double_t numberB8;
   Double_t siXPosForward[10][4];
   Double_t siYPosForward;
+  Double_t gasPositionResolution;
+  std::pair<Double_t, Double_t> mmColumnSize[6];
 
   EnergyLoss *boronMethane;
   EnergyLoss *protonMethane;
@@ -1327,16 +1335,16 @@ inline void Spectra::InitCanvas() {
     centerEnergyCanvas[i]->Update();
   }
 
-  totalCenterEnergyCanvasScaled = 0;
-  centerEnergyCanvasNumScaled = static_cast<Int_t>(sizeof(centerEnergyCanvasScaled)/sizeof(centerEnergyCanvasScaled[0]));
-  centerEnergyCanvasXNumScaled = 4;
-  centerEnergyCanvasYNumScaled = 4;
-  centerEnergyCanvasXYNumScaled = centerEnergyCanvasXNumScaled*centerEnergyCanvasYNumScaled;
-  for(Int_t i = 0; i < centerEnergyCanvasNumScaled; i++) {
-    TString name = Form("centerEnergyScaled%d", i + 1);
-    centerEnergyCanvasScaled[i] = new TCanvas(name, name, 1600, 1200);
-    centerEnergyCanvasScaled[i]->Divide(centerEnergyCanvasXNumScaled, centerEnergyCanvasYNumScaled);
-    centerEnergyCanvasScaled[i]->Update();
+  totalCenterBeamCanvas = 0;
+  centerBeamCanvasNum = static_cast<Int_t>(sizeof(centerBeamCanvas)/sizeof(centerBeamCanvas[0]));
+  centerBeamCanvasXNum = 4;
+  centerBeamCanvasYNum = 4;
+  centerBeamCanvasXYNum = centerBeamCanvasXNum*centerBeamCanvasYNum;
+  for(Int_t i = 0; i < centerBeamCanvasNum; i++) {
+    TString name = Form("centerBeam%d", i + 1);
+    centerBeamCanvas[i] = new TCanvas(name, name, 1600, 1200);
+    centerBeamCanvas[i]->Divide(centerBeamCanvasXNum, centerBeamCanvasYNum);
+    centerBeamCanvas[i]->Update();
   }
 
   totalCenterNoiseCanvas = 0;
@@ -1415,6 +1423,8 @@ inline void Spectra::DrawCenterEnergyCanvas(Int_t count, std::vector<mmCenter> c
   graphColumnTot->SetLineColor(1);
 
   if(count < centerEnergyCanvasNum*centerEnergyCanvasXYNum) {
+    TString name = Form("Event_%lld", entry);
+    mgColumn->SetTitle(name);
     Int_t histNum = count/centerEnergyCanvasXYNum;
     centerEnergyCanvas[histNum]->cd(count + 1 - histNum*centerEnergyCanvasXYNum);
     if(graphColumn0->GetN() > 0) mgColumn->Add(graphColumn0);
@@ -1430,81 +1440,51 @@ inline void Spectra::DrawCenterEnergyCanvas(Int_t count, std::vector<mmCenter> c
   }
 }
 
-inline void Spectra::DrawCenterEnergyCanvasScaled(Int_t count, std::vector<mmCenter> centerMatched_,
-                                                  std::vector<mmTrack> centerBeamTotal_) {
-  // Make maps of different central columns
-  std::map<Int_t, std::map<Int_t, Double_t> > centralEnergyMap;
-  for(auto mm : centerMatched_) {
-    if(mm.row > 111) continue;
-    centralEnergyMap[mm.column][mm.row] = mm.energy;
-  }
+inline void Spectra::DrawCenterBeamCanvas(Int_t count, std::vector<mmTrack> centerBeamTrack_,
+    std::vector<Double_t> pars, Int_t lastRow) {
+  auto* beamMG = new TMultiGraph();
+  auto* beamGraph = new TGraph();
+  auto* beamGraphFit = new TGraph();
 
-  TMultiGraph* mgColumn = new TMultiGraph();
-  TGraph* graphColumn0 = new TGraph();
-  TGraph* graphColumn1 = new TGraph();
-  TGraph* graphColumn2 = new TGraph();
-  TGraph* graphColumn3 = new TGraph();
-  TGraph* graphColumn4 = new TGraph();
-  TGraph* graphColumn5 = new TGraph();
+  // Draw beam
+  beamGraph->SetMarkerStyle(8);
   Int_t i = 0;
-  for(auto map : centralEnergyMap[0]) {
-    graphColumn0->SetPoint(i, map.first, map.second);
-    i++;
-  }
-  i = 0;
-  for(auto map : centralEnergyMap[1]) {
-    graphColumn1->SetPoint(i, map.first, map.second);
-    i++;
-  }
-  i = 0;
-  for(auto map : centralEnergyMap[2]) {
-    graphColumn2->SetPoint(i, map.first, map.second);
-    i++;
-  }
-  i = 0;
-  for(auto map : centralEnergyMap[3]) {
-    graphColumn3->SetPoint(i, map.first, map.second);
-    i++;
-  }
-  i = 0;
-  for(auto map : centralEnergyMap[4]) {
-    graphColumn4->SetPoint(i, map.first, map.second);
-    i++;
-  }
-  i = 0;
-  for(auto map : centralEnergyMap[5]) {
-    graphColumn5->SetPoint(i, map.first, map.second);
+  for(auto mm : centerBeamTrack_) {
+    beamGraph->SetPoint(i, mm.xPosition, mm.yPosition/1.75);
     i++;
   }
 
-  TGraph* graphColumnTot = new TGraph();
-  i = 0;
-  for(auto mm : centerBeamTotal_) {
-    graphColumnTot->SetPoint(i, mm.row, mm.energy);
-    i++;
+  // Draw fit
+  beamGraphFit->SetMarkerStyle(7);
+  beamGraphFit->SetMarkerColor(2);
+  Int_t numPoints = 1000;
+  Double_t x, y, z;
+  Double_t y_begin = centerBeamTrack_[0].yPosition;
+  Double_t y_end = centerBeamTrack_[centerBeamTrack_.size() - 1].yPosition;
+  Double_t y_step = (y_end - y_begin)/static_cast<Double_t>(numPoints);
+  for(Int_t i = 0; i < numPoints; i++) {
+    line(i*y_step + y_begin, pars, x, y, z);
+    if(y/1.75 > lastRow) continue;
+    beamGraphFit->SetPoint(i, x, y/1.75);
   }
 
-  graphColumn0->SetLineColor(28);
-  graphColumn1->SetLineColor(3);
-  graphColumn2->SetLineColor(4);
-  graphColumn3->SetLineColor(6);
-  graphColumn4->SetLineColor(7);
-  graphColumn5->SetLineColor(9);
-  graphColumnTot->SetLineColor(1);
+  // Draw boundary
+  auto *boundGraph = new TGraph();
+  boundGraph->SetMarkerStyle(8);
+  boundGraph->SetMarkerColor(0);
+  boundGraph->SetPoint(0, -20, 0);
+  boundGraph->SetPoint(1, 20, 130);
 
-  if(count < centerEnergyCanvasNumScaled*centerEnergyCanvasXYNumScaled) {
-    Int_t histNum = count/centerEnergyCanvasXYNumScaled;
-    centerEnergyCanvasScaled[histNum]->cd(count + 1 - histNum*centerEnergyCanvasXYNumScaled);
-    if(graphColumn0->GetN() > 0) mgColumn->Add(graphColumn0);
-    if(graphColumn1->GetN() > 0) mgColumn->Add(graphColumn1);
-    if(graphColumn2->GetN() > 0) mgColumn->Add(graphColumn2);
-    if(graphColumn3->GetN() > 0) mgColumn->Add(graphColumn3);
-    if(graphColumn4->GetN() > 0) mgColumn->Add(graphColumn4);
-    if(graphColumn5->GetN() > 0) mgColumn->Add(graphColumn5);
-    if(graphColumnTot->GetN() > 0) mgColumn->Add(graphColumnTot);
-    mgColumn->GetXaxis()->SetLimits(0, 128);
-    mgColumn->Draw("a");
-    centerEnergyCanvasScaled[histNum]->Update();
+  if(count < centerBeamCanvasNum*centerBeamCanvasXYNum) {
+    TString name = Form("Event_%lld", entry);
+    beamMG->SetTitle(name);
+    Int_t histNum = count/centerBeamCanvasXYNum;
+    centerBeamCanvas[histNum]->cd(count + 1 - histNum*centerBeamCanvasXYNum);
+    beamMG->Add(beamGraph);
+    beamMG->Add(beamGraphFit);
+    beamMG->Add(boundGraph);
+    beamMG->Draw("ap");
+    centerBeamCanvas[histNum]->Update();
   }
 }
 
@@ -1666,6 +1646,17 @@ inline void Spectra::InitVariables() {
 
   // Y position of Forward Si Detectors
   siYPosForward = 275.34;
+
+  // Position resolution of gas (-2000 V of 435 torr Methane)
+  gasPositionResolution = 0.029364;
+
+  // MM Column Size
+  mmColumnSize[0] = std::make_pair(-10.5, -7.0);
+  mmColumnSize[1] = std::make_pair(-7.0, -3.5);
+  mmColumnSize[2] = std::make_pair(-3.5, 0);
+  mmColumnSize[3] = std::make_pair(0, 3.5);
+  mmColumnSize[4] = std::make_pair(3.5, 7.0);
+  mmColumnSize[5] = std::make_pair(7.0, 10.5);
 }
 
 inline void Spectra::InitTree() {

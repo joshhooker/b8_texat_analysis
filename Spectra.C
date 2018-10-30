@@ -17,10 +17,10 @@ TChain* MakeChain() {
   auto *chain = new TChain("mfmData");
 
   // Home
-  TString PathToFiles = "/hd3/research/data/run0817a/rootM2R-WaveformReduced/run";
+  // TString PathToFiles = "/hd3/research/data/run0817a/rootM2R-WaveformReduced/run";
 
   // Mac Laptop
-  // TString PathToFiles = "/Users/joshhooker/Desktop/data/run0817a/run";
+  TString PathToFiles = "/Users/joshhooker/Desktop/data/run0817a/run";
 
   // Linux Laptop
   // TString PathToFiles = "/home/joshhooker/Desktop/data/run0817a/run";
@@ -159,13 +159,15 @@ void Spectra::Loop() {
   printf("Starting Main Loop\n");
 
   Long64_t nbytes = 0, nb = 0;
-//  for(Long64_t jentry = 0; jentry < 200; jentry++) {
-//  for(Long64_t jentry = 49983; jentry < 49984; jentry++) {
-  for(Long64_t jentry = 0; jentry < nentries; jentry++) {
+  for(Long64_t jentry = 0; jentry < 5000; jentry++) {
+//  for(Long64_t jentry = 4747; jentry < 4748; jentry++) {
+//  for(Long64_t jentry = 0; jentry < nentries; jentry++) {
     Long64_t ientry = LoadTree(jentry);
     if(ientry < 0) break;
     nb = fChain->GetEntry(jentry);   nbytes += nb;
     // if (Cut(ientry) < 0) continue;
+
+    entry = jentry;
 
     if(jentry != 0 && jentry % 10000 == 0) printf("Processed %lld events\n", jentry);
 
@@ -620,7 +622,7 @@ void Spectra::Loop() {
       event = AnalysisForwardCentral(mmCenterMatchedReducedNoise_, mmCenterBeamTotal_, mmCenterProton_, centralPadTotalEnergy);
     }
     if((left || right) && !sideDet) {
-      event = AnalysisForwardSide(mmCenterMatched_, mmCenterBeamTotal_, mmLeftChain_, mmLeftStrip_, mmRightChain_,
+      event = AnalysisForwardSide(mmCenterMatchedReducedNoise_, mmCenterBeamTotal_, mmLeftChain_, mmLeftStrip_, mmRightChain_,
           mmRightStrip_);
     }
 
@@ -630,16 +632,6 @@ void Spectra::Loop() {
     FillTree();
 
   }
-
-  // TGraph boundaries
-  auto *h_track_bound = new TGraph();
-  h_track_bound->SetMarkerStyle(8);
-  h_track_bound->SetMarkerColor(5);
-  h_track_bound->SetPoint(0, -150, -300);
-  h_track_bound->SetPoint(1, 150, 300);
-  h_track_bound->SetName("Bound");
-  h_track_bound->Write();
-  delete h_track_bound;
 
 //  hIonizationChamberE->Write();
 //  hIonizationChamberT->Write();
@@ -783,6 +775,10 @@ void Spectra::Loop() {
     centerEnergyCanvas[i]->Write();
   }
 
+  for(Int_t i = 0; i < centerBeamCanvasNum; i++) {
+    centerBeamCanvas[i]->Write();
+  }
+
   WriteTree();
 
   file->Close();
@@ -809,8 +805,30 @@ Bool_t Spectra::AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std
 
   if(!dEEForwardCut[siDet]->IsInside(siEnergy, dE)) return false;
 
-  DrawCenterEnergyCanvas(totalCenterEnergyCanvas, centerMatched_, centerBeamTotal_);
-  totalCenterEnergyCanvas++;
+  if(!centerBeamTotal_.empty() && centerBeamTotal_.size() > 15) {
+    // Make reduced beam (70% of beam track)
+    Int_t centerBeamSize = static_cast<Int_t>(centerBeamTotal_.size());
+    centerBeamSize = static_cast<Int_t>(floor(0.7*centerBeamSize));
+
+    std::vector<mmTrack> centerBeamSmall_;
+    for(Int_t i = 0; i < centerBeamSize; i++) {
+      centerBeamSmall_.push_back(centerBeamTotal_[i]);
+    }
+
+    Int_t lastRow = centerBeamSmall_[centerBeamSmall_.size() - 1].row;
+
+    auto *fitBeam = new HoughTrack();
+    fitBeam->AddTrack(centerBeamSmall_, siDet, siQuad);
+    Double_t minDist = fitBeam->Fit();
+    std::vector<Double_t> parsBeam = fitBeam->GetPars();
+    delete fitBeam;
+
+    CorrectCenterEnergy(centerBeamTotal_, parsBeam, lastRow);
+    DrawCenterEnergyCanvas(totalCenterEnergyCanvas, centerMatched_, centerBeamTotal_);
+    totalCenterEnergyCanvas++;
+    DrawCenterBeamCanvas(totalCenterBeamCanvas, centerBeamTotal_, parsBeam, lastRow);
+    totalCenterBeamCanvas++;
+  }
 
   return true;
 }
@@ -1201,6 +1219,65 @@ std::vector<mmCenter> Spectra::CenterReduceNoise(std::vector<mmCenter> center) {
   }
 
   return mmNew;
+}
+
+void Spectra::CorrectCenterEnergy(std::vector<mmTrack> &centerBeam_, std::vector<Double_t> parsBeam, Int_t lastRow) {
+  Double_t x, y, z;
+
+  // Correct energy
+//  for(auto mm : centerBeam_) {
+  for(Int_t i = 0; i < centerBeam_.size(); i++) {
+    if(centerBeam_[i].row > lastRow) continue;
+
+    // if(centerBeam_[i].total != 1) continue;
+    line(centerBeam_[i].yPosition, parsBeam, x, y, z);
+    Double_t distToMesh = 6.54 + centerBeam_[i].height/10.;
+    Double_t gasSigma = sqrt(distToMesh)*gasPositionResolution*10.;
+    // Double_t gausSigma = gasSigma;
+    Double_t gausSigma = sqrt(gasSigma*gasSigma + 1.75*1.75);
+    Double_t gausMean = x;
+
+    // Find pad where the hit fell into
+    Double_t padFirst, padSecond;
+
+    if(centerBeam_[i].total == 1) {
+      for(Int_t j = 0; j < 6; j++) {
+        if((centerBeam_[i].xPosition > mmColumnSize[j].first) &&
+            (centerBeam_[i].xPosition < mmColumnSize[j].second)) {
+          padFirst = mmColumnSize[j].first;
+          padSecond = mmColumnSize[j].second;
+          break;
+        }
+      }
+    }
+    else if(centerBeam_[i].total == 2) {
+      for(Int_t j = 1; j < 6; j++) {
+        if((centerBeam_[i].xPosition > mmColumnSize[j - 1].first) &&
+           (centerBeam_[i].xPosition < mmColumnSize[j].second)) {
+          padFirst = mmColumnSize[j - 1].first;
+          padSecond = mmColumnSize[j].second;
+          break;
+        }
+      }
+    }
+    else continue;
+
+    Double_t gausCDFFirst = GaussianCDF(padFirst, gausMean, gausSigma);
+    Double_t gausCDFSecond = GaussianCDF(padSecond, gausMean, gausSigma);
+    Double_t gausPercentage = gausCDFSecond - gausCDFFirst;
+
+    if(gausPercentage > 0.3) {
+      centerBeam_[i].energy = centerBeam_[i].energy/gausPercentage;
+    }
+    else {
+      centerBeam_[i].energy = 0.;
+    }
+  }
+}
+
+Double_t Spectra::GaussianCDF(Double_t x, Double_t mean, Double_t sigma) {
+
+  return 0.5*(1. + erf((x - mean)/(sqrt(2.)*sigma)));
 }
 
 void Spectra::ChainStripMatch(std::vector<mmTrack> &chainStripMatched, std::vector<mmTrack> &chainStripRaw,
