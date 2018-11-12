@@ -265,6 +265,9 @@ private:
   // Average Peak Energy vs Si E Forward Detectors
   TH2F* hAvgPeakESiE[10];
 
+  // Max Peak Energy in Central Pad vs Derivative around Peak Forward Detectors
+  TH2F* hMaxPeakEDerivPeak[10];
+
   // Cross Section
   TH1F* s1;
 
@@ -300,6 +303,12 @@ private:
   Int_t centerEnergyRunningCanvasNum, centerEnergyRunningCanvasXYNum, centerEnergyRunningCanvasXNum, centerEnergyRunningCanvasYNum;
   TCanvas* centerEnergyRunningCanvas[5];
 
+  // Draw three and five point derivatives with central region with respect to energy
+  void DrawCenterEnergyDeriv(Int_t count, std::vector<centerDeriv> threePoint_, std::vector<centerDeriv> fivePoint_);
+  Int_t totalCenterEnergyDerivCanvas;
+  Int_t centerEnergyDerivCanvasNum, centerEnergyDerivCanvasXYNum, centerEnergyDerivCanvasXNum, centerEnergyDerivCanvasYNum;
+  TCanvas* centerEnergyDerivCanvas[5];
+
   void WriteCanvas();
 
 // Silicon Energy Calibration
@@ -330,16 +339,19 @@ private:
   Bool_t AnalysisLeftSide();
 
 // MicroMegas Functions
+
+  // Center Functions
   std::vector<mmCenter> CenterReduceNoise(std::vector<mmCenter> center);
   void CorrectCenterEnergy(std::vector<mmTrack> &centerMatched_, std::vector<Double_t> parsBeam, Int_t lastRow);
   Double_t GaussianCDF(Double_t x, Double_t mean, Double_t sigma);
-  void FindMaxCentralEnergy(std::vector<mmTrack> centerMatched_, Int_t &maxEnergyRow, Double_t &averageMaxEnergy,
-                            Double_t &maxEnergy);
+  void FindMaxCentralEnergy(std::vector<mmTrack> centerMatched_, Int_t &maxEnergyRow, Double_t &maxEnergy, 
+                            Double_t &averageMaxEnergy, Double_t &maxDeriv);
   std::vector<mmTrack> GetRunningEnergyAverage(std::vector<mmTrack> centerMatched_);
   Bool_t CenterOnlyOneColumn(std::vector<mmTrack> centerMatched_);
   std::vector<centerDeriv> CenterEnergyThreePointDeriv(std::vector<mmTrack> centerMatched_);
   std::vector<centerDeriv> CenterEnergyFivePointDeriv(std::vector<mmTrack> centerMatched_);
 
+  // Side Functions
   void ChainStripMatch(std::vector<mmTrack> &chainStripMatched, std::vector<mmTrack> &chainStripRaw,
                        std::vector<mmChainStrip> chain_,
                        std::vector<mmChainStrip> strip_, Bool_t leftSide, Double_t siTime);
@@ -1383,6 +1395,16 @@ inline void Spectra::InitHistograms() {
     hAvgPeakESiE[i]->SetStats(false);
   }
 
+  // Max Peak Energy in Central Pad vs Derivative around Peak Forward Detectors
+  for(UInt_t i = 0; i < 10; i++) {
+    TString name = Form("maxPeakEDeriv_d%d", i);
+    hMaxPeakEDerivPeak[i] = new TH2F(name, name, 256, 0, 4096, 512, 0, 2048);
+    hMaxPeakEDerivPeak[i]->GetXaxis()->SetTitle("Max Peak Energy [channels]"); hMaxPeakEDerivPeak[i]->GetXaxis()->CenterTitle();
+    hMaxPeakEDerivPeak[i]->GetYaxis()->SetTitle("Derivative at Peak"); hMaxPeakEDerivPeak[i]->GetYaxis()->CenterTitle();
+    hMaxPeakEDerivPeak[i]->GetYaxis()->SetTitleOffset(1.4);
+    hMaxPeakEDerivPeak[i]->SetStats(false);
+  }
+
   // Cross Section Histograms
   s1 = new TH1F("s1", "Outside Forward", 70, 0, 6);
   s1->Sumw2();
@@ -1438,6 +1460,18 @@ inline void Spectra::InitCanvas() {
     centerEnergyRunningCanvas[i] = new TCanvas(name, name, 1600, 1200);
     centerEnergyRunningCanvas[i]->Divide(centerEnergyRunningCanvasXNum, centerEnergyRunningCanvasYNum);
     centerEnergyRunningCanvas[i]->Update();
+  }
+
+  totalCenterEnergyDerivCanvas = 0;
+  centerEnergyDerivCanvasNum = static_cast<Int_t>(sizeof(centerEnergyDerivCanvas)/sizeof(centerEnergyDerivCanvas[0]));
+  centerEnergyDerivCanvasXNum = 4;
+  centerEnergyDerivCanvasYNum = 4;
+  centerEnergyDerivCanvasXYNum = centerEnergyDerivCanvasXNum*centerEnergyDerivCanvasYNum;
+  for(Int_t i = 0; i < centerEnergyDerivCanvasNum; i++) {
+    TString name = Form("centerEnergyDeriv%d", i + 1);
+    centerEnergyDerivCanvas[i] = new TCanvas(name, name, 1600, 1200);
+    centerEnergyDerivCanvas[i]->Divide(centerEnergyDerivCanvasXNum, centerEnergyDerivCanvasYNum);
+    centerEnergyDerivCanvas[i]->Update();
   }
 }
 
@@ -1639,6 +1673,40 @@ inline void Spectra::DrawCenterEnergyRunningAverageCanvas(Int_t count, std::vect
     mgColumn->SetMinimum(0);
     mgColumn->Draw("a");
     centerEnergyRunningCanvas[histNum]->Update();
+  }
+}
+
+inline void Spectra::DrawCenterEnergyDeriv(Int_t count, std::vector<centerDeriv> threePoint_, 
+                                           std::vector<centerDeriv> fivePoint_) {
+  TMultiGraph* mgColumn = new TMultiGraph();
+  TGraph* graphThree = new TGraph();
+  TGraph* graphFive = new TGraph();
+
+  Int_t i = 0;
+  for(auto mm : threePoint_) {
+    graphThree->SetPoint(i, mm.row, mm.deriv);
+    i++;
+  }
+
+  i = 0;
+  for(auto mm : fivePoint_) {
+    graphFive->SetPoint(i, mm.row, mm.deriv);
+    i++;
+  }
+
+  graphThree->SetLineColor(2);
+  graphFive->SetLineColor(4);
+
+  if(count < centerEnergyDerivCanvasNum*centerEnergyDerivCanvasXYNum) {
+    Int_t histNum = count/centerEnergyRunningCanvasXYNum;
+    TString name = Form("Event_%lld", entry);
+    mgColumn->SetTitle(name);
+    centerEnergyDerivCanvas[histNum]->cd(count + 1 - histNum*centerEnergyDerivCanvasXYNum);
+    if(graphThree->GetN() > 0) mgColumn->Add(graphThree);
+    if(graphFive->GetN() > 0) mgColumn->Add(graphFive);
+    mgColumn->GetXaxis()->SetLimits(0, 128);
+    mgColumn->Draw("a");
+    centerEnergyDerivCanvas[histNum]->Update();
   }
 }
 
@@ -1870,23 +1938,33 @@ inline void Spectra::WriteHistograms() {
 //  }
 
   // Max Peak Location Central Pad vs Si E Forward Wall
-  for(UInt_t i = 0; i < 10; i++) {
+  // for(UInt_t i = 0; i < 10; i++) {
+  for(UInt_t i = 4; i < 6; i++) {  
     hMaxPeakSiE[i]->Write();
   }
 
   // Max Peak Location Central Pad vs Average E Forward Wall
-  for(UInt_t i = 0; i < 10; i++) {
+  // for(UInt_t i = 0; i < 10; i++) {
+  for(UInt_t i = 4; i < 6; i++) {
     hMaxPeakAvgPeakE[i]->Write();
   }
 
   // Max Peak Energy in Central Pad vs Average Peak Energy Forward Detectors
-  for(UInt_t i = 0; i < 10; i++) {
+  // for(UInt_t i = 0; i < 10; i++) {
+  for(UInt_t i = 4; i < 6; i++) {
     hMaxPeakEAvgPeakE[i]->Write();
   }
 
   // Average Peak Energy vs Si E Forward Detectors
-  for(UInt_t i = 0; i < 10; i++) {
+  // for(UInt_t i = 0; i < 10; i++) {
+  for(UInt_t i = 4; i < 6; i++) {
     hAvgPeakESiE[i]->Write();
+  }
+
+  // Max Peak Energy in Central Pad vs Derivative around Peak Forward Detectors
+  // for(UInt_t i = 0; i < 10; i++) {
+  for(UInt_t i = 4; i < 6; i++) {
+    hMaxPeakEDerivPeak[i]->Write();
   }
 
   hCWTECentral->Write();
@@ -1904,6 +1982,10 @@ inline void Spectra::WriteCanvas() {
 
   for(Int_t i = 0; i < centerEnergyRunningCanvasNum; i++) {
     centerEnergyRunningCanvas[i]->Write();
+  }
+
+  for(Int_t i = 0; i < centerEnergyDerivCanvasNum; i++) {
+    centerEnergyDerivCanvas[i]->Write();
   }
 }
 

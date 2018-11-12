@@ -159,9 +159,9 @@ void Spectra::Loop() {
   printf("Starting Main Loop\n");
 
   Long64_t nbytes = 0, nb = 0;
-  for(Long64_t jentry = 0; jentry < 100000; jentry++) {
+  // for(Long64_t jentry = 0; jentry < 100000; jentry++) {
   // for(Long64_t jentry = 4747; jentry < 4748; jentry++) {
-  // for(Long64_t jentry = 0; jentry < nentries; jentry++) {
+  for(Long64_t jentry = 0; jentry < nentries; jentry++) {
     Long64_t ientry = LoadTree(jentry);
     if(ientry < 0) break;
     nb = fChain->GetEntry(jentry);   nbytes += nb;
@@ -687,21 +687,29 @@ Bool_t Spectra::AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std
     std::vector<Double_t> parsBeam = fitBeam->GetPars();
     delete fitBeam;
 
-    Int_t maxPeak;
-    Double_t avgPeakEnergy, maxPeakEnergy;
-    FindMaxCentralEnergy(centerBeamTotal_, maxPeak, avgPeakEnergy, maxPeakEnergy);
+    Int_t maxPeakRow;
+    Double_t maxPeakEnergy, avgPeakEnergy, maxPeakDeriv;
+    FindMaxCentralEnergy(centerBeamTotal_, maxPeakRow, maxPeakEnergy, avgPeakEnergy, maxPeakDeriv);
 
-    hMaxPeakSiE[siDet]->Fill(maxPeak, siEnergyCal);
-    hMaxPeakAvgPeakE[siDet]->Fill(maxPeak, avgPeakEnergy);
+    hMaxPeakSiE[siDet]->Fill(maxPeakRow, siEnergyCal);
+    hMaxPeakAvgPeakE[siDet]->Fill(maxPeakRow, avgPeakEnergy);
     hMaxPeakEAvgPeakE[siDet]->Fill(maxPeakEnergy, avgPeakEnergy);
     hAvgPeakESiE[siDet]->Fill(avgPeakEnergy, siEnergyCal);
+    hMaxPeakEDerivPeak[siDet]->Fill(maxPeakEnergy, maxPeakDeriv);
 
     Bool_t singleColumn = CenterOnlyOneColumn(centerBeamTotal_);
-    if(!singleColumn) return true;
+    // if(!singleColumn) return true;
 
     std::vector<mmTrack> averageTrack_ = GetRunningEnergyAverage(centerBeamTotal_);
     DrawCenterEnergyRunningAverageCanvas(totalCenterEnergyRunningCanvas, centerBeamTotal_, averageTrack_);
     totalCenterEnergyRunningCanvas++;
+
+    // std::vector<centerDeriv> threePoint_ = CenterEnergyThreePointDeriv(centerBeamTotal_);
+    // std::vector<centerDeriv> fivePoint_ = CenterEnergyFivePointDeriv(centerBeamTotal_);
+    std::vector<centerDeriv> threePoint_ = CenterEnergyThreePointDeriv(averageTrack_);
+    std::vector<centerDeriv> fivePoint_ = CenterEnergyFivePointDeriv(averageTrack_);
+    DrawCenterEnergyDeriv(totalCenterEnergyDerivCanvas, threePoint_, fivePoint_);
+    totalCenterEnergyDerivCanvas++;
 
     // CorrectCenterEnergy(centerBeamTotal_, parsBeam, lastRow);
     DrawCenterEnergyCanvas(totalCenterEnergyCanvas, centerMatched_, centerBeamTotal_);
@@ -1164,8 +1172,8 @@ Double_t Spectra::GaussianCDF(Double_t x, Double_t mean, Double_t sigma) {
   return 0.5*(1. + erf((x - mean)/(sqrt(2.)*sigma)));
 }
 
-void Spectra::FindMaxCentralEnergy(std::vector<mmTrack> centerMatched_, Int_t &maxEnergyRow, Double_t &averageMaxEnergy,
-                                   Double_t &maxEnergy) {
+void Spectra::FindMaxCentralEnergy(std::vector<mmTrack> centerMatched_, Int_t &maxEnergyRow, Double_t &maxEnergy, 
+                                   Double_t &averageMaxEnergy, Double_t &maxDeriv) {
   maxEnergy = -1000.;
   Int_t maxRow = -1;
   Int_t maxRowBin = 0;
@@ -1181,13 +1189,13 @@ void Spectra::FindMaxCentralEnergy(std::vector<mmTrack> centerMatched_, Int_t &m
 
   Double_t derivative = (centerMatched_[maxRowBin].energy - centerMatched_[maxRowBin- 2].energy)/2.;
 
-  for(Int_t i = maxRowBin - 5; i < maxRowBin; i++) {
+  for(Int_t i = maxRowBin - 4; i < maxRowBin + 1; i++) {
     totalEnergy += centerMatched_[i].energy;
   }
 
   maxEnergyRow = maxRow;
   averageMaxEnergy = totalEnergy/5.;
-  // averageMaxEnergy = derivative;
+  maxDeriv = derivative;
 }
 
 std::vector<mmTrack> Spectra::GetRunningEnergyAverage(std::vector<mmTrack> centerMatched_) {
@@ -1204,17 +1212,6 @@ std::vector<mmTrack> Spectra::GetRunningEnergyAverage(std::vector<mmTrack> cente
 }
 
 Bool_t Spectra::CenterOnlyOneColumn(std::vector<mmTrack> centerMatched_) {
-  // Int_t numColumns = 0;
-  // Double_t prevPosition = centerMatched_[0].xPosition;
-  // for(UInt_t i = 1; i < centerMatched_.size(); i++) {
-
-
-  //   // Check if position is within error 
-  //   if(((centerMatched_[i].xPosition - 0.1) < prevPosition)
-  //        && ((centerMatched_[i].xPosition + 0.1) > prevPosition))
-
-  //   prevPosition = centerMatched_[i].xPosition;
-  // }
   Bool_t singleColumn = true;
 
   for(auto mm : centerMatched_) {
@@ -1222,6 +1219,27 @@ Bool_t Spectra::CenterOnlyOneColumn(std::vector<mmTrack> centerMatched_) {
   }
 
   return singleColumn;
+}
+
+std::vector<centerDeriv> Spectra::CenterEnergyThreePointDeriv(std::vector<mmTrack> center_) {
+  std::vector<centerDeriv> mmDeriv;
+  for(UInt_t i = 1; i < center_.size() - 1; i++) {
+    Double_t deriv = (center_[i + 1].energy - center_[i - 1].energy)/2.;
+    centerDeriv hit = {center_[i].row, deriv};
+    mmDeriv.push_back(hit);
+  }
+  return mmDeriv;
+}
+
+std::vector<centerDeriv> Spectra::CenterEnergyFivePointDeriv(std::vector<mmTrack> center_) {
+  std::vector<centerDeriv> mmDeriv;
+  for(UInt_t i = 2; i < center_.size() - 2; i++) {
+    Double_t deriv = (-center_[i + 2].energy + 8.*center_[i + 1].energy - 
+                      8.*center_[i - 1].energy + center_[i - 2].energy)/12.;
+    centerDeriv hit = {center_[i].row, deriv};
+    mmDeriv.push_back(hit);
+  }
+  return mmDeriv;
 }
 
 void Spectra::ChainStripMatch(std::vector<mmTrack> &chainStripMatched, std::vector<mmTrack> &chainStripRaw,
