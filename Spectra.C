@@ -159,9 +159,9 @@ void Spectra::Loop() {
   printf("Starting Main Loop\n");
 
   Long64_t nbytes = 0, nb = 0;
-  for(Long64_t jentry = 0; jentry < 5000; jentry++) {
-//  for(Long64_t jentry = 4747; jentry < 4748; jentry++) {
-//  for(Long64_t jentry = 0; jentry < nentries; jentry++) {
+  for(Long64_t jentry = 0; jentry < 100000; jentry++) {
+  // for(Long64_t jentry = 4747; jentry < 4748; jentry++) {
+  // for(Long64_t jentry = 0; jentry < nentries; jentry++) {
     Long64_t ientry = LoadTree(jentry);
     if(ientry < 0) break;
     nb = fChain->GetEntry(jentry);   nbytes += nb;
@@ -633,151 +633,9 @@ void Spectra::Loop() {
 
   }
 
-//  hIonizationChamberE->Write();
-//  hIonizationChamberT->Write();
+  WriteHistograms();
 
-  hMicroMegasCenterCumulative->Write();
-  hMicroMegasCenterCumulativePosition->Write();
-  hMicroMegasCenterCumulativePositionRaw->Write();
-  hMicroMegasCenterTime->Write();
-  hMicroMegasCenterHeight->Write();
-
-  // Forward Si Detectors
-//  for(UInt_t i = 0; i < 10; i++) {
-//    hSiEForwardDet[i]->Write();
-//    hSiTForwardDet[i]->Write();
-//    hSiEForwardDetCal[i]->Write();
-//    for (int j = 0; j < 4; j++) {
-//      hSiEForward[i][j]->Write();
-//      hSiEForwardCal[i][j]->Write();
-//      hSiTForward[i][j]->Write();
-//    }
-//    hCsIEForward[i]->Write();
-//    hCsITForward[i]->Write();
-//  }
-
-  // Left Si Detectors
-//  for(UInt_t i = 0; i < 6; i++) {
-//    hSiELeftDet[i]->Write();
-//    hSiTLeftDet[i]->Write();
-//    hSiELeftDetCal[i]->Write();
-//    for(UInt_t j = 0; j < 4; j++) {
-//      hSiELeft[i][j]->Write();
-//      hSiTLeft[i][j]->Write();
-//    }
-//    hCsIELeft[i]->Write();
-//    hCsITLeft[i]->Write();
-//    hCsIETLeft[i]->Write();
-//  }
-
-//   hMicroMegasCenterCumulative->Write();
-//   hMicroMegasCenterEnergyCumulative->Write();
-//   hMicroMegasCenterEnergyAverage->Write();
-//   hMicroMegasCenterEnergyAverageScaled->Write();
-//   hMicroMegasCenterTimeAverage->Write();
-
-  // Forward CsI Energy vs Time
-//  for(UInt_t i = 0; i < 10; i++) {
-//    hCsIETForward[i]->Write();
-//  }
-
-//   Forward Si Energy vs CsI Energy
-//   for(UInt_t i = 0; i < 10; i++) {
-//     hSiCsIEForwardDet[i]->Write();
-//     hSiCsIEForwardDetCal[i]->Write();
-//      for(UInt_t j = 0; j < 4; j++) {
-//        hSiCsIEForward[i][j]->Write();
-//        hSiCsIEForwardCal[i][j]->Write();
-//      }
-//   }
-
-  // Forward Si + CsI vs Si (raw)
-  // for(UInt_t i = 0; i < 10; i++) {
-  //   hSumSiEForwardDet[i]->Write();
-  //   for(UInt_t j = 0; j < 4; j++) {
-  //     hSumSiEForward[i][j]->Write();
-  //   }
-  // }
-
-  // Forward Si + CsI vs CsI (raw)
-  // for(UInt_t i = 0; i < 10; i++) {
-  //   hSumCsIEForwardDet[i]->Write();
-  //   for(UInt_t j = 0; j < 4; j++) {
-  //     hSumCsIEForward[i][j]->Write();
-  //   }
-  // }
-
-  // Forward dE vs Si Energy
-  for(UInt_t i = 0; i < 10; i++) {
-//    hdEEForward[i]->Write();
-//    hdEEForwardCal[i]->Write();
-    hdEEForwardCalTotal[i]->Write();
-  }
-
-  // Forward Hough Angle
-//  for(UInt_t i = 0; i < 10; i++) {
-//    hHoughAngle[i]->Write();
-//  }
-
-  // Forward Vertex vs Si Energy
-//  for(UInt_t i = 0; i < 10; i++) {
-//    hVertexSiEForward[i]->Write();
-//    hVertexSiEForwardCal[i]->Write();
-//    hVertexSiEForwardCalTotal[i]->Write();
-//  }
-//  hVertexSiETotalRegion3->Write();
-//  hVertexCMERegion3->Write();
-
-  // Forward Angle vs Si Energy
-//  for(UInt_t i = 0; i < 10; i++) {
-//    hAngleEForward[i]->Write();
-//    hAngleEForwardCal[i]->Write();
-//    hAngleEForwardCalTotal[i]->Write();
-//    hAngleEForwardProtonEnergy[i]->Write();
-//    hAngleEForwardCMEnergy[i]->Write();
-//  }
-
-  // Forward Vertex vs Angle
-//  for(UInt_t i = 0; i < 10; i++) {
-//    hVertexAngleForward[i]->Write();
-//  }
-
-  // Time vs Column/Strip Number Forward Detectors
-//  for(UInt_t i = 0; i < 10; i++) {
-//    for(UInt_t j = 0; j < 4; j++) {
-//      hTimeChainForward[i][j]->Write();
-//      hTimeStripForward[i][j]->Write();
-//    }
-//  }
-
-  // Time vs Central Row Forward Detectors
-//  for(UInt_t i = 0; i < 10; i++) {
-//    hTimeCentralForward[i]->Write();
-//  }
-
-  // Forward Wall XZ Hit Positions
-//  hHitPositionsXZForward->Write();
-//  for(UInt_t i = 0; i < 10; i++) {
-//    hHitPositionsXZForwardInd[i]->Write();
-//  }
-
-  hCWTECentral->Write();
-  hCWTSiE->Write();
-
-  DivideTargetThickness(s1);
-  ReadSolidAngle();
-  SolidAngle(s1);
-  s1->Scale(1./numberB8);
-  s1->Write();
-  WriteSpectrumToFile(s1, 3);
-
-  for(Int_t i = 0; i < centerEnergyCanvasNum; i++) {
-    centerEnergyCanvas[i]->Write();
-  }
-
-  for(Int_t i = 0; i < centerBeamCanvasNum; i++) {
-    centerBeamCanvas[i]->Write();
-  }
+  WriteCanvas();
 
   WriteTree();
 
@@ -805,7 +663,7 @@ Bool_t Spectra::AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std
 
   if(!dEEForwardCut[siDet]->IsInside(siEnergy, dE)) return false;
 
-  if(!centerBeamTotal_.empty() && centerBeamTotal_.size() > 15) {
+  if(centerBeamTotal_.size() > 10) {
     // Make reduced beam (70% of beam track)
     Int_t centerBeamSize = static_cast<Int_t>(centerBeamTotal_.size());
     centerBeamSize = static_cast<Int_t>(floor(0.7*centerBeamSize));
@@ -815,15 +673,37 @@ Bool_t Spectra::AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std
       centerBeamSmall_.push_back(centerBeamTotal_[i]);
     }
 
-    Int_t lastRow = centerBeamSmall_[centerBeamSmall_.size() - 1].row;
+//    Int_t lastRow = centerBeamTotal_[centerBeamTotal_.size() - 1].row;
+//    auto *fitBeam = new HoughTrack();
+//    fitBeam->AddTrack(centerBeamTotal_, siDet, siQuad);
+//    Double_t minDist = fitBeam->Fit();
+//    std::vector<Double_t> parsBeam = fitBeam->GetPars();
+//    delete fitBeam;
 
+    Int_t lastRow = centerBeamSmall_[centerBeamSmall_.size() - 1].row;
     auto *fitBeam = new HoughTrack();
     fitBeam->AddTrack(centerBeamSmall_, siDet, siQuad);
     Double_t minDist = fitBeam->Fit();
     std::vector<Double_t> parsBeam = fitBeam->GetPars();
     delete fitBeam;
 
-    CorrectCenterEnergy(centerBeamTotal_, parsBeam, lastRow);
+    Int_t maxPeak;
+    Double_t avgPeakEnergy, maxPeakEnergy;
+    FindMaxCentralEnergy(centerBeamTotal_, maxPeak, avgPeakEnergy, maxPeakEnergy);
+
+    hMaxPeakSiE[siDet]->Fill(maxPeak, siEnergyCal);
+    hMaxPeakAvgPeakE[siDet]->Fill(maxPeak, avgPeakEnergy);
+    hMaxPeakEAvgPeakE[siDet]->Fill(maxPeakEnergy, avgPeakEnergy);
+    hAvgPeakESiE[siDet]->Fill(avgPeakEnergy, siEnergyCal);
+
+    Bool_t singleColumn = CenterOnlyOneColumn(centerBeamTotal_);
+    if(!singleColumn) return true;
+
+    std::vector<mmTrack> averageTrack_ = GetRunningEnergyAverage(centerBeamTotal_);
+    DrawCenterEnergyRunningAverageCanvas(totalCenterEnergyRunningCanvas, centerBeamTotal_, averageTrack_);
+    totalCenterEnergyRunningCanvas++;
+
+    // CorrectCenterEnergy(centerBeamTotal_, parsBeam, lastRow);
     DrawCenterEnergyCanvas(totalCenterEnergyCanvas, centerMatched_, centerBeamTotal_);
     totalCenterEnergyCanvas++;
     DrawCenterBeamCanvas(totalCenterBeamCanvas, centerBeamTotal_, parsBeam, lastRow);
@@ -1234,7 +1114,7 @@ void Spectra::CorrectCenterEnergy(std::vector<mmTrack> &centerBeam_, std::vector
     Double_t distToMesh = 6.54 + centerBeam_[i].height/10.;
     Double_t gasSigma = sqrt(distToMesh)*gasPositionResolution*10.;
     // Double_t gausSigma = gasSigma;
-    Double_t gausSigma = sqrt(gasSigma*gasSigma + 1.75*1.75);
+    Double_t gausSigma = sqrt(gasSigma*gasSigma + 1.5*1.5);
     Double_t gausMean = x;
 
     // Find pad where the hit fell into
@@ -1249,16 +1129,19 @@ void Spectra::CorrectCenterEnergy(std::vector<mmTrack> &centerBeam_, std::vector
           break;
         }
       }
+//      std::cout << entry << '\t' << centerBeam_[i].row << '\t' << centerBeam_[i].xPosition << '\t' << padFirst << '\t' << padSecond << std::endl;
     }
     else if(centerBeam_[i].total == 2) {
       for(Int_t j = 1; j < 6; j++) {
         if((centerBeam_[i].xPosition > mmColumnSize[j - 1].first) &&
-           (centerBeam_[i].xPosition < mmColumnSize[j].second)) {
+           (centerBeam_[i].xPosition < mmColumnSize[j].second) &&
+           fabs(centerBeam_[i].xPosition - mmColumnSize[j - 1].first) < 5) {
           padFirst = mmColumnSize[j - 1].first;
           padSecond = mmColumnSize[j].second;
           break;
         }
       }
+      // std::cout << entry << '\t' << centerBeam_[i].xPosition << '\t' << padFirst << '\t' << padSecond << std::endl;
     }
     else continue;
 
@@ -1266,11 +1149,12 @@ void Spectra::CorrectCenterEnergy(std::vector<mmTrack> &centerBeam_, std::vector
     Double_t gausCDFSecond = GaussianCDF(padSecond, gausMean, gausSigma);
     Double_t gausPercentage = gausCDFSecond - gausCDFFirst;
 
-    if(gausPercentage > 0.3) {
+    if(gausPercentage > 0.5) {
       centerBeam_[i].energy = centerBeam_[i].energy/gausPercentage;
     }
     else {
-      centerBeam_[i].energy = 0.;
+//      centerBeam_[i].energy = 0.;
+      centerBeam_[i].energy = centerBeam_[i].energy/0.5;
     }
   }
 }
@@ -1278,6 +1162,66 @@ void Spectra::CorrectCenterEnergy(std::vector<mmTrack> &centerBeam_, std::vector
 Double_t Spectra::GaussianCDF(Double_t x, Double_t mean, Double_t sigma) {
 
   return 0.5*(1. + erf((x - mean)/(sqrt(2.)*sigma)));
+}
+
+void Spectra::FindMaxCentralEnergy(std::vector<mmTrack> centerMatched_, Int_t &maxEnergyRow, Double_t &averageMaxEnergy,
+                                   Double_t &maxEnergy) {
+  maxEnergy = -1000.;
+  Int_t maxRow = -1;
+  Int_t maxRowBin = 0;
+  Double_t totalEnergy = 0.;
+
+  for(UInt_t i = 0; i < centerMatched_.size(); i++) {
+    if(centerMatched_[i].energy > maxEnergy) {
+      maxEnergy = centerMatched_[i].energy;
+      maxRow = centerMatched_[i].row;
+      maxRowBin = i;
+    }
+  }
+
+  Double_t derivative = (centerMatched_[maxRowBin].energy - centerMatched_[maxRowBin- 2].energy)/2.;
+
+  for(Int_t i = maxRowBin - 5; i < maxRowBin; i++) {
+    totalEnergy += centerMatched_[i].energy;
+  }
+
+  maxEnergyRow = maxRow;
+  averageMaxEnergy = totalEnergy/5.;
+  // averageMaxEnergy = derivative;
+}
+
+std::vector<mmTrack> Spectra::GetRunningEnergyAverage(std::vector<mmTrack> centerMatched_) {
+  std::vector<mmTrack> newTrack_;
+  newTrack_.push_back(centerMatched_[0]);
+  for(UInt_t i = 1; i < centerMatched_.size() - 2; i++) {
+    Double_t avgEnergy = (centerMatched_[i - 1].energy + centerMatched_[i].energy + centerMatched_[i + 1].energy)/3.;
+    newTrack_.push_back(centerMatched_[i]);
+    newTrack_[i].energy = avgEnergy;
+  }
+  newTrack_.push_back(centerMatched_[centerMatched_.size() - 1]);
+
+  return newTrack_;
+}
+
+Bool_t Spectra::CenterOnlyOneColumn(std::vector<mmTrack> centerMatched_) {
+  // Int_t numColumns = 0;
+  // Double_t prevPosition = centerMatched_[0].xPosition;
+  // for(UInt_t i = 1; i < centerMatched_.size(); i++) {
+
+
+  //   // Check if position is within error 
+  //   if(((centerMatched_[i].xPosition - 0.1) < prevPosition)
+  //        && ((centerMatched_[i].xPosition + 0.1) > prevPosition))
+
+  //   prevPosition = centerMatched_[i].xPosition;
+  // }
+  Bool_t singleColumn = true;
+
+  for(auto mm : centerMatched_) {
+    if(mm.total > 1) singleColumn = false;  
+  }
+
+  return singleColumn;
 }
 
 void Spectra::ChainStripMatch(std::vector<mmTrack> &chainStripMatched, std::vector<mmTrack> &chainStripRaw,

@@ -253,8 +253,22 @@ private:
   // Silicon Energy vs Pa
   TH2F* hCWTSiE;
 
+  // Max Peak Location in Central Pad vs Si E Forward Detectors
+  TH2F* hMaxPeakSiE[10];
+
+  // Max Peak Location in Central Pad vs Average Peak Energy Forward Detectors
+  TH2F* hMaxPeakAvgPeakE[10];
+
+  // Max Peak Energy in Central Pad vs Average Peak Energy Forward Detectors
+  TH2F* hMaxPeakEAvgPeakE[10];
+
+  // Average Peak Energy vs Si E Forward Detectors
+  TH2F* hAvgPeakESiE[10];
+
   // Cross Section
   TH1F* s1;
+
+  void WriteHistograms();
 
 // TCanvas
 
@@ -278,6 +292,15 @@ private:
   Int_t totalCenterNoiseCanvas;
   Int_t centerNoiseCanvasNum, centerNoiseCanvasXYNum, centerNoiseCanvasXNum, centerNoiseCanvasYNum;
   TCanvas* centerNoiseCanvas[10];
+
+  // Draw central pad raw energy vs running average energy
+  void DrawCenterEnergyRunningAverageCanvas(Int_t count, std::vector<mmTrack> rawTrack_, 
+                                             std::vector<mmTrack> averageTrack_);
+  Int_t totalCenterEnergyRunningCanvas;
+  Int_t centerEnergyRunningCanvasNum, centerEnergyRunningCanvasXYNum, centerEnergyRunningCanvasXNum, centerEnergyRunningCanvasYNum;
+  TCanvas* centerEnergyRunningCanvas[5];
+
+  void WriteCanvas();
 
 // Silicon Energy Calibration
 private:
@@ -310,6 +333,12 @@ private:
   std::vector<mmCenter> CenterReduceNoise(std::vector<mmCenter> center);
   void CorrectCenterEnergy(std::vector<mmTrack> &centerMatched_, std::vector<Double_t> parsBeam, Int_t lastRow);
   Double_t GaussianCDF(Double_t x, Double_t mean, Double_t sigma);
+  void FindMaxCentralEnergy(std::vector<mmTrack> centerMatched_, Int_t &maxEnergyRow, Double_t &averageMaxEnergy,
+                            Double_t &maxEnergy);
+  std::vector<mmTrack> GetRunningEnergyAverage(std::vector<mmTrack> centerMatched_);
+  Bool_t CenterOnlyOneColumn(std::vector<mmTrack> centerMatched_);
+  std::vector<centerDeriv> CenterEnergyThreePointDeriv(std::vector<mmTrack> centerMatched_);
+  std::vector<centerDeriv> CenterEnergyFivePointDeriv(std::vector<mmTrack> centerMatched_);
 
   void ChainStripMatch(std::vector<mmTrack> &chainStripMatched, std::vector<mmTrack> &chainStripRaw,
                        std::vector<mmChainStrip> chain_,
@@ -1314,6 +1343,46 @@ inline void Spectra::InitHistograms() {
   hCWTSiE->GetYaxis()->SetTitleOffset(1.4);
   hCWTSiE->SetStats(false);
 
+  // Max Peak Location Central Pad vs Si E Forward Wall
+  for(UInt_t i = 0; i < 10; i++) {
+    TString name = Form("maxPeakSiE_d%d", i);
+    hMaxPeakSiE[i] = new TH2F(name, name, 128, 0, 128, 500, 0, 15000);
+    hMaxPeakSiE[i]->GetXaxis()->SetTitle("Max Peak [row #]"); hMaxPeakSiE[i]->GetXaxis()->CenterTitle();
+    hMaxPeakSiE[i]->GetYaxis()->SetTitle("Si Energy [keV]"); hMaxPeakSiE[i]->GetYaxis()->CenterTitle();
+    hMaxPeakSiE[i]->GetYaxis()->SetTitleOffset(1.4);
+    hMaxPeakSiE[i]->SetStats(false);
+  }
+
+  // Max Peak Location Central Pad vs Average E Forward Wall
+  for(UInt_t i = 0; i < 10; i++) {
+    TString name = Form("maxPeakAvgE_d%d", i);
+    hMaxPeakAvgPeakE[i] = new TH2F(name, name, 128, 0, 128, 128, 0, 4096);
+    hMaxPeakAvgPeakE[i]->GetXaxis()->SetTitle("Max Peak [row #]"); hMaxPeakAvgPeakE[i]->GetXaxis()->CenterTitle();
+    hMaxPeakAvgPeakE[i]->GetYaxis()->SetTitle("Average Peak Energy [channels]"); hMaxPeakAvgPeakE[i]->GetYaxis()->CenterTitle();
+    hMaxPeakAvgPeakE[i]->GetYaxis()->SetTitleOffset(1.4);
+    hMaxPeakAvgPeakE[i]->SetStats(false);
+  }
+
+  // Max Peak Energy in Central Pad vs Average Peak Energy Forward Detectors
+  for(UInt_t i = 0; i < 10; i++) {
+    TString name = Form("maxPeakEAvgE_d%d", i);
+    hMaxPeakEAvgPeakE[i] = new TH2F(name, name, 256, 0, 4096, 128, 0, 4096);
+    hMaxPeakEAvgPeakE[i]->GetXaxis()->SetTitle("Max Peak Energy [channels]"); hMaxPeakEAvgPeakE[i]->GetXaxis()->CenterTitle();
+    hMaxPeakEAvgPeakE[i]->GetYaxis()->SetTitle("Average Peak Energy [channels]"); hMaxPeakEAvgPeakE[i]->GetYaxis()->CenterTitle();
+    hMaxPeakEAvgPeakE[i]->GetYaxis()->SetTitleOffset(1.4);
+    hMaxPeakEAvgPeakE[i]->SetStats(false);
+  }
+
+  // Average Peak Energy vs Si E Forward Detectors
+  for(UInt_t i = 0; i < 10; i++) {
+    TString name = Form("avgPeakESiE_d%d", i);
+    hAvgPeakESiE[i] = new TH2F(name, name, 128, 0, 4096, 500, 0, 15000);
+    hAvgPeakESiE[i]->GetXaxis()->SetTitle("Average Peak Energy [channels]"); hAvgPeakESiE[i]->GetXaxis()->CenterTitle();
+    hAvgPeakESiE[i]->GetYaxis()->SetTitle("Si Energy [keV]"); hAvgPeakESiE[i]->GetYaxis()->CenterTitle();
+    hAvgPeakESiE[i]->GetYaxis()->SetTitleOffset(1.4);
+    hAvgPeakESiE[i]->SetStats(false);
+  }
+
   // Cross Section Histograms
   s1 = new TH1F("s1", "Outside Forward", 70, 0, 6);
   s1->Sumw2();
@@ -1357,6 +1426,18 @@ inline void Spectra::InitCanvas() {
     centerNoiseCanvas[i] = new TCanvas(name, name, 1600, 1200);
     centerNoiseCanvas[i]->Divide(centerNoiseCanvasXNum, centerNoiseCanvasYNum);
     centerNoiseCanvas[i]->Update();
+  }
+
+  totalCenterEnergyRunningCanvas = 0;
+  centerEnergyRunningCanvasNum = static_cast<Int_t>(sizeof(centerEnergyRunningCanvas)/sizeof(centerEnergyRunningCanvas[0]));
+  centerEnergyRunningCanvasXNum = 4;
+  centerEnergyRunningCanvasYNum = 4;
+  centerEnergyRunningCanvasXYNum = centerEnergyRunningCanvasXNum*centerEnergyRunningCanvasYNum;
+  for(Int_t i = 0; i < centerEnergyRunningCanvasNum; i++) {
+    TString name = Form("centerEnergyRunning%d", i + 1);
+    centerEnergyRunningCanvas[i] = new TCanvas(name, name, 1600, 1200);
+    centerEnergyRunningCanvas[i]->Divide(centerEnergyRunningCanvasXNum, centerEnergyRunningCanvasYNum);
+    centerEnergyRunningCanvas[i]->Update();
   }
 }
 
@@ -1435,6 +1516,7 @@ inline void Spectra::DrawCenterEnergyCanvas(Int_t count, std::vector<mmCenter> c
     if(graphColumn5->GetN() > 0) mgColumn->Add(graphColumn5);
     if(graphColumnTot->GetN() > 0) mgColumn->Add(graphColumnTot);
     mgColumn->GetXaxis()->SetLimits(0, 128);
+    mgColumn->SetMinimum(0);
     mgColumn->Draw("a");
     centerEnergyCanvas[histNum]->Update();
   }
@@ -1522,6 +1604,41 @@ inline void Spectra::DrawCenterNoiseCanvas(Int_t count, std::vector<mmCenter> ce
     mgCenter->SetMaximum(130);
     mgCenter->Draw("ap");
     centerNoiseCanvas[histNum]->Update();
+  }
+}
+
+inline void Spectra::DrawCenterEnergyRunningAverageCanvas(Int_t count, std::vector<mmTrack> rawTrack_,
+                                                          std::vector<mmTrack> averageTrack_) {
+  TMultiGraph* mgColumn = new TMultiGraph();
+  TGraph* graphRaw = new TGraph();
+  TGraph* graphAverage = new TGraph();
+
+  Int_t i = 0;
+  for(auto mm : rawTrack_) {
+    graphRaw->SetPoint(i, mm.row, mm.energy);
+    i++;
+  }
+
+  i = 0;
+  for(auto mm : averageTrack_) {
+    graphAverage->SetPoint(i, mm.row, mm.energy);
+    i++;
+  }
+
+  graphRaw->SetLineColor(1);
+  graphAverage->SetLineColor(2);
+
+  if(count < centerEnergyRunningCanvasNum*centerEnergyRunningCanvasXYNum) {
+    Int_t histNum = count/centerEnergyRunningCanvasXYNum;
+    TString name = Form("Event_%lld", entry);
+    mgColumn->SetTitle(name);
+    centerEnergyRunningCanvas[histNum]->cd(count + 1 - histNum*centerEnergyRunningCanvasXYNum);
+    if(graphRaw->GetN() > 0) mgColumn->Add(graphRaw);
+    if(graphAverage->GetN() > 0) mgColumn->Add(graphAverage);
+    mgColumn->GetXaxis()->SetLimits(0, 128);
+    mgColumn->SetMinimum(0);
+    mgColumn->Draw("a");
+    centerEnergyRunningCanvas[histNum]->Update();
   }
 }
 
@@ -1657,6 +1774,137 @@ inline void Spectra::InitVariables() {
   mmColumnSize[3] = std::make_pair(0, 3.5);
   mmColumnSize[4] = std::make_pair(3.5, 7.0);
   mmColumnSize[5] = std::make_pair(7.0, 10.5);
+}
+
+inline void Spectra::WriteHistograms() {
+  // hIonizationChamberE->Write();
+  // hIonizationChamberT->Write();
+
+  hMicroMegasCenterCumulative->Write();
+  hMicroMegasCenterCumulativePosition->Write();
+  hMicroMegasCenterCumulativePositionRaw->Write();
+  hMicroMegasCenterTime->Write();
+  hMicroMegasCenterHeight->Write();
+
+  // Forward Si Detectors
+//  for(UInt_t i = 0; i < 10; i++) {
+//    hSiEForwardDet[i]->Write();
+//    hSiTForwardDet[i]->Write();
+//    hSiEForwardDetCal[i]->Write();
+//    for (int j = 0; j < 4; j++) {
+//      hSiEForward[i][j]->Write();
+//      hSiEForwardCal[i][j]->Write();
+//      hSiTForward[i][j]->Write();
+//    }
+//    hCsIEForward[i]->Write();
+//    hCsITForward[i]->Write();
+//  }
+
+  // Forward CsI Energy vs Time
+  // for(UInt_t i = 0; i < 10; i++) {
+    // hCsIETForward[i]->Write();
+  // }
+
+  // Forward Si Energy vs CsI Energy
+  // for(UInt_t i = 0; i < 10; i++) {
+    // hSiCsIEForwardDet[i]->Write();
+    // hSiCsIEForwardDetCal[i]->Write();
+    //  for(UInt_t j = 0; j < 4; j++) {
+      //  hSiCsIEForward[i][j]->Write();
+      //  hSiCsIEForwardCal[i][j]->Write();
+    //  }
+  // }
+
+  // Forward dE vs Si Energy
+  for(UInt_t i = 0; i < 10; i++) {
+  //  hdEEForward[i]->Write();
+  //  hdEEForwardCal[i]->Write();
+    hdEEForwardCalTotal[i]->Write();
+  }
+
+  // Forward Hough Angle
+  // for(UInt_t i = 0; i < 10; i++) {
+    // hHoughAngle[i]->Write();
+  // }
+
+    // Forward Vertex vs Si Energy
+//  for(UInt_t i = 0; i < 10; i++) {
+//    hVertexSiEForward[i]->Write();
+//    hVertexSiEForwardCal[i]->Write();
+//    hVertexSiEForwardCalTotal[i]->Write();
+//  }
+//  hVertexSiETotalRegion3->Write();
+//  hVertexCMERegion3->Write();
+
+  // Forward Angle vs Si Energy
+//  for(UInt_t i = 0; i < 10; i++) {
+//    hAngleEForward[i]->Write();
+//    hAngleEForwardCal[i]->Write();
+//    hAngleEForwardCalTotal[i]->Write();
+//    hAngleEForwardProtonEnergy[i]->Write();
+//    hAngleEForwardCMEnergy[i]->Write();
+//  }
+
+  // Forward Vertex vs Angle
+//  for(UInt_t i = 0; i < 10; i++) {
+//    hVertexAngleForward[i]->Write();
+//  }
+
+  // Time vs Column/Strip Number Forward Detectors
+//  for(UInt_t i = 0; i < 10; i++) {
+//    for(UInt_t j = 0; j < 4; j++) {
+//      hTimeChainForward[i][j]->Write();
+//      hTimeStripForward[i][j]->Write();
+//    }
+//  }
+
+  // Time vs Central Row Forward Detectors
+//  for(UInt_t i = 0; i < 10; i++) {
+//    hTimeCentralForward[i]->Write();
+//  }
+
+  // Forward Wall XZ Hit Positions
+//  hHitPositionsXZForward->Write();
+//  for(UInt_t i = 0; i < 10; i++) {
+//    hHitPositionsXZForwardInd[i]->Write();
+//  }
+
+  // Max Peak Location Central Pad vs Si E Forward Wall
+  for(UInt_t i = 0; i < 10; i++) {
+    hMaxPeakSiE[i]->Write();
+  }
+
+  // Max Peak Location Central Pad vs Average E Forward Wall
+  for(UInt_t i = 0; i < 10; i++) {
+    hMaxPeakAvgPeakE[i]->Write();
+  }
+
+  // Max Peak Energy in Central Pad vs Average Peak Energy Forward Detectors
+  for(UInt_t i = 0; i < 10; i++) {
+    hMaxPeakEAvgPeakE[i]->Write();
+  }
+
+  // Average Peak Energy vs Si E Forward Detectors
+  for(UInt_t i = 0; i < 10; i++) {
+    hAvgPeakESiE[i]->Write();
+  }
+
+  hCWTECentral->Write();
+  hCWTSiE->Write();
+}
+
+inline void Spectra::WriteCanvas() {
+  for(Int_t i = 0; i < centerEnergyCanvasNum; i++) {
+    centerEnergyCanvas[i]->Write();
+  }
+
+  for(Int_t i = 0; i < centerBeamCanvasNum; i++) {
+    centerBeamCanvas[i]->Write();
+  }
+
+  for(Int_t i = 0; i < centerEnergyRunningCanvasNum; i++) {
+    centerEnergyRunningCanvas[i]->Write();
+  }
 }
 
 inline void Spectra::InitTree() {

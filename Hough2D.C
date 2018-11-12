@@ -7,7 +7,7 @@ Hough2D::~Hough2D() {
   delete hHoughYZ;
 }
 
-Hough2D::Hough2D(std::vector<mmTrack> initPoints): nBinsX(360), nBinsY(360) {
+Hough2D::Hough2D(std::vector<mmTrack> initPoints): nBinsX(360), nBinsY(5760) {
   for(UInt_t i = 0; i < initPoints.size(); i++) {
     xy initPointsXY = {initPoints[i].xPosition, initPoints[i].yPosition};
     yz initPointsYZ = {initPoints[i].yPosition, initPoints[i].height};
@@ -83,6 +83,10 @@ void Hough2D::CalculateHoughXY() {
   }
 
   Double_t thetaStep = 180./static_cast<Double_t>(nBinsX);
+
+  Double_t diffD = maxDHistogram - minDHistogram;
+  Int_t nBinsY = static_cast<Int_t>(diffD/0.005);
+//  std::cout << maxDHistogram << '\t' << minDHistogram << '\t' << diffD << '\t' << nBinsY << std::endl;
 
   // Fill Hough Matrix
   // Go through the angles and find the angle with the smallest standard deviation

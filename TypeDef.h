@@ -52,4 +52,9 @@ typedef struct yz {
   Double_t z;
 } yz;
 
+typedef struct centerDeriv {
+  Int_t row;
+  Double_t deriv;
+} centerDeriv;
+
 #endif //TYPEDEF_H

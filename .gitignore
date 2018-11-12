@@ -3,6 +3,7 @@
 *.pcm
 .DS_Store
 .idea/
+.vscode/
 alpha_calibration/
 azureConversion/
 averageBeamProperties/
