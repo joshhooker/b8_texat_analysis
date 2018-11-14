@@ -1177,7 +1177,7 @@ Double_t Spectra::GaussianCDF(Double_t x, Double_t mean, Double_t sigma) {
   return 0.5*(1. + erf((x - mean)/(sqrt(2.)*sigma)));
 }
 
-void Spectra::FindMaxCentralEnergy(std::vector<mmTrack> centerMatched_, Int_t &maxEnergyRow, Double_t &maxEnergy, 
+void Spectra::FindMaxCentralEnergy(std::vector<mmTrack> centerMatched_, Int_t &maxEnergyRow, Double_t &maxEnergy,
                                    Double_t &averageMaxEnergy, Double_t &maxDeriv) {
   maxEnergy = -1000.;
   Int_t maxRow = -1;
@@ -1249,7 +1249,7 @@ Bool_t Spectra::CenterOnlyOneColumn(std::vector<mmTrack> centerMatched_) {
   Bool_t singleColumn = true;
 
   for(auto mm : centerMatched_) {
-    if(mm.total > 1) singleColumn = false;  
+    if(mm.total > 1) singleColumn = false;
   }
 
   return singleColumn;
@@ -1268,7 +1268,7 @@ std::vector<centerDeriv> Spectra::CenterEnergyThreePointDeriv(std::vector<mmTrac
 std::vector<centerDeriv> Spectra::CenterEnergyFivePointDeriv(std::vector<mmTrack> center_) {
   std::vector<centerDeriv> mmDeriv;
   for(UInt_t i = 2; i < center_.size() - 2; i++) {
-    Double_t deriv = (-center_[i + 2].energy + 8.*center_[i + 1].energy - 
+    Double_t deriv = (-center_[i + 2].energy + 8.*center_[i + 1].energy -
                       8.*center_[i - 1].energy + center_[i - 2].energy)/12.;
     centerDeriv hit = {center_[i].row, deriv};
     mmDeriv.push_back(hit);
@@ -1280,7 +1280,7 @@ std::pair<Int_t, Int_t> Spectra::CenterGetDerivMax(std::vector<centerDeriv> thre
   Int_t maxThreePointRow, maxFivePointRow;
 
   std::pair<Int_t, Int_t> pair;
-  
+
   Double_t maxDeriv = -1000.;
   for(auto mm : threePoint_) {
     if(mm.deriv > maxDeriv) {

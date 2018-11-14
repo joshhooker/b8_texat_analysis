@@ -303,7 +303,7 @@ private:
   TCanvas* centerNoiseCanvas[10];
 
   // Draw central pad raw energy vs running average energy
-  void DrawCenterEnergyRunningAverageCanvas(Int_t count, std::vector<mmTrack> rawTrack_, 
+  void DrawCenterEnergyRunningAverageCanvas(Int_t count, std::vector<mmTrack> rawTrack_,
                                              std::vector<mmTrack> averageTrack_);
   Int_t totalCenterEnergyRunningCanvas;
   Int_t centerEnergyRunningCanvasNum, centerEnergyRunningCanvasXYNum, centerEnergyRunningCanvasXNum, centerEnergyRunningCanvasYNum;
@@ -350,7 +350,7 @@ private:
   std::vector<mmCenter> CenterReduceNoise(std::vector<mmCenter> center);
   void CorrectCenterEnergy(std::vector<mmTrack> &centerMatched_, std::vector<Double_t> parsBeam, Int_t lastRow);
   Double_t GaussianCDF(Double_t x, Double_t mean, Double_t sigma);
-  void FindMaxCentralEnergy(std::vector<mmTrack> centerMatched_, Int_t &maxEnergyRow, Double_t &maxEnergy, 
+  void FindMaxCentralEnergy(std::vector<mmTrack> centerMatched_, Int_t &maxEnergyRow, Double_t &maxEnergy,
                             Double_t &averageMaxEnergy, Double_t &maxDeriv);
   std::vector<mmTrack> GetRunningEnergyAverageThree(std::vector<mmTrack> centerMatched_);
   std::vector<mmTrack> GetRunningEnergyAverageFive(std::vector<mmTrack> centerMatched_);
@@ -1704,7 +1704,7 @@ inline void Spectra::DrawCenterEnergyRunningAverageCanvas(Int_t count, std::vect
   }
 }
 
-inline void Spectra::DrawCenterEnergyDeriv(Int_t count, std::vector<centerDeriv> threePoint_, 
+inline void Spectra::DrawCenterEnergyDeriv(Int_t count, std::vector<centerDeriv> threePoint_,
                                            std::vector<centerDeriv> fivePoint_) {
   TMultiGraph* mgColumn = new TMultiGraph();
   TGraph* graphThree = new TGraph();
@@ -1967,7 +1967,7 @@ inline void Spectra::WriteHistograms() {
 
   // Max Peak Location Central Pad vs Si E Forward Wall
   // for(UInt_t i = 0; i < 10; i++) {
-  for(UInt_t i = 4; i < 6; i++) {  
+  for(UInt_t i = 4; i < 6; i++) {
     hMaxPeakSiE[i]->Write();
   }
 
