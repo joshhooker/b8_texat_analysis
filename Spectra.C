@@ -698,9 +698,9 @@ Bool_t Spectra::AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std
     hMaxPeakEDerivPeak[siDet]->Fill(maxPeakEnergy, maxPeakDeriv);
 
     Bool_t singleColumn = CenterOnlyOneColumn(centerBeamTotal_);
-    // if(!singleColumn) return true;
+    if(!singleColumn) return true;
 
-    std::vector<mmTrack> averageTrack_ = GetRunningEnergyAverage(centerBeamTotal_);
+    std::vector<mmTrack> averageTrack_ = GetRunningEnergyAverageThree(centerBeamTotal_);
     DrawCenterEnergyRunningAverageCanvas(totalCenterEnergyRunningCanvas, centerBeamTotal_, averageTrack_);
     totalCenterEnergyRunningCanvas++;
 
@@ -710,6 +710,11 @@ Bool_t Spectra::AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std
     std::vector<centerDeriv> fivePoint_ = CenterEnergyFivePointDeriv(averageTrack_);
     DrawCenterEnergyDeriv(totalCenterEnergyDerivCanvas, threePoint_, fivePoint_);
     totalCenterEnergyDerivCanvas++;
+
+    std::pair<Int_t, Int_t> derivPeak = CenterGetDerivMax(threePoint_, fivePoint_);
+    Int_t derivDiff = maxPeakRow - derivPeak.first;
+    hMaxPeakDerivDiff[siDet]->Fill(maxPeakRow, derivDiff);
+    hDerivPeakDerivDiff[siDet]->Fill(derivPeak.first, derivDiff);
 
     // CorrectCenterEnergy(centerBeamTotal_, parsBeam, lastRow);
     DrawCenterEnergyCanvas(totalCenterEnergyCanvas, centerMatched_, centerBeamTotal_);
@@ -1187,18 +1192,47 @@ void Spectra::FindMaxCentralEnergy(std::vector<mmTrack> centerMatched_, Int_t &m
     }
   }
 
-  Double_t derivative = (centerMatched_[maxRowBin].energy - centerMatched_[maxRowBin- 2].energy)/2.;
+  Int_t minRowBin;
+  if(maxRowBin < 5) {
+    minRowBin = 0;
+  }
+  else {
+    minRowBin = maxRowBin - 4;
+  }
 
-  for(Int_t i = maxRowBin - 4; i < maxRowBin + 1; i++) {
+  Double_t derivative;
+  if(maxRowBin > 1) {
+    derivative = (centerMatched_[maxRowBin].energy - centerMatched_[maxRowBin- 2].energy)/2.;
+  }
+  else {
+    derivative = 0.;
+  }
+
+  Int_t count = 0;
+  for(Int_t i = minRowBin; i < maxRowBin + 1; i++) {
     totalEnergy += centerMatched_[i].energy;
+    count++;
   }
 
   maxEnergyRow = maxRow;
-  averageMaxEnergy = totalEnergy/5.;
+  averageMaxEnergy = totalEnergy/static_cast<Double_t>(count);
   maxDeriv = derivative;
 }
 
-std::vector<mmTrack> Spectra::GetRunningEnergyAverage(std::vector<mmTrack> centerMatched_) {
+std::vector<mmTrack> Spectra::GetRunningEnergyAverageThree(std::vector<mmTrack> centerMatched_) {
+  std::vector<mmTrack> newTrack_;
+  newTrack_.push_back(centerMatched_[0]);
+  for(UInt_t i = 1; i < centerMatched_.size() - 2; i++) {
+    Double_t avgEnergy = (centerMatched_[i - 1].energy + centerMatched_[i].energy + centerMatched_[i + 1].energy)/3.;
+    newTrack_.push_back(centerMatched_[i]);
+    newTrack_[i].energy = avgEnergy;
+  }
+  newTrack_.push_back(centerMatched_[centerMatched_.size() - 1]);
+
+  return newTrack_;
+}
+
+std::vector<mmTrack> Spectra::GetRunningEnergyAverageFive(std::vector<mmTrack> centerMatched_) {
   std::vector<mmTrack> newTrack_;
   newTrack_.push_back(centerMatched_[0]);
   for(UInt_t i = 1; i < centerMatched_.size() - 2; i++) {
@@ -1240,6 +1274,32 @@ std::vector<centerDeriv> Spectra::CenterEnergyFivePointDeriv(std::vector<mmTrack
     mmDeriv.push_back(hit);
   }
   return mmDeriv;
+}
+
+std::pair<Int_t, Int_t> Spectra::CenterGetDerivMax(std::vector<centerDeriv> threePoint_, std::vector<centerDeriv> fivePoint_) {
+  Int_t maxThreePointRow, maxFivePointRow;
+
+  std::pair<Int_t, Int_t> pair;
+  
+  Double_t maxDeriv = -1000.;
+  for(auto mm : threePoint_) {
+    if(mm.deriv > maxDeriv) {
+      maxDeriv = mm.deriv;
+      maxThreePointRow = mm.row;
+    }
+  }
+
+  maxDeriv = -1000.;
+  for(auto mm : fivePoint_) {
+    if(mm.deriv > maxDeriv) {
+      maxDeriv = mm.deriv;
+      maxFivePointRow = mm.row;
+    }
+  }
+
+  pair = std::make_pair(maxThreePointRow, maxFivePointRow);
+
+  return pair;
 }
 
 void Spectra::ChainStripMatch(std::vector<mmTrack> &chainStripMatched, std::vector<mmTrack> &chainStripRaw,

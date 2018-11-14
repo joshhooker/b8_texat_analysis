@@ -268,6 +268,12 @@ private:
   // Max Peak Energy in Central Pad vs Derivative around Peak Forward Detectors
   TH2F* hMaxPeakEDerivPeak[10];
 
+  // Max Peak Location in Central Pad vs Difference between Peak Location and Derivative Max
+  TH2F* hMaxPeakDerivDiff[10];
+
+  // Derivative Location in Central Pad vs Difference between Peak Location and Derivative Max
+  TH2F* hDerivPeakDerivDiff[10];
+
   // Cross Section
   TH1F* s1;
 
@@ -346,10 +352,12 @@ private:
   Double_t GaussianCDF(Double_t x, Double_t mean, Double_t sigma);
   void FindMaxCentralEnergy(std::vector<mmTrack> centerMatched_, Int_t &maxEnergyRow, Double_t &maxEnergy, 
                             Double_t &averageMaxEnergy, Double_t &maxDeriv);
-  std::vector<mmTrack> GetRunningEnergyAverage(std::vector<mmTrack> centerMatched_);
+  std::vector<mmTrack> GetRunningEnergyAverageThree(std::vector<mmTrack> centerMatched_);
+  std::vector<mmTrack> GetRunningEnergyAverageFive(std::vector<mmTrack> centerMatched_);
   Bool_t CenterOnlyOneColumn(std::vector<mmTrack> centerMatched_);
   std::vector<centerDeriv> CenterEnergyThreePointDeriv(std::vector<mmTrack> centerMatched_);
   std::vector<centerDeriv> CenterEnergyFivePointDeriv(std::vector<mmTrack> centerMatched_);
+  std::pair<Int_t, Int_t> CenterGetDerivMax(std::vector<centerDeriv> threePoint_, std::vector<centerDeriv> fivePoint_);
 
   // Side Functions
   void ChainStripMatch(std::vector<mmTrack> &chainStripMatched, std::vector<mmTrack> &chainStripRaw,
@@ -1398,11 +1406,31 @@ inline void Spectra::InitHistograms() {
   // Max Peak Energy in Central Pad vs Derivative around Peak Forward Detectors
   for(UInt_t i = 0; i < 10; i++) {
     TString name = Form("maxPeakEDeriv_d%d", i);
-    hMaxPeakEDerivPeak[i] = new TH2F(name, name, 256, 0, 4096, 512, 0, 2048);
+    hMaxPeakEDerivPeak[i] = new TH2F(name, name, 256, 0, 4096, 128, 0, 2048);
     hMaxPeakEDerivPeak[i]->GetXaxis()->SetTitle("Max Peak Energy [channels]"); hMaxPeakEDerivPeak[i]->GetXaxis()->CenterTitle();
     hMaxPeakEDerivPeak[i]->GetYaxis()->SetTitle("Derivative at Peak"); hMaxPeakEDerivPeak[i]->GetYaxis()->CenterTitle();
     hMaxPeakEDerivPeak[i]->GetYaxis()->SetTitleOffset(1.4);
     hMaxPeakEDerivPeak[i]->SetStats(false);
+  }
+
+  // Max Peak Location in Central Pad vs Difference between Peak Location and Derivative Max
+  for(UInt_t i = 0; i < 10; i++) {
+    TString name = Form("maxPeakDerivDiff_d%d", i);
+    hMaxPeakDerivDiff[i] = new TH2F(name, name, 128, 0, 128, 128, 0, 128);
+    hMaxPeakDerivDiff[i]->GetXaxis()->SetTitle("Max Peak Location [row]"); hMaxPeakDerivDiff[i]->GetXaxis()->CenterTitle();
+    hMaxPeakDerivDiff[i]->GetYaxis()->SetTitle("Diff in Derivative and Max Peak [row]"); hMaxPeakDerivDiff[i]->GetYaxis()->CenterTitle();
+    hMaxPeakDerivDiff[i]->GetYaxis()->SetTitleOffset(1.4);
+    hMaxPeakDerivDiff[i]->SetStats(false);
+  }
+
+  // Derivative Location in Central Pad vs Difference between Peak Location and Derivative Max
+  for(UInt_t i = 0; i < 10; i++) {
+    TString name = Form("derivPeakDerivDiff_d%d", i);
+    hDerivPeakDerivDiff[i] = new TH2F(name, name, 128, 0, 128, 128, 0, 128);
+    hDerivPeakDerivDiff[i]->GetXaxis()->SetTitle("Derivative Peak Location [row]"); hDerivPeakDerivDiff[i]->GetXaxis()->CenterTitle();
+    hDerivPeakDerivDiff[i]->GetYaxis()->SetTitle("Diff in Derivative and Max Peak [row]"); hDerivPeakDerivDiff[i]->GetYaxis()->CenterTitle();
+    hDerivPeakDerivDiff[i]->GetYaxis()->SetTitleOffset(1.4);
+    hDerivPeakDerivDiff[i]->SetStats(false);
   }
 
   // Cross Section Histograms
@@ -1965,6 +1993,18 @@ inline void Spectra::WriteHistograms() {
   // for(UInt_t i = 0; i < 10; i++) {
   for(UInt_t i = 4; i < 6; i++) {
     hMaxPeakEDerivPeak[i]->Write();
+  }
+
+  // Max Peak Location in Central Pad vs Difference between Peak Location and Derivative Max
+  // for(UInt_t i = 0; i < 10; i++) {
+  for(UInt_t i = 4; i < 6; i++) {
+    hMaxPeakDerivDiff[i]->Write();
+  }
+
+  // Derivative Location in Central Pad vs Difference between Peak Location and Derivative Max
+  // for(UInt_t i = 0; i < 10; i++) {
+  for(UInt_t i = 4; i < 6; i++) {
+    hDerivPeakDerivDiff[i]->Write();
   }
 
   hCWTECentral->Write();
