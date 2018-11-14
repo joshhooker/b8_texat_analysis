@@ -488,7 +488,7 @@ void Spectra::Loop() {
     if(sideDet) continue;
 
     // Skip bad Kiev detectors
-//    if(siDet == 2 || siDet == 3 || siDet == 6 || siDet == 7) continue;
+    // if(siDet == 2 || siDet == 3 || siDet == 6 || siDet == 7) continue;
 
     //*****//
     // CsI //
@@ -607,7 +607,7 @@ void Spectra::Loop() {
       hit.energy = centralPadTotalEnergy[row];
       hit.height = heightOffset - hit.time*driftVelocity;
       hit.total = centralPadTotal[row];
-//      hMicroMegasCenterCumulative->Fill(centralPadColumn[row] - 3, row);
+      // hMicroMegasCenterCumulative->Fill(centralPadColumn[row] - 3, row);
       hMicroMegasCenterCumulativePosition->Fill(hit.xPosition, hit.yPosition);
       if(row < 112) {
         mmCenterBeamTotal_.push_back(hit);
@@ -673,12 +673,12 @@ Bool_t Spectra::AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std
       centerBeamSmall_.push_back(centerBeamTotal_[i]);
     }
 
-//    Int_t lastRow = centerBeamTotal_[centerBeamTotal_.size() - 1].row;
-//    auto *fitBeam = new HoughTrack();
-//    fitBeam->AddTrack(centerBeamTotal_, siDet, siQuad);
-//    Double_t minDist = fitBeam->Fit();
-//    std::vector<Double_t> parsBeam = fitBeam->GetPars();
-//    delete fitBeam;
+    // Int_t lastRow = centerBeamTotal_[centerBeamTotal_.size() - 1].row;
+    // auto *fitBeam = new HoughTrack();
+    // fitBeam->AddTrack(centerBeamTotal_, siDet, siQuad);
+    // Double_t minDist = fitBeam->Fit();
+    // std::vector<Double_t> parsBeam = fitBeam->GetPars();
+    // delete fitBeam;
 
     Int_t lastRow = centerBeamSmall_[centerBeamSmall_.size() - 1].row;
     auto *fitBeam = new HoughTrack();
@@ -700,7 +700,8 @@ Bool_t Spectra::AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std
     Bool_t singleColumn = CenterOnlyOneColumn(centerBeamTotal_);
     if(!singleColumn) return true;
 
-    std::vector<mmTrack> averageTrack_ = GetRunningEnergyAverageThree(centerBeamTotal_);
+    // std::vector<mmTrack> averageTrack_ = GetRunningEnergyAverageThree(centerBeamTotal_);
+    std::vector<mmTrack> averageTrack_ = GetRunningEnergyAverageFive(centerBeamTotal_);
     DrawCenterEnergyRunningAverageCanvas(totalCenterEnergyRunningCanvas, centerBeamTotal_, averageTrack_);
     totalCenterEnergyRunningCanvas++;
 
@@ -1235,11 +1236,14 @@ std::vector<mmTrack> Spectra::GetRunningEnergyAverageThree(std::vector<mmTrack> 
 std::vector<mmTrack> Spectra::GetRunningEnergyAverageFive(std::vector<mmTrack> centerMatched_) {
   std::vector<mmTrack> newTrack_;
   newTrack_.push_back(centerMatched_[0]);
-  for(UInt_t i = 1; i < centerMatched_.size() - 2; i++) {
-    Double_t avgEnergy = (centerMatched_[i - 1].energy + centerMatched_[i].energy + centerMatched_[i + 1].energy)/3.;
+  newTrack_.push_back(centerMatched_[1]);
+  for(UInt_t i = 2; i < centerMatched_.size() - 3; i++) {
+    Double_t avgEnergy = (centerMatched_[i - 2].energy + centerMatched_[i - 1].energy +
+        centerMatched_[i].energy + centerMatched_[i + 1].energy + centerMatched_[i + 2].energy)/5.;
     newTrack_.push_back(centerMatched_[i]);
     newTrack_[i].energy = avgEnergy;
   }
+  newTrack_.push_back(centerMatched_[centerMatched_.size() - 2]);
   newTrack_.push_back(centerMatched_[centerMatched_.size() - 1]);
 
   return newTrack_;
@@ -1513,8 +1517,8 @@ void Spectra::ChainStripMatchingTimeSlopeFit(std::vector<mmTrack> &chainStripMat
 
   hChain->SetName(Form("hChain_%lld", entry));
   hStrip->SetName(Form("hStrip_%lld", entry));
-//  hChain->Write();
-//  hStrip->Write();
+  // hChain->Write();
+  // hStrip->Write();
 
   Double_t chainP0 = fitChain->GetParameter(0);
   Double_t chainP1 = fitChain->GetParameter(1);
@@ -1599,7 +1603,7 @@ void Spectra::ChainStripMatchingTimeSlopeHough(std::vector<mmTrack> &chainStripM
         chainD/sin(chainTheta*M_PI/180.);
     chainTime *= 40.;
     for(UInt_t j = 0; j < strip.size(); j++) {
-//      Double_t stripTime = strip[j].row*stripP1 + stripP0;
+      // Double_t stripTime = strip[j].row*stripP1 + stripP0;
       Double_t stripTime = -(cos(stripTheta*M_PI/180.)/sin(stripTheta*M_PI/180.))*strip[j].row +
           stripD/sin(stripTheta*M_PI/180.);
       stripTime *= 40.;

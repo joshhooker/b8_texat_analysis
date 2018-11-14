@@ -1883,18 +1883,18 @@ inline void Spectra::WriteHistograms() {
   hMicroMegasCenterHeight->Write();
 
   // Forward Si Detectors
-//  for(UInt_t i = 0; i < 10; i++) {
-//    hSiEForwardDet[i]->Write();
-//    hSiTForwardDet[i]->Write();
-//    hSiEForwardDetCal[i]->Write();
-//    for (int j = 0; j < 4; j++) {
-//      hSiEForward[i][j]->Write();
-//      hSiEForwardCal[i][j]->Write();
-//      hSiTForward[i][j]->Write();
-//    }
-//    hCsIEForward[i]->Write();
-//    hCsITForward[i]->Write();
-//  }
+  // for(UInt_t i = 0; i < 10; i++) {
+    // hSiEForwardDet[i]->Write();
+    // hSiTForwardDet[i]->Write();
+    // hSiEForwardDetCal[i]->Write();
+    // for (int j = 0; j < 4; j++) {
+      // hSiEForward[i][j]->Write();
+      // hSiEForwardCal[i][j]->Write();
+      // hSiTForward[i][j]->Write();
+    // }
+    // hCsIEForward[i]->Write();
+    // hCsITForward[i]->Write();
+  // }
 
   // Forward CsI Energy vs Time
   // for(UInt_t i = 0; i < 10; i++) {
@@ -1923,47 +1923,47 @@ inline void Spectra::WriteHistograms() {
     // hHoughAngle[i]->Write();
   // }
 
-    // Forward Vertex vs Si Energy
-//  for(UInt_t i = 0; i < 10; i++) {
-//    hVertexSiEForward[i]->Write();
-//    hVertexSiEForwardCal[i]->Write();
-//    hVertexSiEForwardCalTotal[i]->Write();
-//  }
-//  hVertexSiETotalRegion3->Write();
-//  hVertexCMERegion3->Write();
+  // Forward Vertex vs Si Energy
+  // for(UInt_t i = 0; i < 10; i++) {
+    // hVertexSiEForward[i]->Write();
+    // hVertexSiEForwardCal[i]->Write();
+    // hVertexSiEForwardCalTotal[i]->Write();
+  // }
+  // hVertexSiETotalRegion3->Write();
+  // hVertexCMERegion3->Write();
 
   // Forward Angle vs Si Energy
-//  for(UInt_t i = 0; i < 10; i++) {
-//    hAngleEForward[i]->Write();
-//    hAngleEForwardCal[i]->Write();
-//    hAngleEForwardCalTotal[i]->Write();
-//    hAngleEForwardProtonEnergy[i]->Write();
-//    hAngleEForwardCMEnergy[i]->Write();
-//  }
+  // for(UInt_t i = 0; i < 10; i++) {
+    // hAngleEForward[i]->Write();
+    // hAngleEForwardCal[i]->Write();
+    // hAngleEForwardCalTotal[i]->Write();
+    // hAngleEForwardProtonEnergy[i]->Write();
+    // hAngleEForwardCMEnergy[i]->Write();
+  // }
 
   // Forward Vertex vs Angle
-//  for(UInt_t i = 0; i < 10; i++) {
-//    hVertexAngleForward[i]->Write();
-//  }
+  // for(UInt_t i = 0; i < 10; i++) {
+    // hVertexAngleForward[i]->Write();
+  // }
 
   // Time vs Column/Strip Number Forward Detectors
-//  for(UInt_t i = 0; i < 10; i++) {
-//    for(UInt_t j = 0; j < 4; j++) {
-//      hTimeChainForward[i][j]->Write();
-//      hTimeStripForward[i][j]->Write();
-//    }
-//  }
+  // for(UInt_t i = 0; i < 10; i++) {
+    // for(UInt_t j = 0; j < 4; j++) {
+      // hTimeChainForward[i][j]->Write();
+      // hTimeStripForward[i][j]->Write();
+    // }
+  // }
 
   // Time vs Central Row Forward Detectors
-//  for(UInt_t i = 0; i < 10; i++) {
-//    hTimeCentralForward[i]->Write();
-//  }
+  // for(UInt_t i = 0; i < 10; i++) {
+    // hTimeCentralForward[i]->Write();
+  // }
 
   // Forward Wall XZ Hit Positions
-//  hHitPositionsXZForward->Write();
-//  for(UInt_t i = 0; i < 10; i++) {
-//    hHitPositionsXZForwardInd[i]->Write();
-//  }
+  // hHitPositionsXZForward->Write();
+  // for(UInt_t i = 0; i < 10; i++) {
+    // hHitPositionsXZForwardInd[i]->Write();
+  // }
 
   // Max Peak Location Central Pad vs Si E Forward Wall
   // for(UInt_t i = 0; i < 10; i++) {

@@ -35,6 +35,6 @@ foreach(_script ${SCRIPTS})
 endforeach()
 
 add_executable(b8_texat_analysis
-        Spectra.C Hough2D.C HoughTrack.C)
+        Spectra.cpp Hough2D.cpp HoughTrack.cpp)
 
 target_link_libraries(b8_texat_analysis ${ROOT_LIBRARIES})
