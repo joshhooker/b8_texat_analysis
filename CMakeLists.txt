@@ -37,13 +37,13 @@ foreach(_script ${SCRIPTS})
 endforeach()
 
 IF(EXISTS "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/compile_commands.json")
-    EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E copy
         ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/compile_commands.json
         ${PROJECT_SOURCE_DIR}/compile_commands.json
     )
 ENDIF()
 
 add_executable(b8_texat_analysis
-        Spectra.cpp Hough2D.cpp HoughTrack.cpp)
+  Spectra.cpp Hough2D.cpp HoughTrack.cpp EnergyLoss.cpp)
 
 target_link_libraries(b8_texat_analysis ${ROOT_LIBRARIES})

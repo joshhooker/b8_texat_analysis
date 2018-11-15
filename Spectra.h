@@ -283,13 +283,13 @@ private:
 
   void InitCanvas();
 
-  // For central pads
+  // Draw Central Pads Energy
   void DrawCenterEnergyCanvas(Int_t count, std::vector<mmCenter> centerMatched_, std::vector<mmTrack> centerBeamTotal_);
   Int_t totalCenterEnergyCanvas;
   Int_t centerEnergyCanvasNum, centerEnergyCanvasXYNum, centerEnergyCanvasXNum, centerEnergyCanvasYNum;
   TCanvas* centerEnergyCanvas[5];
 
-  // Beam track
+  // Draw Beam Track
   void DrawCenterBeamCanvas(Int_t count, std::vector<mmTrack> centerBeamTrack_, std::vector<Double_t> pars,
       Int_t lastRow);
   Int_t totalCenterBeamCanvas;
@@ -302,18 +302,24 @@ private:
   Int_t centerNoiseCanvasNum, centerNoiseCanvasXYNum, centerNoiseCanvasXNum, centerNoiseCanvasYNum;
   TCanvas* centerNoiseCanvas[10];
 
-  // Draw central pad raw energy vs running average energy
+  // Draw Central Pad Raw Energy vs Running Average Energy
   void DrawCenterEnergyRunningAverageCanvas(Int_t count, std::vector<mmTrack> rawTrack_,
                                              std::vector<mmTrack> averageTrack_);
   Int_t totalCenterEnergyRunningCanvas;
   Int_t centerEnergyRunningCanvasNum, centerEnergyRunningCanvasXYNum, centerEnergyRunningCanvasXNum, centerEnergyRunningCanvasYNum;
   TCanvas* centerEnergyRunningCanvas[5];
 
-  // Draw three and five point derivatives with central region with respect to energy
-  void DrawCenterEnergyDeriv(Int_t count, std::vector<centerDeriv> threePoint_, std::vector<centerDeriv> fivePoint_);
+  // Draw Three and Five Point Derivatives with Central Region with Respect to Energy
+  void DrawCenterEnergyDerivCanvas(Int_t count, std::vector<centerDeriv> threePoint_, std::vector<centerDeriv> fivePoint_);
   Int_t totalCenterEnergyDerivCanvas;
   Int_t centerEnergyDerivCanvasNum, centerEnergyDerivCanvasXYNum, centerEnergyDerivCanvasXNum, centerEnergyDerivCanvasYNum;
   TCanvas* centerEnergyDerivCanvas[5];
+
+  // Draw Linear Fit of Central Regions
+  void DrawCenterBeamLinearCanvas(Int_t count, std::vector<mmTrack> centerMatched_, std::vector<Double_t> parsBeam, std::vector<Double_t> parsRecoil);
+  Int_t totalCenterBeamLinearCanvas;
+  Int_t centerBeamLinearCanvasNum, centerBeamLinearCanvasXYNum, centerBeamLinearCanvasXNum, centerBeamLinearCanvasYNum;
+  TCanvas* centerBeamLinearCanvas[5];
 
   void WriteCanvas();
 
@@ -358,6 +364,7 @@ private:
   std::vector<centerDeriv> CenterEnergyThreePointDeriv(std::vector<mmTrack> centerMatched_);
   std::vector<centerDeriv> CenterEnergyFivePointDeriv(std::vector<mmTrack> centerMatched_);
   std::pair<Int_t, Int_t> CenterGetDerivMax(std::vector<centerDeriv> threePoint_, std::vector<centerDeriv> fivePoint_);
+  std::vector<Double_t> FitCenterPadsLinear(std::vector<mmTrack> centerMatched_, Int_t vertexRow);
 
   // Side Functions
   void ChainStripMatch(std::vector<mmTrack> &chainStripMatched, std::vector<mmTrack> &chainStripRaw,
@@ -416,6 +423,8 @@ private:
   Double_t siYPosForward;
   Double_t gasPositionResolution;
   std::pair<Double_t, Double_t> mmColumnSize[6];
+  Double_t padError;
+  Double_t padErrorTwoColumns;
 
   EnergyLoss *boronMethane;
   EnergyLoss *protonMethane;
@@ -861,12 +870,7 @@ inline void Spectra::InitChannelMap() {
   MM_Map_Asad2_Aget0[Aget_Map[0]] = 28;
   MM_Map_Asad2_Aget0[Aget_Map[1]] = 29;
   MM_Map_Asad2_Aget0[Aget_Map[2]] = 30;
-  MM_Map_Asad2_Aget0[Aget_Map[3]] = 31;
-  // j = 31;
-  // for(Int_t i = 0; i < 32; i++) {
-  //   MM_Map_Asad2_Aget0[Aget_Map[i]] = j;
-  //   j--;
-  // }
+  MM_Map_Asad2_Aget0[Aget_Map[3]] = 31; 
   // Chains
   MM_Map_Asad2_Aget0[Aget_Map[35]] = 32;
   MM_Map_Asad2_Aget0[Aget_Map[34]] = 33;
@@ -900,11 +904,6 @@ inline void Spectra::InitChannelMap() {
   MM_Map_Asad2_Aget0[Aget_Map[62]] = 61;
   MM_Map_Asad2_Aget0[Aget_Map[61]] = 62;
   MM_Map_Asad2_Aget0[Aget_Map[60]] = 63;
-  // j = 32;
-  // for(Int_t i = 32; i < 64; i++) {
-  //   MM_Map_Asad2_Aget0[Aget_Map[i]] = j;
-  //   j++;
-  // }
 
   // Asad2_Aget1 (Beam left)
   // Strips
@@ -940,11 +939,6 @@ inline void Spectra::InitChannelMap() {
   MM_Map_Asad2_Aget1[Aget_Map[1]] = 61;
   MM_Map_Asad2_Aget1[Aget_Map[2]] = 62;
   MM_Map_Asad2_Aget1[Aget_Map[3]] = 63;
-  // j = 63;
-  // for(Int_t i = 0; i < 32; i++) {
-  //   MM_Map_Asad2_Aget1[Aget_Map[i]] = j;
-  //   j--;
-  // }
   // Chains
   MM_Map_Asad2_Aget1[Aget_Map[35]] = 0;
   MM_Map_Asad2_Aget1[Aget_Map[34]] = 1;
@@ -978,11 +972,6 @@ inline void Spectra::InitChannelMap() {
   MM_Map_Asad2_Aget1[Aget_Map[62]] = 29;
   MM_Map_Asad2_Aget1[Aget_Map[61]] = 30;
   MM_Map_Asad2_Aget1[Aget_Map[60]] = 31;
-  // j = 0;
-  // for(Int_t i = 32; i < 64; i++) {
-  //   MM_Map_Asad2_Aget1[Aget_Map[i]] = j;
-  //   j++;
-  // }
 
   // Asad2_Aget2
   j = 63;
@@ -1501,6 +1490,18 @@ inline void Spectra::InitCanvas() {
     centerEnergyDerivCanvas[i]->Divide(centerEnergyDerivCanvasXNum, centerEnergyDerivCanvasYNum);
     centerEnergyDerivCanvas[i]->Update();
   }
+
+  totalCenterBeamLinearCanvas = 0;
+  centerBeamLinearCanvasNum = static_cast<Int_t>(sizeof(centerBeamLinearCanvas)/sizeof(centerBeamLinearCanvas[0]));
+  centerBeamLinearCanvasXNum = 4;
+  centerBeamLinearCanvasYNum = 4;
+  centerBeamCanvasXYNum = centerBeamLinearCanvasXNum*centerBeamLinearCanvasYNum;
+  for(Int_t i = 0; i < centerBeamLinearCanvasNum; i++) {
+    TString name = Form("centerBeamLinear%d", i + 1);
+    centerBeamLinearCanvas[i] = new TCanvas(name, name, 1600, 1200);
+    centerBeamLinearCanvas[i]->Divide(centerBeamLinearCanvasXNum, centerBeamLinearCanvasYNum);
+    centerBeamLinearCanvas[i]->Update();
+  }
 }
 
 inline void Spectra::DrawCenterEnergyCanvas(Int_t count, std::vector<mmCenter> centerMatched_,
@@ -1704,7 +1705,7 @@ inline void Spectra::DrawCenterEnergyRunningAverageCanvas(Int_t count, std::vect
   }
 }
 
-inline void Spectra::DrawCenterEnergyDeriv(Int_t count, std::vector<centerDeriv> threePoint_,
+inline void Spectra::DrawCenterEnergyDerivCanvas(Int_t count, std::vector<centerDeriv> threePoint_,
                                            std::vector<centerDeriv> fivePoint_) {
   TMultiGraph* mgColumn = new TMultiGraph();
   TGraph* graphThree = new TGraph();
@@ -1736,6 +1737,12 @@ inline void Spectra::DrawCenterEnergyDeriv(Int_t count, std::vector<centerDeriv>
     mgColumn->Draw("a");
     centerEnergyDerivCanvas[histNum]->Update();
   }
+}
+
+inline void Spectra::DrawCenterBeamLinearCanvas(Int_t count, std::vector<mmTrack> center_, std::vector<Double_t> parsBeam,
+                                                std::vector<Double_t> parsRecoil) {
+
+
 }
 
 inline void Spectra::InitSiEForwardCalibration() {
@@ -1870,6 +1877,10 @@ inline void Spectra::InitVariables() {
   mmColumnSize[3] = std::make_pair(0, 3.5);
   mmColumnSize[4] = std::make_pair(3.5, 7.0);
   mmColumnSize[5] = std::make_pair(7.0, 10.5);
+
+  // Pad Error for Fitting of Central Pads
+  padError = 1.75; // in mm
+  padErrorTwoColumns = 0.2; // in mm
 }
 
 inline void Spectra::WriteHistograms() {

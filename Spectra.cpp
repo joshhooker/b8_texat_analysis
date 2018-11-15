@@ -709,7 +709,7 @@ Bool_t Spectra::AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std
     // std::vector<centerDeriv> fivePoint_ = CenterEnergyFivePointDeriv(centerBeamTotal_);
     std::vector<centerDeriv> threePoint_ = CenterEnergyThreePointDeriv(averageTrack_);
     std::vector<centerDeriv> fivePoint_ = CenterEnergyFivePointDeriv(averageTrack_);
-    DrawCenterEnergyDeriv(totalCenterEnergyDerivCanvas, threePoint_, fivePoint_);
+    DrawCenterEnergyDerivCanvas(totalCenterEnergyDerivCanvas, threePoint_, fivePoint_);
     totalCenterEnergyDerivCanvas++;
 
     std::pair<Int_t, Int_t> derivPeak = CenterGetDerivMax(threePoint_, fivePoint_);
