@@ -14,3 +14,4 @@ calcExcitationEnergy/
 cmake-build-debug/
 compareGrisha/
 pictures/
+compile_commands.json

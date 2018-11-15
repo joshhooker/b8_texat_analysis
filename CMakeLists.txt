@@ -3,6 +3,8 @@ project(b8_texat_analysis)
 
 set(CMAKE_CXX_STANDARD 11)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O3")
 
@@ -33,6 +35,13 @@ foreach(_script ${SCRIPTS})
         COPYONLY
     )
 endforeach()
+
+IF(EXISTS "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/compile_commands.json")
+    EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/compile_commands.json
+        ${PROJECT_SOURCE_DIR}/compile_commands.json
+    )
+ENDIF()
 
 add_executable(b8_texat_analysis
         Spectra.cpp Hough2D.cpp HoughTrack.cpp)
