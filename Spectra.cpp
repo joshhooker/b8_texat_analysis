@@ -832,23 +832,23 @@ Bool_t Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::v
 
   // Find dE for left and right regions
   dE = 0.;
-  Int_t count = 0;
+  Int_t dECount = 0;
   if(left) {
     for(auto mm: leftStripReduced_) {
       if(mm.row < 55) continue;
       dE += mm.energy;
-      count++;
+      dECount++;
     }
-    dE /= static_cast<Double_t>(count);
+    dE /= static_cast<Double_t>(dECount);
     // dE /= static_cast<Double_t>(leftStripReduced_.size());
   }
   else if(right) {
     for(auto mm : rightStripReduced_) {
       if(mm.row < 55) continue;
       dE += mm.energy;
-      count++;
+      dECount++;
     }
-    dE /= static_cast<Double_t>(count);
+    dE /= static_cast<Double_t>(dECount);
     // dE /= static_cast<Double_t>(rightStripReduced_.size());
   }
 
