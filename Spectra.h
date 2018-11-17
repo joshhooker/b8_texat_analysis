@@ -15,6 +15,7 @@
 #include <TFile.h>
 #include <TGraph.h>
 #include <TGraph2D.h>
+#include <TGraphErrors.h>
 #include <TH1.h>
 #include <TH2.h>
 #include <TH3.h>
@@ -154,6 +155,8 @@ private:
 
   TCutG *cwtE_CentralCut;
   TCutG *cwtE_CentralProtonCut;
+
+  TCutG *siCsiEForwardCut[10];
 
 // Histograms
 private:
@@ -316,7 +319,8 @@ private:
   TCanvas* centerEnergyDerivCanvas[5];
 
   // Draw Linear Fit of Central Regions
-  void DrawCenterBeamLinearCanvas(Int_t count, std::vector<mmTrack> centerMatched_, std::vector<Double_t> parsBeam, std::vector<Double_t> parsRecoil);
+  void DrawCenterBeamLinearCanvas(Int_t count, std::vector<mmTrack> centerMatched_, std::vector<Double_t> parsBeam, std::vector<Double_t> parsRecoil,
+      Int_t vertexRow);
   Int_t totalCenterBeamLinearCanvas;
   Int_t centerBeamLinearCanvasNum, centerBeamLinearCanvasXYNum, centerBeamLinearCanvasXNum, centerBeamLinearCanvasYNum;
   TCanvas* centerBeamLinearCanvas[5];
@@ -1495,7 +1499,7 @@ inline void Spectra::InitCanvas() {
   centerBeamLinearCanvasNum = static_cast<Int_t>(sizeof(centerBeamLinearCanvas)/sizeof(centerBeamLinearCanvas[0]));
   centerBeamLinearCanvasXNum = 4;
   centerBeamLinearCanvasYNum = 4;
-  centerBeamCanvasXYNum = centerBeamLinearCanvasXNum*centerBeamLinearCanvasYNum;
+  centerBeamLinearCanvasXYNum = centerBeamLinearCanvasXNum*centerBeamLinearCanvasYNum;
   for(Int_t i = 0; i < centerBeamLinearCanvasNum; i++) {
     TString name = Form("centerBeamLinear%d", i + 1);
     centerBeamLinearCanvas[i] = new TCanvas(name, name, 1600, 1200);
@@ -1740,9 +1744,37 @@ inline void Spectra::DrawCenterEnergyDerivCanvas(Int_t count, std::vector<center
 }
 
 inline void Spectra::DrawCenterBeamLinearCanvas(Int_t count, std::vector<mmTrack> center_, std::vector<Double_t> parsBeam,
-                                                std::vector<Double_t> parsRecoil) {
+                                                std::vector<Double_t> parsRecoil, Int_t vertexRow) {
+  TMultiGraph* mgCenter = new TMultiGraph();
+  TGraphErrors* graphCenter = new TGraphErrors();
+  TGraph* graphBeam = new TGraph();
+  TGraph* graphRecoil = new TGraph();
 
+  Int_t i = 0;
+  for(auto mm : center_) {
+    if(mm.total == 1) {
+      graphCenter->SetPoint(i, mm.row, mm.xPosition);
+      graphCenter->SetPointError(i, 0, padError);
+    }
+    else if(mm.total == 2) {
+      graphCenter->SetPoint(i, mm.row, mm.xPosition);
+      graphCenter->SetPointError(i, 0, padErrorTwoColumns);
+    }
+    i++;
+  }
 
+  if(count < centerBeamLinearCanvasNum*centerBeamLinearCanvasXYNum) {
+    Int_t histNum = count/centerBeamCanvasXYNum;
+    TString name = Form("Event_%lld", entry);
+    mgCenter->SetTitle(name);
+    centerBeamLinearCanvas[histNum]->cd(count + 1 - histNum*centerBeamLinearCanvasXYNum);
+    if(graphCenter->GetN() > 0) mgCenter->Add(graphCenter);
+    mgCenter->GetXaxis()->SetLimits(0, 128);
+    mgCenter->SetMinimum(-15);
+    mgCenter->SetMaximum(15);
+    mgCenter->Draw("a");
+    centerBeamLinearCanvas[histNum]->Update();
+  }
 }
 
 inline void Spectra::InitSiEForwardCalibration() {
@@ -1880,7 +1912,7 @@ inline void Spectra::InitVariables() {
 
   // Pad Error for Fitting of Central Pads
   padError = 1.75; // in mm
-  padErrorTwoColumns = 0.2; // in mm
+  padErrorTwoColumns = 0.5; // in mm
 }
 
 inline void Spectra::WriteHistograms() {
@@ -1913,14 +1945,14 @@ inline void Spectra::WriteHistograms() {
   // }
 
   // Forward Si Energy vs CsI Energy
-  // for(UInt_t i = 0; i < 10; i++) {
-    // hSiCsIEForwardDet[i]->Write();
-    // hSiCsIEForwardDetCal[i]->Write();
+  for(UInt_t i = 0; i < 10; i++) {
+    hSiCsIEForwardDet[i]->Write();
+    hSiCsIEForwardDetCal[i]->Write();
     //  for(UInt_t j = 0; j < 4; j++) {
       //  hSiCsIEForward[i][j]->Write();
       //  hSiCsIEForwardCal[i][j]->Write();
     //  }
-  // }
+   }
 
   // Forward dE vs Si Energy
   for(UInt_t i = 0; i < 10; i++) {
@@ -1978,66 +2010,70 @@ inline void Spectra::WriteHistograms() {
 
   // Max Peak Location Central Pad vs Si E Forward Wall
   // for(UInt_t i = 0; i < 10; i++) {
-  for(UInt_t i = 4; i < 6; i++) {
-    hMaxPeakSiE[i]->Write();
-  }
+  // for(UInt_t i = 4; i < 6; i++) {
+    // hMaxPeakSiE[i]->Write();
+  // }
 
   // Max Peak Location Central Pad vs Average E Forward Wall
   // for(UInt_t i = 0; i < 10; i++) {
-  for(UInt_t i = 4; i < 6; i++) {
-    hMaxPeakAvgPeakE[i]->Write();
-  }
+  // for(UInt_t i = 4; i < 6; i++) {
+    // hMaxPeakAvgPeakE[i]->Write();
+  // }
 
   // Max Peak Energy in Central Pad vs Average Peak Energy Forward Detectors
   // for(UInt_t i = 0; i < 10; i++) {
-  for(UInt_t i = 4; i < 6; i++) {
-    hMaxPeakEAvgPeakE[i]->Write();
-  }
+  // for(UInt_t i = 4; i < 6; i++) {
+    // hMaxPeakEAvgPeakE[i]->Write();
+  // }
 
   // Average Peak Energy vs Si E Forward Detectors
   // for(UInt_t i = 0; i < 10; i++) {
-  for(UInt_t i = 4; i < 6; i++) {
-    hAvgPeakESiE[i]->Write();
-  }
+  // for(UInt_t i = 4; i < 6; i++) {
+    // hAvgPeakESiE[i]->Write();
+  // }
 
   // Max Peak Energy in Central Pad vs Derivative around Peak Forward Detectors
   // for(UInt_t i = 0; i < 10; i++) {
-  for(UInt_t i = 4; i < 6; i++) {
-    hMaxPeakEDerivPeak[i]->Write();
-  }
+  // for(UInt_t i = 4; i < 6; i++) {
+    // hMaxPeakEDerivPeak[i]->Write();
+  // }
 
   // Max Peak Location in Central Pad vs Difference between Peak Location and Derivative Max
   // for(UInt_t i = 0; i < 10; i++) {
-  for(UInt_t i = 4; i < 6; i++) {
-    hMaxPeakDerivDiff[i]->Write();
-  }
+  // for(UInt_t i = 4; i < 6; i++) {
+    // hMaxPeakDerivDiff[i]->Write();
+  // }
 
   // Derivative Location in Central Pad vs Difference between Peak Location and Derivative Max
   // for(UInt_t i = 0; i < 10; i++) {
-  for(UInt_t i = 4; i < 6; i++) {
-    hDerivPeakDerivDiff[i]->Write();
-  }
+  // for(UInt_t i = 4; i < 6; i++) {
+    // hDerivPeakDerivDiff[i]->Write();
+  // }
 
-  hCWTECentral->Write();
-  hCWTSiE->Write();
+  // hCWTECentral->Write();
+  // hCWTSiE->Write();
 }
 
 inline void Spectra::WriteCanvas() {
-  for(Int_t i = 0; i < centerEnergyCanvasNum; i++) {
-    centerEnergyCanvas[i]->Write();
-  }
+  // for(Int_t i = 0; i < centerEnergyCanvasNum; i++) {
+    // centerEnergyCanvas[i]->Write();
+  // }
 
-  for(Int_t i = 0; i < centerBeamCanvasNum; i++) {
-    centerBeamCanvas[i]->Write();
-  }
+  // for(Int_t i = 0; i < centerBeamCanvasNum; i++) {
+    // centerBeamCanvas[i]->Write();
+  // }
 
-  for(Int_t i = 0; i < centerEnergyRunningCanvasNum; i++) {
-    centerEnergyRunningCanvas[i]->Write();
-  }
+  // for(Int_t i = 0; i < centerEnergyRunningCanvasNum; i++) {
+    // centerEnergyRunningCanvas[i]->Write();
+  // }
 
-  for(Int_t i = 0; i < centerEnergyDerivCanvasNum; i++) {
-    centerEnergyDerivCanvas[i]->Write();
-  }
+  // for(Int_t i = 0; i < centerEnergyDerivCanvasNum; i++) {
+    // centerEnergyDerivCanvas[i]->Write();
+  // }
+
+  // for(Int_t i = 0; i < centerBeamLinearCanvasNum; i++) {
+    // centerBeamLinearCanvas[i]->Write();
+  // }
 }
 
 inline void Spectra::InitTree() {

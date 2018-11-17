@@ -139,6 +139,13 @@ void Spectra::Loop() {
   cwtE_CentralCut = (TCutG*)cutFile->Get("cwtE_CentralCut");
   cwtE_CentralProtonCut = (TCutG*)cutFile->Get("cwtE_CentralProtonCut");
 
+  // Cut on raw Si E and CsI E (channels)
+  siCsiEForwardCut[0] = (TCutG*)cutFile->Get("siCsiEForward_d0Cut");
+  siCsiEForwardCut[1] = (TCutG*)cutFile->Get("siCsiEForward_d1Cut");
+  siCsiEForwardCut[4] = (TCutG*)cutFile->Get("siCsiEForward_d4Cut");
+  siCsiEForwardCut[5] = (TCutG*)cutFile->Get("siCsiEForward_d5Cut");
+  siCsiEForwardCut[9] = (TCutG*)cutFile->Get("siCsiEForward_d9Cut");
+
   cutFile->Close();
 
   InitChannelMap();
@@ -159,7 +166,7 @@ void Spectra::Loop() {
   printf("Starting Main Loop\n");
 
   Long64_t nbytes = 0, nb = 0;
-  // for(Long64_t jentry = 0; jentry < 100000; jentry++) {
+  // for(Long64_t jentry = 0; jentry < 5000; jentry++) {
   // for(Long64_t jentry = 4747; jentry < 4748; jentry++) {
   for(Long64_t jentry = 0; jentry < nentries; jentry++) {
     Long64_t ientry = LoadTree(jentry);
@@ -488,7 +495,7 @@ void Spectra::Loop() {
     if(sideDet) continue;
 
     // Skip bad Kiev detectors
-    // if(siDet == 2 || siDet == 3 || siDet == 6 || siDet == 7) continue;
+    if(siDet == 2 || siDet == 3 || siDet == 6 || siDet == 7) continue;
 
     //*****//
     // CsI //
@@ -524,7 +531,13 @@ void Spectra::Loop() {
       hSumCsIEForward[siDet][siQuad]->Fill(siEnergy + csiEnergy, csiEnergy);
     }
 
-    totalEnergy = siEnergyCal + csiEnergyCal;
+    if(siCsiEForwardCut[siDet]->IsInside(siEnergy, csiEnergy)) {
+      hSiCsIEForwardDet[siDet]->Fill(siEnergy, csiEnergy);
+      totalEnergy = siEnergyCal + csiEnergyCal;
+    }
+    else {
+      totalEnergy = siEnergyCal;
+    }
 
     //************//
     // Micromegas //
@@ -661,7 +674,10 @@ Bool_t Spectra::AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std
   hdEEForwardCal[siDet]->Fill(siEnergyCal, dE);
   hdEEForwardCalTotal[siDet]->Fill(totalEnergy, dE);
 
-  if(!dEEForwardCut[siDet]->IsInside(siEnergy, dE)) return false;
+  if(dE < 200) return false;
+  if(siEnergyCal < 1000) return false;
+
+  // if(!dEEForwardCut[siDet]->IsInside(siEnergy, dE)) return false;
 
   if(centerBeamTotal_.size() > 10) {
     // Make reduced beam (70% of beam track)
@@ -698,7 +714,11 @@ Bool_t Spectra::AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std
     hMaxPeakEDerivPeak[siDet]->Fill(maxPeakEnergy, maxPeakDeriv);
 
     Bool_t singleColumn = CenterOnlyOneColumn(centerBeamTotal_);
-    if(!singleColumn) return true;
+    // if(!singleColumn) return true;
+
+    std::vector<Double_t> parsRecoil;
+    DrawCenterBeamLinearCanvas(totalCenterBeamLinearCanvas, centerBeamTotal_, parsBeam, parsRecoil, 0);
+    totalCenterBeamLinearCanvas++;
 
     // std::vector<mmTrack> averageTrack_ = GetRunningEnergyAverageThree(centerBeamTotal_);
     std::vector<mmTrack> averageTrack_ = GetRunningEnergyAverageFive(centerBeamTotal_);
