@@ -1956,9 +1956,9 @@ inline void Spectra::WriteHistograms() {
 
   // Forward dE vs Si Energy
   for(UInt_t i = 0; i < 10; i++) {
-  //  hdEEForward[i]->Write();
-  //  hdEEForwardCal[i]->Write();
-    hdEEForwardCalTotal[i]->Write();
+    // hdEEForward[i]->Write();
+    hdEEForwardCal[i]->Write();
+    // hdEEForwardCalTotal[i]->Write();
   }
 
   // Forward Hough Angle

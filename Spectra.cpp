@@ -508,10 +508,11 @@ void Spectra::Loop() {
     csiTime = 0.;
     for(auto csi : csiDetect_) {
       if(csi.detect == siDet) {
-        csiEnergy = csi.energy;
         csiTime = csi.time;
         if(csiTime < 11000 || csiTime > 12250) continue;
         punchthrough = true;
+        if(!siCsiEForwardCut[siDet]->IsInside(siEnergy, csi.energy)) continue;
+        csiEnergy = csi.energy;
         if(!sideDet) {
           hCsIETForward[siDet]->Fill(csiEnergy, csiTime);
           csiEnergyCal = csiEnergy*csiEForwardCalibration[siDet].first + csiEForwardCalibration[siDet].second;
@@ -531,13 +532,7 @@ void Spectra::Loop() {
       hSumCsIEForward[siDet][siQuad]->Fill(siEnergy + csiEnergy, csiEnergy);
     }
 
-    if(siCsiEForwardCut[siDet]->IsInside(siEnergy, csiEnergy)) {
-      hSiCsIEForwardDet[siDet]->Fill(siEnergy, csiEnergy);
-      totalEnergy = siEnergyCal + csiEnergyCal;
-    }
-    else {
-      totalEnergy = siEnergyCal;
-    }
+    totalEnergy = siEnergyCal + csiEnergyCal;
 
     //************//
     // Micromegas //
@@ -662,7 +657,7 @@ Bool_t Spectra::AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std
   dE = 0.;
   Int_t totalRows = 0;
   for(auto mm : centerProton_) {
-    if(mm.row > 116 && mm.row < 124 && mm.row != 117) {
+    if(mm.row > 115 && mm.row < 124 && mm.row != 117) {
       if(mm.energy < 50) continue;
       dE += mm.energy;
       totalRows++;
@@ -837,17 +832,24 @@ Bool_t Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::v
 
   // Find dE for left and right regions
   dE = 0.;
+  Int_t count = 0;
   if(left) {
     for(auto mm: leftStripReduced_) {
+      if(mm.row < 55) continue;
       dE += mm.energy;
+      count++;
     }
-    dE /= static_cast<Double_t>(leftStripReduced_.size());
+    dE /= static_cast<Double_t>(count);
+    // dE /= static_cast<Double_t>(leftStripReduced_.size());
   }
   else if(right) {
     for(auto mm : rightStripReduced_) {
+      if(mm.row < 55) continue;
       dE += mm.energy;
+      count++;
     }
-    dE /= static_cast<Double_t>(rightStripReduced_.size());
+    dE /= static_cast<Double_t>(count);
+    // dE /= static_cast<Double_t>(rightStripReduced_.size());
   }
 
   hdEEForward[siDet]->Fill(siEnergy, dE);
