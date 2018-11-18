@@ -18,6 +18,20 @@ typedef struct csiDetect {
   Double_t time;
 } csiDetect;
 
+typedef struct protonDetect{
+  Int_t det;
+  Int_t quad;
+  Int_t siChannel;
+  Double_t siEnergy;
+  Double_t siEnergyCal;
+  Double_t siTime;
+  Double_t csiEnergy;
+  Double_t csiEnergyCal;
+  Double_t csiTime;
+  Double_t totalEnergy;
+  Bool_t punchthrough;
+} protonDetect;
+
 typedef struct mmCenter {
   Int_t column;
   Int_t row;

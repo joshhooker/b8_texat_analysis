@@ -437,102 +437,90 @@ void Spectra::Loop() {
     //*********//
 
     // Look at all Si that fired and gate
-    std::vector<siDetect> siDetectNew_;
+    std::vector<siDetect> siDetectReduced_;
     for(auto si : siDetect_) {
       hCWTSiE->Fill(si.energy, si.cwt);
-      if(si.time > 3600 && si.time < 5200) siDetectNew_.push_back(si);
+      if(si.time > 3600 && si.time < 5200) siDetectReduced_.push_back(si);
     }
 
-    // If more than 1 Si fired, get highest energy (good enough for now for (p, p))
-    siDetect highSi;
-    Double_t maxEnergy = 0.;
-    for(auto si : siDetectNew_) {
-      if(si.energy > maxEnergy) {
-        maxEnergy = si.energy;
-        highSi = si;
-      }
+    std::vector<protonDetect> protonDet_;
+    for(auto si : siDetectReduced_) {
+      // Skip bad Kiev detectors (side)
+      if(si.detect > 9) continue;
+      // Skip bad Kiev detectors (forward)
+      if(si.detect == 2 || si.detect == 3 || si.detect == 6 || si.detect == 7) continue;
+      protonDetect hit = {si.detect, si.quad, si.channel, si.energy, 0., si.time, 0., 0., 0., 0., false};
+      protonDet_.push_back(hit);
     }
 
-    siDet = highSi.detect;
-    siQuad = highSi.quad;
-    siChannel = highSi.channel;
-    siEnergy = highSi.energy;
-    siEnergyCal = 0.;
-    if(siDet < 10) {
-      siEnergyCal = siEnergy*siEForwardCalibration[siDet][siQuad].first + siEForwardCalibration[siDet][siQuad].second;
-    }
-    else {
-      siEnergyCal = siEnergy*siELeftCalibration[siDet - 10][siQuad].first + siELeftCalibration[siDet - 10][siQuad].second;
-    }
-    siTime = highSi.time;
-
-    if(siEnergyCal < 1.) continue;
-
-    if(siDet < 10) {
-      hSiEForwardDet[siDet]->Fill(siEnergy);
-      hSiEForwardDetCal[siDet]->Fill(siEnergyCal);
-      hSiTForwardDet[siDet]->Fill(siTime);
-      hSiEForward[siDet][siQuad]->Fill(siEnergy);
-      hSiEForwardCal[siDet][siQuad]->Fill(siEnergyCal);
+    for(auto &det : protonDet_) {
+      Double_t siEnergyCal = det.siEnergy*siEForwardCalibration[det.det][det.quad].first +
+          siEForwardCalibration[det.det][det.quad].second;
+      det.siEnergyCal = siEnergyCal;
+      det.totalEnergy = siEnergyCal;
     }
 
-    Bool_t left = false;
-    Bool_t central = false;
-    Bool_t right = false;
-    if(siDet == 4 || siDet == 5) { // Central detectors
-      central = true;
-    }
-    else if(siDet < 4) { // Right detectors
-      right = true;
-    }
-    else if(siDet > 5) { // Left detectors
-      left = true;
-    }
-
-    Bool_t sideDet = false;
-    if(siDet > 9) sideDet = true;
-
-    if(sideDet) continue;
-
-    // Skip bad Kiev detectors
-    if(siDet == 2 || siDet == 3 || siDet == 6 || siDet == 7) continue;
+    // Remove events only in bad detectors
+    if(protonDet_.empty()) continue;
 
     //*****//
     // CsI //
     //*****//
 
-    // Find if CsI behind Si fired
-    punchthrough = false;
-    csiEnergy = 0.;
-    csiEnergyCal = 0.;
-    csiTime = 0.;
     for(auto csi : csiDetect_) {
-      if(csi.detect == siDet) {
-        csiTime = csi.time;
-        if(csiTime < 11000 || csiTime > 12250) continue;
-        punchthrough = true;
-        if(!siCsiEForwardCut[siDet]->IsInside(siEnergy, csi.energy)) continue;
-        csiEnergy = csi.energy;
-        if(!sideDet) {
-          hCsIETForward[siDet]->Fill(csiEnergy, csiTime);
-          csiEnergyCal = csiEnergy*csiEForwardCalibration[siDet].first + csiEForwardCalibration[siDet].second;
-          hSiCsIEForwardDet[siDet]->Fill(siEnergy, csiEnergy);
-          hSiCsIEForwardDetCal[siDet]->Fill(siEnergyCal, csiEnergy);
-          hSiCsIEForward[siDet][siQuad]->Fill(siEnergy, csiEnergy);
-          hSiCsIEForwardCal[siDet][siQuad]->Fill(siEnergyCal, csiEnergy);
-        }
+      if(csi.time < 11000 || csi.time > 12250) continue;
+      for(auto &det : protonDet_) {
+        if(det.det != csi.detect) continue;
+        if(!siCsiEForwardCut[det.det]->IsInside(det.siEnergy, csi.energy)) continue;
+        Double_t csiEnergyCal = csi.energy*csiEForwardCalibration[det.det].first + csiEForwardCalibration[det.det].second;
+        det.csiEnergy = csi.energy;
+        det.csiEnergyCal = csiEnergyCal;
+        det.csiTime = csi.time;
+        det.totalEnergy += csiEnergyCal;
+        det.punchthrough = true;
       }
     }
 
-    if(punchthrough) {
-      hSumSiEForwardDet[siDet]->Fill(siEnergy + csiEnergy, siEnergy);
-      hSumSiEForward[siDet][siQuad]->Fill(siEnergy + csiEnergy, siEnergy);
+    //****************//
+    // Plot that shit //
+    //****************//
 
-      hSumCsIEForwardDet[siDet]->Fill(siEnergy + csiEnergy, csiEnergy);
-      hSumCsIEForward[siDet][siQuad]->Fill(siEnergy + csiEnergy, csiEnergy);
+    // hSiFired->Fill(protonDet_.size());
+
+    for(auto det : protonDet_) {
+      // std::cout << det.det << '\t' << det.quad << '\t' << det.siEnergyCal << std::endl;
+
+      hSiEForward[det.det][det.quad]->Fill(det.siEnergy);
+      hSiEForwardDet[det.det]->Fill(det.siEnergy);
+
+      hSiEForwardCal[det.det][det.quad]->Fill(det.siEnergyCal);
+      hSiEForwardDetCal[det.det]->Fill(det.siEnergyCal);
+
+      hSiTForward[det.det][det.quad]->Fill(det.siTime);
+      hSiTForwardDet[det.det]->Fill(det.siTime);
+
+      if(det.punchthrough) {
+        hCsiEForward[det.det]->Fill(det.csiEnergy);
+        hCsiEForwardCal[det.det]->Fill(det.csiEnergyCal);
+        hCsiTForward[det.det]->Fill(det.csiTime);
+
+        hCsiETForward[det.det]->Fill(det.csiEnergy, det.csiTime);
+
+        hSiCsiEForward[det.det][det.quad]->Fill(det.siEnergy, det.csiEnergy);
+        hSiCsiEForwardDet[det.det]->Fill(det.siEnergy, det.csiEnergy);
+
+        hSiCsiEForwardCal[det.det][det.quad]->Fill(det.siEnergyCal, det.csiEnergy);
+        hSiCsiEForwardDetCal[det.det]->Fill(det.siEnergyCal, det.csiEnergy);
+      }
+
+      hTotalEForward[det.det]->Fill(det.totalEnergy);
+
+      hSumSiEForward[det.det][det.quad]->Fill(det.totalEnergy, det.siEnergy);
+      hSumSiEForwardDet[det.det]->Fill(det.totalEnergy, det.siEnergy);
+
+      hSumCsiEForward[det.det][det.quad]->Fill(det.totalEnergy, det.csiEnergy);
+      hSumCsiEForwardDet[det.det]->Fill(det.totalEnergy, det.csiEnergy);
     }
-
-    totalEnergy = siEnergyCal + csiEnergyCal;
 
     //************//
     // Micromegas //
@@ -541,19 +529,24 @@ void Spectra::Loop() {
     // Gate on time for central pads
     std::vector<mmCenter> mmCenterMatchedReduced_;
     for(auto mm : mmCenterMatched_) {
-      Double_t time = mm.time - siTime;
+      Double_t time = mm.time;
       if(mm.row < 2) continue;
       if(mm.row < 112) {
-        if(time < 900 || time > 1600) continue;
+        if(time < 4750 || time > 6250) continue;
         if(mm.energy < 200) continue;
         hCWTECentral->Fill(mm.energy, mm.cwt);
         if(!cwtE_CentralCut->IsInside(mm.energy, mm.cwt)) continue;
         mmCenterMatchedReduced_.push_back(mm);
       }
       // These should not fire
-      else if(mm.row > 111 && (mm.column == 0 || mm.column == 5)) continue;
+      else if(mm.row > 111 && (mm.column == 0 || mm.column == 5)) {
+        if(time < 4750 || time > 6250) continue;
+        if(mm.energy < 200) continue;
+        if(!cwtE_CentralCut->IsInside(mm.energy, mm.cwt)) continue;
+        mmCenterMatchedReduced_.push_back(mm);
+      }
       else {
-        if(time > 2500) continue;
+        if(time < 4750 || time > 6250) continue;
         hCWTECentral->Fill(mm.energy, mm.cwt);
         if(!cwtE_CentralProtonCut->IsInside(mm.energy, mm.cwt)) continue;
         mmCenterMatchedReduced_.push_back(mm);
@@ -561,8 +554,8 @@ void Spectra::Loop() {
     }
 
     // Sorting mmCenterMatchedReduced_ by row and reduce noise
-    std::vector<mmCenter> mmCenterMatchedReducedNoise_;
-    if(!mmCenterMatchedReduced_.empty()) {
+     std::vector<mmCenter> mmCenterMatchedReducedNoise_;
+     if(!mmCenterMatchedReduced_.empty()) {
       std::sort(mmCenterMatchedReduced_.begin(), mmCenterMatchedReduced_.end(), sortByRowMMCenter());
       mmCenterMatchedReducedNoise_ = CenterReduceNoise(mmCenterMatchedReduced_);
     }
@@ -625,16 +618,16 @@ void Spectra::Loop() {
       }
     }
 
-    Bool_t event = false;
-    if(central) {
-      event = AnalysisForwardCentral(mmCenterMatchedReducedNoise_, mmCenterBeamTotal_, mmCenterProton_, centralPadTotalEnergy);
-    }
-    if((left || right) && !sideDet) {
-      event = AnalysisForwardSide(mmCenterMatchedReducedNoise_, mmCenterBeamTotal_, mmLeftChain_, mmLeftStrip_, mmRightChain_,
-          mmRightStrip_);
-    }
+//    Bool_t event = false;
+//    if(central) {
+//      event = AnalysisForwardCentral(mmCenterMatchedReducedNoise_, mmCenterBeamTotal_, mmCenterProton_, centralPadTotalEnergy);
+//    }
+//    if((left || right) && !sideDet) {
+//      event = AnalysisForwardSide(mmCenterMatchedReducedNoise_, mmCenterBeamTotal_, mmLeftChain_, mmLeftStrip_, mmRightChain_,
+//          mmRightStrip_);
+//    }
 
-    if(!event) continue;
+    // if(!event) continue;
 
     //  ** End of event by event analysis ** //
     FillTree();
@@ -881,6 +874,7 @@ Bool_t Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::v
 
   // Assign proton track for side regions
   std::vector<mmTrack> protonTrack;
+
   if(left) {
     protonTrack = chainStripMatchedLeft;
   }
@@ -895,7 +889,10 @@ Bool_t Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::v
 
   Double_t protonEnergy = 0.;
 
-  if(protonTrack.empty()) return false;
+  if(protonTrack.empty()) {
+    std::cout << "protonTrack Empty!" << std::endl;
+    return false;
+  }
 
   auto *fitProton = new HoughTrack();
   fitProton->AddTrack(protonTrack, siDet, siQuad);
@@ -1091,7 +1088,7 @@ std::vector<mmCenter> Spectra::CenterReduceNoise(std::vector<mmCenter> center) {
   std::vector<Int_t> rows[128];
 
   for(auto mm : center) {
-    if(mm.row > 111) {
+    if(mm.row > 111 && mm.column != 0 && mm.column != 5) {
       mmNew.push_back(mm);
     }
     else {
