@@ -665,6 +665,10 @@ Bool_t Spectra::AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std
   }
   dE /= static_cast<Double_t>(totalRows);
 
+  for(auto mm : centerMatched_) {
+    hTimeCentraldEForward[siDet]->Fill(mm.row, mm.time - siTime);
+  }
+
   hdEEForward[siDet]->Fill(siEnergy, dE);
   hdEEForwardCal[siDet]->Fill(siEnergyCal, dE);
   hdEEForwardCalTotal[siDet]->Fill(totalEnergy, dE);
@@ -835,7 +839,7 @@ Bool_t Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::v
   Int_t dECount = 0;
   if(left) {
     for(auto mm: leftStripReduced_) {
-      if(mm.row < 55) continue;
+      if(mm.row < 60) continue;
       dE += mm.energy;
       dECount++;
     }
@@ -844,7 +848,7 @@ Bool_t Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::v
   }
   else if(right) {
     for(auto mm : rightStripReduced_) {
-      if(mm.row < 55) continue;
+      if(mm.row < 60) continue;
       dE += mm.energy;
       dECount++;
     }

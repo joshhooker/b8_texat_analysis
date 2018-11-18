@@ -246,6 +246,9 @@ private:
   // Time vs Central Region Forward Detectors
   TH2F* hTimeCentralForward[10];
 
+  // Time vs dE Row Number Forward Detectors
+  TH2F* hTimeCentraldEForward[10];
+
   // Forward Wall XZ Hit Positions
   TH2F* hHitPositionsXZForward;
   TH2F* hHitPositionsXZForwardInd[10];
@@ -1328,6 +1331,16 @@ inline void Spectra::InitHistograms() {
     hTimeCentralForward[i]->SetStats(false);
   }
 
+  // Time vs dE Row Number Forward Detectors
+  for(UInt_t i = 0; i < 10; i++) {
+    TString name = Form("timeCentraldEForward_d%d", i);
+    hTimeCentraldEForward[i] = new TH2F(name, name, 130, -2, 128, 75, 0, 3000);
+    hTimeCentraldEForward[i]->GetXaxis()->SetTitle("Row #"); hTimeCentraldEForward[i]->GetXaxis()->CenterTitle();
+    hTimeCentraldEForward[i]->GetYaxis()->SetTitle("Time [ns]"); hTimeCentraldEForward[i]->GetYaxis()->CenterTitle();
+    hTimeCentraldEForward[i]->GetYaxis()->SetTitleOffset(1.4);
+    hTimeCentraldEForward[i]->SetStats(false);
+  }
+
   // Forward Wall XZ Hit Positions
   hHitPositionsXZForward = new TH2F("hitPositionXZForward", "hitPositionXZForward", 200, -200, 200, 100, -100, 100);
   hHitPositionsXZForward->GetXaxis()->SetTitle("X [mm]"); hHitPositionsXZForward->GetXaxis()->CenterTitle();
@@ -1957,8 +1970,8 @@ inline void Spectra::WriteHistograms() {
   // Forward dE vs Si Energy
   for(UInt_t i = 0; i < 10; i++) {
     // hdEEForward[i]->Write();
-    hdEEForwardCal[i]->Write();
-    // hdEEForwardCalTotal[i]->Write();
+    // hdEEForwardCal[i]->Write();
+    hdEEForwardCalTotal[i]->Write();
   }
 
   // Forward Hough Angle
@@ -2001,6 +2014,11 @@ inline void Spectra::WriteHistograms() {
   // for(UInt_t i = 0; i < 10; i++) {
     // hTimeCentralForward[i]->Write();
   // }
+
+  // Time vs dE Row Number Forward Detectors
+  for(UInt_t i = 4; i < 6; i++) {
+    hTimeCentraldEForward[i]->Write();
+  }
 
   // Forward Wall XZ Hit Positions
   // hHitPositionsXZForward->Write();
