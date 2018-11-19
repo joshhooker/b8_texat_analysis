@@ -115,7 +115,7 @@ void Spectra::Loop() {
   /////////////////
   TFile *cutFile = TFile::Open("cuts.root");
 
-  // dE cuts
+  // dE cuts (Calibrated Si energy vs dE)
   for(UInt_t i = 0; i < 10; i++) {
     if(i == 8) continue;
     dEEForwardCut[i] = (TCutG*)cutFile->Get(Form("dEEForward_d%dCut", i));
@@ -432,6 +432,10 @@ void Spectra::Loop() {
     if(icE < 1400 || icE > 1900) continue;
     if(icT < 5500 || icT > 6500) continue;
 
+    Bool_t central = false;
+    Bool_t left = false;
+    Bool_t right = false;
+
     //*********//
     // Silicon //
     //*********//
@@ -485,7 +489,7 @@ void Spectra::Loop() {
     // Plot that shit //
     //****************//
 
-    hSiFired->Fill(protonDet_.size());
+    // hSiFired->Fill(protonDet_.size());
 
     for(auto det : protonDet_) {
       hSiEForward[det.det][det.quad]->Fill(det.siEnergy);
@@ -652,6 +656,7 @@ void Spectra::Loop() {
       dERight /= static_cast<Double_t>(totalRowsRight);
     }
 
+    std::vector<protonDetect> protonDetReduced_;
     for(auto det : protonDet_) {
       Double_t dERegion = 0.;
       if(det.det < 4) dERegion = dERight;
@@ -660,16 +665,50 @@ void Spectra::Loop() {
       hdEEForward[det.det]->Fill(det.siEnergy, dERegion);
       hdEEForwardCal[det.det]->Fill(det.siEnergyCal, dERegion);
       hdEEForwardCalTotal[det.det]->Fill(det.totalEnergy, dERegion);
+
+      if(!dEEForwardCut[det.det]->IsInside(det.siEnergyCal, dERegion)) continue;
+      protonDetReduced_.push_back(det);
     }
 
-//    Bool_t event = false;
+    if(protonDetReduced_.empty()) continue;
+
+    hSiFired->Fill(protonDetReduced_.size());
+
+    if(protonDetReduced_.size() != 1) continue;
+
+    siDet = protonDetReduced_[0].det;
+    siQuad = protonDetReduced_[0].quad;
+    siChannel = protonDetReduced_[0].siChannel;
+    siEnergy = protonDetReduced_[0].siEnergy;
+    siEnergyCal = protonDetReduced_[0].siEnergyCal;
+    siTime = protonDetReduced_[0].siTime;
+    csiEnergy = protonDetReduced_[0].csiEnergy;
+    csiEnergyCal = protonDetReduced_[0].csiEnergyCal;
+    csiTime = protonDetReduced_[0].csiTime;
+    totalEnergy = protonDetReduced_[0].totalEnergy;
+    punchthrough = protonDetReduced_[0].punchthrough;
+    if(siDet < 4) {
+      dE = dERight;
+      right = true;
+    }
+    else if(siDet > 5) {
+      dE = dELeft;
+      left = true;
+    }
+    else {
+      dE = dECentral;
+      central = true;
+    }
+
+
+    Bool_t event = false;
 //    if(central) {
 //      event = AnalysisForwardCentral(mmCenterMatchedReducedNoise_, mmCenterBeamTotal_, mmCenterProton_, centralPadTotalEnergy);
 //    }
-//    if((left || right) && !sideDet) {
-//      event = AnalysisForwardSide(mmCenterMatchedReducedNoise_, mmCenterBeamTotal_, mmLeftChain_, mmLeftStrip_, mmRightChain_,
-//          mmRightStrip_);
-//    }
+    if(left || right) {
+      event = AnalysisForwardSide(mmCenterMatchedReducedNoise_, mmCenterBeamTotal_, mmLeftChain_, mmLeftStrip_, mmRightChain_,
+          mmRightStrip_);
+    }
 
     // if(!event) continue;
 
@@ -816,25 +855,21 @@ Bool_t Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::v
   if(siDet < 4) right = true;
   else if(siDet > 5) left = true;
 
-  // Look at time vs chain/strip
-  if(left) {
-    // Chain
-    for(auto mm : leftChain_) {
-      hTimeChainForward[siDet][siQuad]->Fill(mm.row, mm.time - siTime);
-    }
-    // Strip
-    for(auto mm : leftStrip_) {
-      hTimeStripForward[siDet][siQuad]->Fill(mm.row, mm.time - siTime);
-    }
+  // Left Chain
+  for(auto mm : leftChain_) {
+    hTimeChainForward[siDet][siQuad]->Fill(mm.row, mm.time - siTime);
   }
-  else if(right) {
-    // Chain
-    for(auto mm : rightChain_) {
-      hTimeChainForward[siDet][siQuad]->Fill(mm.row, mm.time - siTime);
-    }
-    for(auto mm : rightStrip_) {
-      hTimeStripForward[siDet][siQuad]->Fill(mm.row, mm.time - siTime);
-    }
+  // Left Strip
+  for(auto mm : leftStrip_) {
+    hTimeStripForward[siDet][siQuad]->Fill(mm.row, mm.time - siTime);
+  }
+  // Right Chain
+  for(auto mm : rightChain_) {
+    hTimeChainForward[siDet][siQuad]->Fill(mm.row, mm.time - siTime);
+  }
+  // Right Strip
+  for(auto mm : rightStrip_) {
+    hTimeStripForward[siDet][siQuad]->Fill(mm.row, mm.time - siTime);
   }
 
   // Gate on time vs chain/strip
@@ -842,67 +877,36 @@ Bool_t Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::v
   std::vector<mmChainStrip> leftStripReduced_;
   std::vector<mmChainStrip> rightChainReduced_;
   std::vector<mmChainStrip> rightStripReduced_;
-  if(left) {
-    // Chain
-    for(auto mm : leftChain_) {
-      if(timeChainForwardCut[siDet][siQuad]->IsInside(mm.row, mm.time - siTime)) {
-        leftChainReduced_.push_back(mm);
-      }
-    }
-    // Strip
-    for(auto mm : leftStrip_) {
-      if(timeStripForwardCut[siDet][siQuad]->IsInside(mm.row, mm.time - siTime)) {
-        leftStripReduced_.push_back(mm);
-      }
+  // Left Chain
+  for(auto mm : leftChain_) {
+    if(timeChainForwardCut[siDet][siQuad]->IsInside(mm.row, mm.time - siTime)) {
+      leftChainReduced_.push_back(mm);
     }
   }
-  else if(right) {
-    // Chain
-    for(auto mm : rightChain_) {
-      if(timeChainForwardCut[siDet][siQuad]->IsInside(mm.row, mm.time - siTime)) {
-        rightChainReduced_.push_back(mm);
-      }
-    }
-    // Strip
-    for(auto mm : rightStrip_) {
-      if(timeStripForwardCut[siDet][siQuad]->IsInside(mm.row, mm.time - siTime)) {
-        rightStripReduced_.push_back(mm);
-      }
+  // Left Strip
+  for(auto mm : leftStrip_) {
+    if(timeStripForwardCut[siDet][siQuad]->IsInside(mm.row, mm.time - siTime)) {
+      leftStripReduced_.push_back(mm);
     }
   }
-
-  // Find dE for left and right regions
-  dE = 0.;
-  Int_t dECount = 0;
-  if(left) {
-    for(auto mm: leftStripReduced_) {
-      if(mm.row < 60) continue;
-      dE += mm.energy;
-      dECount++;
+  // Right Chain
+  for(auto mm : rightChain_) {
+    if(timeChainForwardCut[siDet][siQuad]->IsInside(mm.row, mm.time - siTime)) {
+      rightChainReduced_.push_back(mm);
     }
-    dE /= static_cast<Double_t>(dECount);
-    // dE /= static_cast<Double_t>(leftStripReduced_.size());
   }
-  else if(right) {
-    for(auto mm : rightStripReduced_) {
-      if(mm.row < 60) continue;
-      dE += mm.energy;
-      dECount++;
+  // Right Strip
+  for(auto mm : rightStrip_) {
+    if(timeStripForwardCut[siDet][siQuad]->IsInside(mm.row, mm.time - siTime)) {
+      rightStripReduced_.push_back(mm);
     }
-    dE /= static_cast<Double_t>(dECount);
-    // dE /= static_cast<Double_t>(rightStripReduced_.size());
   }
-
-  hdEEForward[siDet]->Fill(siEnergy, dE);
-  hdEEForwardCal[siDet]->Fill(siEnergyCal, dE);
-  hdEEForwardCalTotal[siDet]->Fill(totalEnergy, dE);
-
-  if(!dEEForwardCut[siDet]->IsInside(totalEnergy, dE)) return false;
 
   for(auto mm : centerMatched_) {
     hTimeCentralForward[siDet]->Fill(mm.row, mm.time - siTime);
   }
 
+  /*
   // Match strips with chains
   std::vector<mmTrack> chainStripMatchedLeft;
   std::vector<mmTrack> chainStripMatchedRight;
@@ -1122,6 +1126,7 @@ Bool_t Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::v
       s1->Fill(cmEnergy);
     }
   }
+  */
 
   return true;
 }
