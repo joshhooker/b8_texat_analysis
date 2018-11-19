@@ -1223,19 +1223,19 @@ inline void Spectra::InitHistograms() {
   // dE vs E Histograms
   for(UInt_t i = 0; i < 10; i++) {
     TString name = Form("dEEForward_d%d", i);
-    hdEEForward[i] = new TH2F(name, name, 500, 0, 4000, 500, 0, 4000);
+    hdEEForward[i] = new TH2F(name, name, 500, 0, 4000, 500, 0, 8000);
     hdEEForward[i]->GetXaxis()->SetTitle("Si Energy [channels]"); hdEEForward[i]->GetXaxis()->CenterTitle();
     hdEEForward[i]->GetYaxis()->SetTitle("dE [channels]"); hdEEForward[i]->GetYaxis()->CenterTitle();
     hdEEForward[i]->GetYaxis()->SetTitleOffset(1.4);
 
     name = Form("dEEForwardCal_d%d", i);
-    hdEEForwardCal[i] = new TH2F(name, name, 500, 0, 14000, 500, 0, 4000);
+    hdEEForwardCal[i] = new TH2F(name, name, 500, 0, 14000, 500, 0, 8000);
     hdEEForwardCal[i]->GetXaxis()->SetTitle("Si Energy [keV]"); hdEEForwardCal[i]->GetXaxis()->CenterTitle();
     hdEEForwardCal[i]->GetYaxis()->SetTitle("dE [channels]"); hdEEForwardCal[i]->GetYaxis()->CenterTitle();
     hdEEForwardCal[i]->GetYaxis()->SetTitleOffset(1.4);
 
     name = Form("dEEForwardCalTotal_d%d", i);
-    hdEEForwardCalTotal[i] = new TH2F(name, name, 500, 0, 25000, 500, 0, 4000);
+    hdEEForwardCalTotal[i] = new TH2F(name, name, 500, 0, 25000, 500, 0, 8000);
     hdEEForwardCalTotal[i]->GetXaxis()->SetTitle("Total Energy [keV]"); hdEEForwardCalTotal[i]->GetXaxis()->CenterTitle();
     hdEEForwardCalTotal[i]->GetYaxis()->SetTitle("dE [channels]"); hdEEForwardCalTotal[i]->GetYaxis()->CenterTitle();
     hdEEForwardCalTotal[i]->GetYaxis()->SetTitleOffset(1.4);
@@ -1957,7 +1957,6 @@ inline void Spectra::WriteHistograms() {
   hMicroMegasCenterCumulativePosition->Write();
   hMicroMegasCenterCumulativePositionRaw->Write();
   hMicroMegasCenterTime->Write();
-  hMicroMegasCenterHeight->Write();
 
   // Number of Si fired
   hSiFired->Write();
@@ -1998,11 +1997,11 @@ inline void Spectra::WriteHistograms() {
    // }
 
   // Forward dE vs Si Energy
-  // for(UInt_t i = 0; i < 10; i++) {
+  for(UInt_t i = 0; i < 10; i++) {
     // hdEEForward[i]->Write();
-    // hdEEForwardCal[i]->Write();
+    hdEEForwardCal[i]->Write();
     // hdEEForwardCalTotal[i]->Write();
-  // }
+  }
 
   // Forward Hough Angle
   // for(UInt_t i = 0; i < 10; i++) {

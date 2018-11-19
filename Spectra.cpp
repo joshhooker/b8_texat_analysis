@@ -485,11 +485,9 @@ void Spectra::Loop() {
     // Plot that shit //
     //****************//
 
-    // hSiFired->Fill(protonDet_.size());
+    hSiFired->Fill(protonDet_.size());
 
     for(auto det : protonDet_) {
-      // std::cout << det.det << '\t' << det.quad << '\t' << det.siEnergyCal << std::endl;
-
       hSiEForward[det.det][det.quad]->Fill(det.siEnergy);
       hSiEForwardDet[det.det]->Fill(det.siEnergy);
 
@@ -532,7 +530,7 @@ void Spectra::Loop() {
       Double_t time = mm.time;
       if(mm.row < 2) continue;
       if(mm.row < 112) {
-        if(time < 4750 || time > 6250) continue;
+        if(time < 4700 || time > 6300) continue;
         if(mm.energy < 200) continue;
         hCWTECentral->Fill(mm.energy, mm.cwt);
         if(!cwtE_CentralCut->IsInside(mm.energy, mm.cwt)) continue;
@@ -540,13 +538,14 @@ void Spectra::Loop() {
       }
       // These should not fire
       else if(mm.row > 111 && (mm.column == 0 || mm.column == 5)) {
-        if(time < 4750 || time > 6250) continue;
+        if(time < 4700 || time > 6300) continue;
         if(mm.energy < 200) continue;
+        hCWTECentral->Fill(mm.energy, mm.cwt);
         if(!cwtE_CentralCut->IsInside(mm.energy, mm.cwt)) continue;
         mmCenterMatchedReduced_.push_back(mm);
       }
       else {
-        if(time < 4750 || time > 6250) continue;
+        if(time < 4700 || time > 6300) continue;
         hCWTECentral->Fill(mm.energy, mm.cwt);
         if(!cwtE_CentralProtonCut->IsInside(mm.energy, mm.cwt)) continue;
         mmCenterMatchedReduced_.push_back(mm);
@@ -560,11 +559,10 @@ void Spectra::Loop() {
       mmCenterMatchedReducedNoise_ = CenterReduceNoise(mmCenterMatchedReduced_);
     }
 
-    // Reduce mmCenter to one entry per row
+    // Reduce mmCenter to one entry per row for beam and protons
     std::map<Int_t, Double_t> centralPadPosition;
     std::map<Int_t, Double_t> centralPadTotalEnergy;
     std::map<Int_t, Double_t> centralPadTime;
-    std::map<Int_t, Int_t> centralPadColumn;
     std::map<Int_t, Int_t> centralPadTotal;
     for(UInt_t i = 0; i < 128; i++) {
       centralPadTotal[i] = 0;
@@ -574,14 +572,12 @@ void Spectra::Loop() {
       Double_t yPosition = mm.row*rowConversion + rowConversionOffset;
       hMicroMegasCenterCumulative->Fill(mm.column - 3, mm.row);
       hMicroMegasCenterCumulativePositionRaw->Fill(xPosition, yPosition);
-      hMicroMegasCenterTime->Fill(mm.row, mm.time - siTime);
-      hMicroMegasCenterHeight->Fill(mm.row, heightOffset - (mm.time - siTime)*driftVelocity);
+      hMicroMegasCenterTime->Fill(mm.row, mm.time);
       if(centralPadTotal[mm.row] == 0) {
         if(mm.energy < 0) continue;
         centralPadPosition[mm.row] = (mm.column*3.5 - 8.75)*mm.energy;
         centralPadTotalEnergy[mm.row] = mm.energy;
         centralPadTime[mm.row] = mm.time;
-        centralPadColumn[mm.row] = mm.column;
       }
       else {
         if(mm.energy < 0) continue;
@@ -608,7 +604,6 @@ void Spectra::Loop() {
       hit.energy = centralPadTotalEnergy[row];
       hit.height = heightOffset - hit.time*driftVelocity;
       hit.total = centralPadTotal[row];
-      // hMicroMegasCenterCumulative->Fill(centralPadColumn[row] - 3, row);
       hMicroMegasCenterCumulativePosition->Fill(hit.xPosition, hit.yPosition);
       if(row < 112) {
         mmCenterBeamTotal_.push_back(hit);
@@ -616,6 +611,55 @@ void Spectra::Loop() {
       else if(row > 111) {
         mmCenterProton_.push_back(hit);
       }
+    }
+
+    //*************************************//
+    // Get dE for side and central regions //
+    //*************************************//
+
+    // Central region
+    Double_t dECentral = 0.;
+    Int_t totalRowsCentral = 0;
+    for(auto mm : mmCenterProton_) {
+      if(mm.row > 115 && mm.row < 124 && mm.row != 117) {
+        dECentral += mm.energy;
+        totalRowsCentral++;
+      }
+    }
+    if(totalRowsCentral > 0) {
+      dECentral /= static_cast<Double_t>(totalRowsCentral);
+    }
+
+    // Side Region
+    Double_t dELeft = 0.;
+    Int_t totalRowsLeft = 0;
+    for(auto mm : mmLeftStrip_) {
+      if(mm.row < 50 || mm.row > 62) continue;
+      dELeft += mm.energy;
+      totalRowsLeft++;
+    }
+    if(totalRowsLeft > 0) {
+      dELeft /= static_cast<Double_t>(totalRowsLeft);
+    }
+    Double_t dERight = 0.;
+    Int_t totalRowsRight = 0;
+    for(auto mm : mmRightStrip_) {
+      if(mm.row < 50 || mm.row > 62) continue;
+      dERight += mm.energy;
+      totalRowsRight++;
+    }
+    if(totalRowsRight > 0) {
+      dERight /= static_cast<Double_t>(totalRowsRight);
+    }
+
+    for(auto det : protonDet_) {
+      Double_t dERegion = 0.;
+      if(det.det < 4) dERegion = dERight;
+      else if(det.det > 5) dERegion = dELeft;
+      else dERegion = dECentral;
+      hdEEForward[det.det]->Fill(det.siEnergy, dERegion);
+      hdEEForwardCal[det.det]->Fill(det.siEnergyCal, dERegion);
+      hdEEForwardCalTotal[det.det]->Fill(det.totalEnergy, dERegion);
     }
 
 //    Bool_t event = false;
