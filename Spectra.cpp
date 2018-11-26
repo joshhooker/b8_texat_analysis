@@ -22,9 +22,6 @@ TChain* MakeChain() {
   // Mac Laptop
   TString PathToFiles = "/Users/joshhooker/Desktop/data/run0817a/run";
 
-  // Linux Laptop
-  // TString PathToFiles = "/home/joshhooker/Desktop/data/run0817a/run";
-
   // Alpha source test in gas
   // chain->Add(PathToFiles+"004.root");
 
@@ -906,29 +903,74 @@ Bool_t Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::v
     hTimeCentralForward[siDet]->Fill(mm.row, mm.time - siTime);
   }
 
-  /*
   // Match strips with chains
-  std::vector<mmTrack> chainStripMatchedLeft;
-  std::vector<mmTrack> chainStripMatchedRight;
-  std::vector<mmTrack> chainStripRawLeft;
-  std::vector<mmTrack> chainStripRawRight;
+  std::vector<mmTrack> chainStripMatchedLeft_;
+  std::vector<mmTrack> chainStripMatchedRight_;
+  std::vector<mmTrack> chainStripRawLeft_;
+  std::vector<mmTrack> chainStripRawRight_;
   if(!leftChainReduced_.empty() && !leftStripReduced_.empty()) {
-    ChainStripMatch(chainStripMatchedLeft, chainStripRawLeft, leftChainReduced_, leftStripReduced_, true, siTime);
+    ChainStripMatch(chainStripMatchedLeft_, chainStripRawLeft_, leftChainReduced_, leftStripReduced_, true, siTime);
   }
   if(!rightChainReduced_.empty() && !rightStripReduced_.empty()) {
-    ChainStripMatch(chainStripMatchedRight, chainStripRawRight, rightChainReduced_, rightStripReduced_, false,
+    ChainStripMatch(chainStripMatchedRight_, chainStripRawRight_, rightChainReduced_, rightStripReduced_, false,
                     siTime);
   }
+
+  Double_t leftTrackLength = 0.;
+  Double_t rightTrackLength = 0.;
+  if(!chainStripMatchedLeft_.empty()) leftTrackLength = ChainStripSize(chainStripMatchedLeft_);
+  if(!chainStripMatchedRight_.empty()) rightTrackLength = ChainStripSize(chainStripMatchedRight_);
+
+  Double_t protonTrackLength = 0.;
+  Double_t otherTrackLength = 0.;
+  if(right) {
+    protonTrackLength = rightTrackLength;
+    otherTrackLength = leftTrackLength;
+  }
+  else if(left) {
+    protonTrackLength = leftTrackLength;
+    otherTrackLength = rightTrackLength;
+  }
+
+//  if(leftTrackLength > 0 && rightTrackLength > 0) {
+//    std::cout << "Proton: " << protonTrackLength << "; Other: " << otherTrackLength << std::endl;
+//  }
+  if(protonTrackLength > 0  && otherTrackLength > 0) {
+    DrawEventTrackSideCanvas(totalEventTrackSideCanvas, centerBeamTotal_, chainStripMatchedLeft_, chainStripRawLeft_,
+          chainStripMatchedRight_, chainStripRawRight_);
+    totalEventTrackSideCanvas++;
+
+    DrawEventTrackSidedECanvas(totalEventTrackSidedECanvas, chainStripRawLeft_, chainStripRawRight_);
+    totalEventTrackSidedECanvas++;
+  }
+
+//  if(otherTrackLength > 0.9*protonTrackLength) {
+//    DrawEventTrackSideCanvas(totalEventTrackSideCanvas, centerBeamTotal_, chainStripMatchedLeft_, chainStripRawLeft_,
+//        chainStripMatchedRight_, chainStripRawRight_);
+//    totalEventTrackSideCanvas++;
+//  }
+
+//  if(otherTrackLength > 0.9*protonTrackLength) return false;
+
+//  if(!chainStripMatchedLeft_.empty() && !chainStripMatchedRight_.empty()) {
+//    // std::cout << "Det Fired: " << siDet << std::endl;
+//    // std::cout << "Left Size: " << ChainStripSize(chainStripMatchedLeft_) << '\t' << "Right Size: " <<
+//    //    ChainStripSize(chainStripMatchedRight_) << std::endl;
+//
+//    DrawEventTrackSideCanvas(totalEventTrackSideCanvas, centerBeamTotal_, chainStripMatchedLeft_, chainStripMatchedRight_);
+//    totalEventTrackSideCanvas++;
+//  }
 
   // Assign proton track for side regions
   std::vector<mmTrack> protonTrack;
 
   if(left) {
-    protonTrack = chainStripMatchedLeft;
+    protonTrack = chainStripMatchedLeft_;
   }
   else if(right) {
-    protonTrack = chainStripMatchedRight;
+    protonTrack = chainStripMatchedRight_;
   }
+
 
   // Find vertex using the proton track in side regions
   vertexPositionX = 0.;
@@ -938,9 +980,10 @@ Bool_t Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::v
   Double_t protonEnergy = 0.;
 
   if(protonTrack.empty()) {
-    std::cout << "protonTrack Empty!" << std::endl;
+    // std::cout << "protonTrack Empty: " << protonTrackLength << " OtherTrack: " << otherTrackLength << std::endl;
     return false;
   }
+
 
   auto *fitProton = new HoughTrack();
   fitProton->AddTrack(protonTrack, siDet, siQuad);
@@ -953,7 +996,7 @@ Bool_t Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::v
   delete fitProton;
 
   ULong_t mmCenterSize = centerBeamTotal_.size();
-
+  /*
   if(mmCenterSize == 0) {
     Double_t beamX_old = 0.;
     Double_t beamY_old = 250.;
@@ -1001,6 +1044,7 @@ Bool_t Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::v
       }
     }
   }
+  else if()
   else {
     // Loop through beam in central region starting from last
     Double_t beamX_old = centerBeamTotal_[mmCenterSize - 1].xPosition;
@@ -1381,34 +1425,27 @@ std::pair<Int_t, Int_t> Spectra::CenterGetDerivMax(std::vector<centerDeriv> thre
 void Spectra::ChainStripMatch(std::vector<mmTrack> &chainStripMatched, std::vector<mmTrack> &chainStripRaw,
                               std::vector<mmChainStrip> chain_,
                               std::vector<mmChainStrip> strip_, Bool_t leftSide, Double_t siTime) {
+  // Function that matches chains and strips together
+  // If number of different time buckets < 4, uses box method
+  // If > 3, uses the same time to match
+
   chainStripMatched.clear();
   chainStripRaw.clear();
   std::vector<mmTrack> totalTime0;
   ChainStripMatchingTime(totalTime0, chain_, strip_, leftSide, siTime, 0);
-  ChainStripMatchingTime(chainStripRaw, chain_, strip_, leftSide, siTime, 0);
 
-  size_t numTimeBuckets = ChainStripTime0TimeBuckets(totalTime0);
-  // std::cout << "Time buckets: " << numTimeBuckets << std::endl;
+  size_t numTimeBuckets = ChainStripTime0NumTimeBuckets(totalTime0);
   if(numTimeBuckets < 4) {
     ChainStripMatchingBoxTime0(chainStripMatched, totalTime0);
-    // std::cout << "BoxTime0: " << chainStripMatched.size() << std::endl;
   }
-  // else if(chain_.size() > 12 && strip_.size() > 12) {
-  //   ChainStripMatchingTimeSlopeHough(chainStripMatched, chain_, strip_, leftSide, siTime, 10.);
-  //   if(chainStripMatched.size() < 2) {
-  //     chainStripMatched.clear();
-  //     ChainStripMatchingBoxTime0(chainStripMatched, totalTime0);
-  //   }
-  //   // std::cout << "SlopeHough0: " << chainStripMatched.size() << std::endl;
-  // }
   else {
     ChainStripMatchingTime(chainStripMatched, chain_, strip_, leftSide, siTime, 0);
-    // std::cout << "MatchingTime: " << chainStripMatched.size() << std::endl;
   }
-  // std::cout << chain_.size() << '\t' << strip_.size() << '\t' << chainStripMatched.size() << std::endl;
+
+  chainStripRaw = totalTime0;
 }
 
-size_t Spectra::ChainStripTime0TimeBuckets(std::vector<mmTrack> matched) {
+size_t Spectra::ChainStripTime0NumTimeBuckets(std::vector<mmTrack> matched) {
   // Function that finds the number of different time buckets for the time0 algorithm
   // This is used if you want to change the strip/chain matching algorithm (if all on the same plane)
 
@@ -1515,10 +1552,30 @@ void Spectra::ChainStripMatchingBox(std::vector<mmTrack> &chainStripMatched, std
 }
 
 void Spectra::ChainStripMatchingBoxTime0(std::vector<mmTrack> &chainStripMatched, std::vector<mmTrack> time0) {
-  UInt_t size = time0.size();
-  if(size == 0) return;
-  chainStripMatched.push_back(time0[0]);
-  chainStripMatched.push_back(time0[size - 1]);
+  // Function to quickly get the box points after matching using the same time
+  // Finds the points closest and furthest from the origin for box
+  chainStripMatched.clear();
+  if(time0.empty()) return;
+
+  mmTrack closestHit;
+  Double_t closestDistance = 5000.;
+  mmTrack furthestHit;
+  Double_t furthestDistance = 0.;
+
+  for(auto mm : time0) {
+    Double_t distance = sqrt(mm.xPosition*mm.xPosition + mm.yPosition*mm.yPosition);
+    if(distance < closestDistance) {
+      closestHit = mm;
+      closestDistance = distance;
+    }
+    if(distance > furthestDistance) {
+      furthestHit = mm;
+      furthestDistance = distance;
+    }
+  }
+
+  chainStripMatched.push_back(closestHit);
+  chainStripMatched.push_back(furthestHit);
 }
 
 void Spectra::ChainStripMatchingTime(std::vector<mmTrack> &chainStripMatched, std::vector<mmChainStrip> chain,
@@ -1698,6 +1755,20 @@ void Spectra::ChainStripMatchingTimeSlopeHough(std::vector<mmTrack> &chainStripM
       }
     }
   }
+}
+
+Double_t Spectra::ChainStripSize(std::vector<mmTrack> chainStripMatched) {
+  Double_t initX = chainStripMatched[0].xPosition;
+  Double_t initY = chainStripMatched[0].yPosition;
+  Double_t finalX = chainStripMatched[chainStripMatched.size() - 1].xPosition;
+  Double_t finalY = chainStripMatched[chainStripMatched.size() - 1].yPosition;
+
+  Double_t diffX = fabs(finalX - initX);
+  Double_t diffY = fabs(finalY - initY);
+
+  Double_t distance = sqrt(diffX*diffX + diffY*diffY);
+
+  return distance;
 }
 
 void Spectra::DivideTargetThickness(TH1F *f) {

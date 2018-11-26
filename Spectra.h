@@ -334,6 +334,19 @@ private:
   Int_t centerBeamLinearCanvasNum, centerBeamLinearCanvasXYNum, centerBeamLinearCanvasXNum, centerBeamLinearCanvasYNum;
   TCanvas* centerBeamLinearCanvas[5];
 
+  // Draw Event Track
+  void DrawEventTrackSideCanvas(Int_t count, std::vector<mmTrack> center_, std::vector<mmTrack> left_, std::vector<mmTrack> leftRaw_,
+      std::vector<mmTrack> right_, std::vector<mmTrack> rightRaw_);
+  Int_t totalEventTrackSideCanvas;
+  Int_t eventTrackSideCanvasNum, eventTrackSideCanvasXYNum, eventTrackSideCanvasXNum, eventTrackSideCanvasYNum;
+  TCanvas* eventTrackSideCanvas[15];
+
+  // Draw dE Event Track for Side Region
+  void DrawEventTrackSidedECanvas(Int_t count, std::vector<mmTrack> leftRaw_, std::vector<mmTrack> rightRaw_);
+  Int_t totalEventTrackSidedECanvas;
+  Int_t eventTrackSidedECanvasNum, eventTrackSidedECanvasXYNum, eventTrackSidedECanvasXNum, eventTrackSidedECanvasYNum;
+  TCanvas* eventTrackSidedECanvas[15];
+
   void WriteCanvas();
 
 // Silicon Energy Calibration
@@ -383,7 +396,7 @@ private:
   void ChainStripMatch(std::vector<mmTrack> &chainStripMatched, std::vector<mmTrack> &chainStripRaw,
                        std::vector<mmChainStrip> chain_,
                        std::vector<mmChainStrip> strip_, Bool_t leftSide, Double_t siTime);
-  size_t ChainStripTime0TimeBuckets(std::vector<mmTrack> matched);
+  size_t ChainStripTime0NumTimeBuckets(std::vector<mmTrack> matched);
   size_t ChainStripNumberTimeBuckets(std::vector<mmChainStrip> chain, std::vector<mmChainStrip> strip);
   void ChainStripMatchingOutward(std::vector<mmTrack> &chainStripMatched, std::vector<mmChainStrip> chain,
                                  std::vector<mmChainStrip> strip, Bool_t leftSide, Double_t siTime);
@@ -398,6 +411,7 @@ private:
   void ChainStripMatchingTimeSlopeHough(std::vector<mmTrack> &chainStripMatched, std::vector<mmChainStrip> chain,
                                         std::vector<mmChainStrip> strip, Bool_t leftSide, Double_t siTime,
                                         Double_t timeWindow);
+  Double_t ChainStripSize(std::vector<mmTrack> chainStripMatched);
 
 // Visualize Hough Transform
   void GetMinMaxD(std::vector<mmTrack> initPoints, Int_t &minXY, Int_t &maxXY, Int_t &minYZ, Int_t &maxYZ);
@@ -471,7 +485,7 @@ private:
 };
 #endif
 
-#ifdef Spectra_cxx
+// #ifdef Spectra_cxx
 
 inline Spectra::Spectra(TTree *tree) : fChain(0) {
   // if parameter tree is not specified (or zero), connect the file
@@ -1540,6 +1554,30 @@ inline void Spectra::InitCanvas() {
     centerBeamLinearCanvas[i]->Divide(centerBeamLinearCanvasXNum, centerBeamLinearCanvasYNum);
     centerBeamLinearCanvas[i]->Update();
   }
+
+  totalEventTrackSideCanvas = 0;
+  eventTrackSideCanvasNum = static_cast<Int_t>(sizeof(eventTrackSideCanvas)/sizeof(eventTrackSideCanvas[0]));
+  eventTrackSideCanvasXNum = 3;
+  eventTrackSideCanvasYNum = 3;
+  eventTrackSideCanvasXYNum = eventTrackSideCanvasXNum*eventTrackSideCanvasYNum;
+  for(Int_t i = 0; i < eventTrackSideCanvasNum; i++) {
+    TString name = Form("eventTrackSide%d", i + 1);
+    eventTrackSideCanvas[i] = new TCanvas(name, name, 1600, 1200);
+    eventTrackSideCanvas[i]->Divide(eventTrackSideCanvasXNum, eventTrackSideCanvasYNum);
+    eventTrackSideCanvas[i]->Update();
+  }
+
+  totalEventTrackSidedECanvas = 0;
+  eventTrackSidedECanvasNum = static_cast<Int_t>(sizeof(eventTrackSidedECanvas)/sizeof(eventTrackSidedECanvas[0]));
+  eventTrackSidedECanvasXNum = 3;
+  eventTrackSidedECanvasYNum = 3;
+  eventTrackSidedECanvasXYNum = eventTrackSidedECanvasXNum*eventTrackSidedECanvasYNum;
+  for(Int_t i = 0; i < eventTrackSidedECanvasNum; i++) {
+    TString name = Form("eventTrackSidedE%d", i + 1);
+    eventTrackSidedECanvas[i] = new TCanvas(name, name, 1600, 1200);
+    eventTrackSidedECanvas[i]->Divide(eventTrackSidedECanvasXNum, eventTrackSidedECanvasYNum);
+    eventTrackSidedECanvas[i]->Update();
+  }
 }
 
 inline void Spectra::DrawCenterEnergyCanvas(Int_t count, std::vector<mmCenter> centerMatched_,
@@ -1808,6 +1846,111 @@ inline void Spectra::DrawCenterBeamLinearCanvas(Int_t count, std::vector<mmTrack
     mgCenter->SetMaximum(15);
     mgCenter->Draw("a");
     centerBeamLinearCanvas[histNum]->Update();
+  }
+}
+
+inline void Spectra::DrawEventTrackSideCanvas(Int_t count, std::vector<mmTrack> center_,
+    std::vector<mmTrack> left_, std::vector<mmTrack> leftRaw_, std::vector<mmTrack> right_, std::vector<mmTrack> rightRaw_) {
+  TMultiGraph* mgEvent = new TMultiGraph();
+  TGraph* graphCenter = new TGraph();
+  TGraph* graphLeft = new TGraph();
+  TGraph* graphLeftRaw = new TGraph();
+  TGraph* graphRight = new TGraph();
+  TGraph* graphRightRaw = new TGraph();
+
+  Int_t i = 0;
+  for(auto mm : center_) {
+    graphCenter->SetPoint(i, mm.xPosition, mm.yPosition);
+    i++;
+  }
+
+  i = 0;
+  for(auto mm : left_) {
+    graphLeft->SetPoint(i, mm.xPosition, mm.yPosition);
+    i++;
+  }
+
+  i = 0;
+  for(auto mm : leftRaw_) {
+    graphLeftRaw->SetPoint(i, mm.xPosition, mm.yPosition);
+    i++;
+  }
+
+  i = 0;
+  for(auto mm : right_) {
+    graphRight->SetPoint(i, mm.xPosition, mm.yPosition);
+    i++;
+  }
+
+  i = 0;
+  for(auto mm : rightRaw_) {
+    graphRightRaw->SetPoint(i, mm.xPosition, mm.yPosition);
+    i++;
+  }
+
+  graphCenter->SetMarkerColor(1);
+  graphCenter->SetMarkerStyle(8);
+
+  graphLeft->SetMarkerColor(2);
+  graphLeft->SetMarkerStyle(8);
+  graphLeftRaw->SetMarkerColor(3);
+  graphLeftRaw->SetMarkerStyle(7);
+
+  graphRight->SetMarkerColor(2);
+  graphRight->SetMarkerStyle(8);
+  graphRightRaw->SetMarkerColor(4);
+  graphRightRaw->SetMarkerStyle(7);
+
+  if(count < eventTrackSideCanvasNum*eventTrackSideCanvasXYNum) {
+    Int_t histNum = count/eventTrackSideCanvasXYNum;
+    TString name = Form("Event_%lld", entry);
+    mgEvent->SetTitle(name);
+    eventTrackSideCanvas[histNum]->cd(count + 1 - histNum*eventTrackSideCanvasXYNum);
+    if(graphCenter->GetN() > 0) mgEvent->Add(graphCenter);
+    if(graphLeft->GetN() > 0) mgEvent->Add(graphLeft);
+    if(graphLeftRaw->GetN() > 0) mgEvent->Add(graphLeftRaw);
+    if(graphRight->GetN() > 0) mgEvent->Add(graphRight);
+    if(graphRightRaw->GetN() > 0) mgEvent->Add(graphRightRaw);
+    mgEvent->GetXaxis()->SetLimits(-200, 200);
+    mgEvent->SetMinimum(0);
+    mgEvent->SetMaximum(300);
+    mgEvent->Draw("ap");
+    eventTrackSideCanvas[histNum]->Update();
+  }
+}
+
+inline void Spectra::DrawEventTrackSidedECanvas(Int_t count, std::vector<mmTrack> leftRaw_, std::vector<mmTrack> rightRaw_) {
+  TMultiGraph* mgEvent = new TMultiGraph();
+  TGraph* graphLeftRaw = new TGraph();
+  TGraph* graphRightRaw = new TGraph();
+
+  Int_t i = 0;
+  for(auto mm : leftRaw_) {
+    graphLeftRaw->SetPoint(i, mm.yPosition, mm.energy);
+    i++;
+  }
+
+  i = 0;
+  for(auto mm : rightRaw_) {
+    graphRightRaw->SetPoint(i, mm.yPosition, mm.energy);
+    i++;
+  }
+
+  graphLeftRaw->SetLineColor(3);
+  graphRightRaw->SetLineColor(4);
+
+  if(count < eventTrackSidedECanvasNum*eventTrackSideCanvasXYNum) {
+    Int_t histNum = count/eventTrackSidedECanvasXYNum;
+    TString name = Form("Event_%lld", entry);
+    mgEvent->SetTitle(name);
+    eventTrackSidedECanvas[histNum]->cd(count + 1 - histNum*eventTrackSidedECanvasXYNum);
+    if(graphLeftRaw->GetN() > 0) mgEvent->Add(graphLeftRaw);
+    if(graphRightRaw->GetN() > 0) mgEvent->Add(graphRightRaw);
+    mgEvent->GetXaxis()->SetLimits(0, 300);
+    mgEvent->SetMinimum(0);
+    mgEvent->SetMaximum(4000);
+    mgEvent->Draw("a");
+    eventTrackSidedECanvas[histNum]->Update();
   }
 }
 
@@ -2121,6 +2264,14 @@ inline void Spectra::WriteCanvas() {
   // for(Int_t i = 0; i < centerBeamLinearCanvasNum; i++) {
     // centerBeamLinearCanvas[i]->Write();
   // }
+
+  for(Int_t i = 0; i < eventTrackSideCanvasNum; i++) {
+    eventTrackSideCanvas[i]->Write();
+  }
+
+  for(Int_t i = 0; i < eventTrackSidedECanvasNum; i++) {
+    eventTrackSidedECanvas[i]->Write();
+  }
 }
 
 inline void Spectra::InitTree() {
@@ -2156,4 +2307,4 @@ inline void Spectra::WriteTree() {
   outTree->Write();
 }
 
-#endif // #ifdef Spectra_cxx
+// #endif // #ifdef Spectra_cxx
