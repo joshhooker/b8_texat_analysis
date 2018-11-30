@@ -115,33 +115,33 @@ void Spectra::Loop() {
   // dE cuts (Calibrated Si energy vs dE)
   for(uint i = 0; i < 10; i++) {
     if(i == 8) continue;
-    dEEForwardCut[i] = (TCutG*)cutFile->Get(Form("dEEForward_d%dCut", i));
+    dEEForwardCut[i] = static_cast<TCutG*>(cutFile->Get(Form("dEEForward_d%dCut", i)));
   }
 
   // Angle vs Energy Cut
-  angleTotEnergyCut[0] = (TCutG*)cutFile->Get("angleTotEnergy_d0Cut");
-  angleTotEnergyCut[1] = (TCutG*)cutFile->Get("angleTotEnergy_d1Cut");
-  angleTotEnergyCut[9] = (TCutG*)cutFile->Get("angleTotEnergy_d9Cut");
+  angleTotEnergyCut[0] = static_cast<TCutG*>(cutFile->Get("angleTotEnergy_d0Cut"));
+  angleTotEnergyCut[1] = static_cast<TCutG*>(cutFile->Get("angleTotEnergy_d1Cut"));
+  angleTotEnergyCut[9] = static_cast<TCutG*>(cutFile->Get("angleTotEnergy_d9Cut"));
 
   // Chain/Strip vs Time Cuts
   for(uint i = 0; i < 10; i++) {
     if(i == 4 || i == 5) continue;
     for(uint j = 0; j < 4; j++) {
       if(i == 7 && j == 0) continue;
-      timeChainForwardCut[i][j] = (TCutG*)cutFile->Get(Form("timeChainForward_d%d_q%dCut", i, j));
-      timeStripForwardCut[i][j] = (TCutG*)cutFile->Get(Form("timeStripForward_d%d_q%dCut", i, j));
+      timeChainForwardCut[i][j] = static_cast<TCutG*>(cutFile->Get(Form("timeChainForward_d%d_q%dCut", i, j)));
+      timeStripForwardCut[i][j] = static_cast<TCutG*>(cutFile->Get(Form("timeStripForward_d%d_q%dCut", i, j)));
     }
   }
 
-  cwtE_CentralCut = (TCutG*)cutFile->Get("cwtE_CentralCut");
-  cwtE_CentralProtonCut = (TCutG*)cutFile->Get("cwtE_CentralProtonCut");
+  cwtE_CentralCut = static_cast<TCutG*>((cutFile->Get("cwtE_CentralCut")));
+  cwtE_CentralProtonCut = static_cast<TCutG*>(cutFile->Get("cwtE_CentralProtonCut"));
 
   // Cut on raw Si E and CsI E (channels)
-  siCsiEForwardCut[0] = (TCutG*)cutFile->Get("siCsiEForward_d0Cut");
-  siCsiEForwardCut[1] = (TCutG*)cutFile->Get("siCsiEForward_d1Cut");
-  siCsiEForwardCut[4] = (TCutG*)cutFile->Get("siCsiEForward_d4Cut");
-  siCsiEForwardCut[5] = (TCutG*)cutFile->Get("siCsiEForward_d5Cut");
-  siCsiEForwardCut[9] = (TCutG*)cutFile->Get("siCsiEForward_d9Cut");
+  siCsiEForwardCut[0] = static_cast<TCutG*>(cutFile->Get("siCsiEForward_d0Cut"));
+  siCsiEForwardCut[1] = static_cast<TCutG*>(cutFile->Get("siCsiEForward_d1Cut"));
+  siCsiEForwardCut[4] = static_cast<TCutG*>(cutFile->Get("siCsiEForward_d4Cut"));
+  siCsiEForwardCut[5] = static_cast<TCutG*>(cutFile->Get("siCsiEForward_d5Cut"));
+  siCsiEForwardCut[9] = static_cast<TCutG*>(cutFile->Get("siCsiEForward_d9Cut"));
 
   cutFile->Close();
 
