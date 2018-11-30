@@ -45,26 +45,26 @@
 #include "TypeDef.h"
 
 // Define the parameteric line equation
-void line(Double_t t, std::vector<Double_t> p, Double_t &x, Double_t &y, Double_t &z) {
+void line(double t, std::vector<double> p, double &x, double &y, double &z) {
   x = p[0] + p[1]*t;
   y = t;
   z = p[2] + p[3]*t;
 }
 
 struct sortByRowMMChainStrip {
-  inline Bool_t operator() (const mmChainStrip& struct1, const mmChainStrip& struct2) {
+  inline bool operator() (const mmChainStrip& struct1, const mmChainStrip& struct2) {
     return (struct1.row < struct2.row);
   }
 };
 
 struct sortByRowMMCenter {
-  inline Bool_t operator() (const mmCenter& struct1, const mmCenter& struct2) {
+  inline bool operator() (const mmCenter& struct1, const mmCenter& struct2) {
     return (struct1.row < struct2.row);
   }
 };
 
 struct sortByRowMMTrack {
-  inline Bool_t operator() (const mmTrack& struct1, const mmTrack& struct2) {
+  inline bool operator() (const mmTrack& struct1, const mmTrack& struct2) {
     return (struct1.row < struct2.row);
   }
 };
@@ -111,39 +111,39 @@ public :
 private:
   void InitChannelMap();
 
-  std::map<Int_t, std::pair<Int_t, Int_t> > siForwardMap;
-  Int_t siForwardChannel[10][4];
+  std::map<Int_t, std::pair<int, int> > siForwardMap;
+  int siForwardChannel[10][4];
 
-  std::map<Int_t, std::pair<Int_t, Int_t> > siLeftMap;
-  Int_t siLeftChannel[6][4];
+  std::map<int, std::pair<int, int> > siLeftMap;
+  int siLeftChannel[6][4];
 
-  std::map<Int_t, Int_t> csiForwardMap;
-  Int_t csiForwardChannel[10];
+  std::map<int, int> csiForwardMap;
+  int csiForwardChannel[10];
 
-  std::map<Int_t, Int_t> csiLeftMap;
-  Int_t csiLeftChannel[6];
+  std::map<int, int> csiLeftMap;
+  int csiLeftChannel[6];
 
-  std::map<Int_t, Int_t> Aget_Map;
+  std::map<int, int> Aget_Map;
 
-  std::map<Int_t, std::pair<Int_t, Int_t> > MM_Map_Asad0_Aget0;
-  std::map<Int_t, std::pair<Int_t, Int_t> > MM_Map_Asad0_Aget1;
-  std::map<Int_t, std::pair<Int_t, Int_t> > MM_Map_Asad0_Aget2;
-  std::map<Int_t, std::pair<Int_t, Int_t> > MM_Map_Asad0_Aget3;
+  std::map<int, std::pair<int, int> > MM_Map_Asad0_Aget0;
+  std::map<int, std::pair<int, int> > MM_Map_Asad0_Aget1;
+  std::map<int, std::pair<int, int> > MM_Map_Asad0_Aget2;
+  std::map<int, std::pair<int, int> > MM_Map_Asad0_Aget3;
 
-  std::map<Int_t, std::pair<Int_t, Int_t> > MM_Map_Asad1_Aget0;
-  std::map<Int_t, std::pair<Int_t, Int_t> > MM_Map_Asad1_Aget1;
-  std::map<Int_t, std::pair<Int_t, Int_t> > MM_Map_Asad1_Aget2;
-  std::map<Int_t, std::pair<Int_t, Int_t> > MM_Map_Asad1_Aget3;
+  std::map<int, std::pair<int, int> > MM_Map_Asad1_Aget0;
+  std::map<int, std::pair<int, int> > MM_Map_Asad1_Aget1;
+  std::map<int, std::pair<int, int> > MM_Map_Asad1_Aget2;
+  std::map<int, std::pair<int, int> > MM_Map_Asad1_Aget3;
 
-  std::map<Int_t, Int_t> MM_Map_Asad2_Aget0;
-  std::map<Int_t, Int_t> MM_Map_Asad2_Aget1;
-  std::map<Int_t, std::pair<Int_t, Int_t> > MM_Map_Asad2_Aget2;
-  std::map<Int_t, std::pair<Int_t, Int_t> > MM_Map_Asad2_Aget3;
+  std::map<int, int> MM_Map_Asad2_Aget0;
+  std::map<int, int> MM_Map_Asad2_Aget1;
+  std::map<int, std::pair<int, int> > MM_Map_Asad2_Aget2;
+  std::map<int, std::pair<int, int> > MM_Map_Asad2_Aget3;
 
-  std::map<Int_t, Int_t> MM_Map_Asad3_Aget0;
-  std::map<Int_t, Int_t> MM_Map_Asad3_Aget1;
-  std::map<Int_t, std::pair<Int_t, Int_t> > MM_Map_Asad3_Aget2;
-  std::map<Int_t, std::pair<Int_t, Int_t> > MM_Map_Asad3_Aget3;
+  std::map<int, int> MM_Map_Asad3_Aget0;
+  std::map<int, int> MM_Map_Asad3_Aget1;
+  std::map<int, std::pair<int, int> > MM_Map_Asad3_Aget2;
+  std::map<int, std::pair<int, int> > MM_Map_Asad3_Aget3;
 
 // Cuts
   TCutG *dEEForwardCut[10];
@@ -296,55 +296,55 @@ private:
   void InitCanvas();
 
   // Draw Central Pads Energy
-  void DrawCenterEnergyCanvas(Int_t count, std::vector<mmCenter> centerMatched_, std::vector<mmTrack> centerBeamTotal_);
-  Int_t totalCenterEnergyCanvas;
-  Int_t centerEnergyCanvasNum, centerEnergyCanvasXYNum, centerEnergyCanvasXNum, centerEnergyCanvasYNum;
+  void DrawCenterEnergyCanvas(int count, std::vector<mmCenter> centerMatched_, std::vector<mmTrack> centerBeamTotal_);
+  int totalCenterEnergyCanvas;
+  int centerEnergyCanvasNum, centerEnergyCanvasXYNum, centerEnergyCanvasXNum, centerEnergyCanvasYNum;
   TCanvas* centerEnergyCanvas[5];
 
   // Draw Beam Track
-  void DrawCenterBeamCanvas(Int_t count, std::vector<mmTrack> centerBeamTrack_, std::vector<Double_t> pars,
-      Int_t lastRow);
-  Int_t totalCenterBeamCanvas;
-  Int_t centerBeamCanvasNum, centerBeamCanvasXYNum, centerBeamCanvasXNum, centerBeamCanvasYNum;
+  void DrawCenterBeamCanvas(int count, std::vector<mmTrack> centerBeamTrack_, std::vector<double> pars,
+      int lastRow);
+  int totalCenterBeamCanvas;
+  int centerBeamCanvasNum, centerBeamCanvasXYNum, centerBeamCanvasXNum, centerBeamCanvasYNum;
   TCanvas* centerBeamCanvas[5];
 
-  void DrawCenterNoiseCanvas(Int_t count, std::vector<mmCenter> centerReduced_,
+  void DrawCenterNoiseCanvas(int count, std::vector<mmCenter> centerReduced_,
                              std::vector<mmCenter> centerReducedNoise_);
-  Int_t totalCenterNoiseCanvas;
-  Int_t centerNoiseCanvasNum, centerNoiseCanvasXYNum, centerNoiseCanvasXNum, centerNoiseCanvasYNum;
+  int totalCenterNoiseCanvas;
+  int centerNoiseCanvasNum, centerNoiseCanvasXYNum, centerNoiseCanvasXNum, centerNoiseCanvasYNum;
   TCanvas* centerNoiseCanvas[10];
 
   // Draw Central Pad Raw Energy vs Running Average Energy
-  void DrawCenterEnergyRunningAverageCanvas(Int_t count, std::vector<mmTrack> rawTrack_,
+  void DrawCenterEnergyRunningAverageCanvas(int count, std::vector<mmTrack> rawTrack_,
                                              std::vector<mmTrack> averageTrack_);
-  Int_t totalCenterEnergyRunningCanvas;
-  Int_t centerEnergyRunningCanvasNum, centerEnergyRunningCanvasXYNum, centerEnergyRunningCanvasXNum, centerEnergyRunningCanvasYNum;
+  int totalCenterEnergyRunningCanvas;
+  int centerEnergyRunningCanvasNum, centerEnergyRunningCanvasXYNum, centerEnergyRunningCanvasXNum, centerEnergyRunningCanvasYNum;
   TCanvas* centerEnergyRunningCanvas[5];
 
   // Draw Three and Five Point Derivatives with Central Region with Respect to Energy
-  void DrawCenterEnergyDerivCanvas(Int_t count, std::vector<centerDeriv> threePoint_, std::vector<centerDeriv> fivePoint_);
-  Int_t totalCenterEnergyDerivCanvas;
-  Int_t centerEnergyDerivCanvasNum, centerEnergyDerivCanvasXYNum, centerEnergyDerivCanvasXNum, centerEnergyDerivCanvasYNum;
+  void DrawCenterEnergyDerivCanvas(int count, std::vector<centerDeriv> threePoint_, std::vector<centerDeriv> fivePoint_);
+  int totalCenterEnergyDerivCanvas;
+  int centerEnergyDerivCanvasNum, centerEnergyDerivCanvasXYNum, centerEnergyDerivCanvasXNum, centerEnergyDerivCanvasYNum;
   TCanvas* centerEnergyDerivCanvas[5];
 
   // Draw Linear Fit of Central Regions
-  void DrawCenterBeamLinearCanvas(Int_t count, std::vector<mmTrack> centerMatched_, std::vector<Double_t> parsBeam, std::vector<Double_t> parsRecoil,
-      Int_t vertexRow);
-  Int_t totalCenterBeamLinearCanvas;
-  Int_t centerBeamLinearCanvasNum, centerBeamLinearCanvasXYNum, centerBeamLinearCanvasXNum, centerBeamLinearCanvasYNum;
+  void DrawCenterBeamLinearCanvas(int count, std::vector<mmTrack> centerMatched_, std::vector<double> parsBeam, std::vector<double> parsRecoil,
+      int vertexRow);
+  int totalCenterBeamLinearCanvas;
+  int centerBeamLinearCanvasNum, centerBeamLinearCanvasXYNum, centerBeamLinearCanvasXNum, centerBeamLinearCanvasYNum;
   TCanvas* centerBeamLinearCanvas[5];
 
   // Draw Event Track
-  void DrawEventTrackSideCanvas(Int_t count, std::vector<mmTrack> center_, std::vector<mmTrack> left_, std::vector<mmTrack> leftRaw_,
+  void DrawEventTrackSideCanvas(int count, std::vector<mmTrack> center_, std::vector<mmTrack> left_, std::vector<mmTrack> leftRaw_,
       std::vector<mmTrack> right_, std::vector<mmTrack> rightRaw_);
-  Int_t totalEventTrackSideCanvas;
-  Int_t eventTrackSideCanvasNum, eventTrackSideCanvasXYNum, eventTrackSideCanvasXNum, eventTrackSideCanvasYNum;
+  int totalEventTrackSideCanvas;
+  int eventTrackSideCanvasNum, eventTrackSideCanvasXYNum, eventTrackSideCanvasXNum, eventTrackSideCanvasYNum;
   TCanvas* eventTrackSideCanvas[15];
 
   // Draw dE Event Track for Side Region
-  void DrawEventTrackSidedECanvas(Int_t count, std::vector<mmTrack> leftRaw_, std::vector<mmTrack> rightRaw_);
-  Int_t totalEventTrackSidedECanvas;
-  Int_t eventTrackSidedECanvasNum, eventTrackSidedECanvasXYNum, eventTrackSidedECanvasXNum, eventTrackSidedECanvasYNum;
+  void DrawEventTrackSidedECanvas(int count, std::vector<mmTrack> leftRaw_, std::vector<mmTrack> rightRaw_, double leftAngle, double rightAngle);
+  int totalEventTrackSidedECanvas;
+  int eventTrackSidedECanvasNum, eventTrackSidedECanvasXYNum, eventTrackSidedECanvasXNum, eventTrackSidedECanvasYNum;
   TCanvas* eventTrackSidedECanvas[15];
 
   void WriteCanvas();
@@ -352,73 +352,73 @@ private:
 // Silicon Energy Calibration
 private:
   void InitSiEForwardCalibration();
-  std::pair<Float_t, Float_t> siEForwardCalibration[10][4] = {std::make_pair(0., 0.)};
-  std::pair<Float_t, Float_t> siELeftCalibration[6][4] = {std::make_pair(0., 0.)};
+  std::pair<double, double> siEForwardCalibration[10][4] = {std::make_pair(0., 0.)};
+  std::pair<double, double> siELeftCalibration[6][4] = {std::make_pair(0., 0.)};
 
   void InitCsIECalibration();
-  std::pair<Float_t, Float_t> csiEForwardCalibration[10] = {std::make_pair(0., 0.)};
+  std::pair<double, double> csiEForwardCalibration[10] = {std::make_pair(0., 0.)};
 
 // Center Pad Gain Match
 private:
   void InitCentralPadGainMatch();
-  Double_t scale[6][128];
+  double scale[6][128];
 
 // Beam Average Central Pads
   void InitAverageBeamEnergy();
-  Double_t averageBeamEnergy[6][128];
+  double averageBeamEnergy[6][128];
 
 // General Methods
-  Bool_t AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std::vector<mmTrack> centerBeamTotal_,
-                              std::vector<mmTrack> centerProton_, std::map<Int_t, Double_t> centralPadTotalEnergy);
-  Bool_t AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::vector<mmTrack> centerBeamTotal_,
+  bool AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std::vector<mmTrack> centerBeamTotal_,
+                              std::vector<mmTrack> centerProton_, std::map<int, double> centralPadTotalEnergy);
+  bool AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::vector<mmTrack> centerBeamTotal_,
                            std::vector<mmChainStrip> leftChain_, std::vector<mmChainStrip> leftStrip_,
                            std::vector<mmChainStrip> rightChain_,
                            std::vector<mmChainStrip> rightStrip_);
-  Bool_t AnalysisLeftSide();
+  bool AnalysisLeftSide();
 
 // MicroMegas Functions
 
   // Center Functions
   std::vector<mmCenter> CenterReduceNoise(std::vector<mmCenter> center);
-  void CorrectCenterEnergy(std::vector<mmTrack> &centerMatched_, std::vector<Double_t> parsBeam, Int_t lastRow);
-  Double_t GaussianCDF(Double_t x, Double_t mean, Double_t sigma);
-  void FindMaxCentralEnergy(std::vector<mmTrack> centerMatched_, Int_t &maxEnergyRow, Double_t &maxEnergy,
-                            Double_t &averageMaxEnergy, Double_t &maxDeriv);
+  void CorrectCenterEnergy(std::vector<mmTrack> &centerMatched_, std::vector<double> parsBeam, int lastRow);
+  double GaussianCDF(double x, double mean, double sigma);
+  void FindMaxCentralEnergy(std::vector<mmTrack> centerMatched_, int &maxEnergyRow, double &maxEnergy,
+                            double &averageMaxEnergy, double &maxDeriv);
   std::vector<mmTrack> GetRunningEnergyAverageThree(std::vector<mmTrack> centerMatched_);
   std::vector<mmTrack> GetRunningEnergyAverageFive(std::vector<mmTrack> centerMatched_);
-  Bool_t CenterOnlyOneColumn(std::vector<mmTrack> centerMatched_);
+  bool CenterOnlyOneColumn(std::vector<mmTrack> centerMatched_);
   std::vector<centerDeriv> CenterEnergyThreePointDeriv(std::vector<mmTrack> centerMatched_);
   std::vector<centerDeriv> CenterEnergyFivePointDeriv(std::vector<mmTrack> centerMatched_);
-  std::pair<Int_t, Int_t> CenterGetDerivMax(std::vector<centerDeriv> threePoint_, std::vector<centerDeriv> fivePoint_);
-  std::vector<Double_t> FitCenterPadsLinear(std::vector<mmTrack> centerMatched_, Int_t vertexRow);
+  std::pair<int, int> CenterGetDerivMax(std::vector<centerDeriv> threePoint_, std::vector<centerDeriv> fivePoint_);
+  std::vector<double> FitCenterPadsLinear(std::vector<mmTrack> centerMatched_, int vertexRow);
 
   // Side Functions
   void ChainStripMatch(std::vector<mmTrack> &chainStripMatched, std::vector<mmTrack> &chainStripRaw,
                        std::vector<mmChainStrip> chain_,
-                       std::vector<mmChainStrip> strip_, Bool_t leftSide, Double_t siTime);
+                       std::vector<mmChainStrip> strip_, bool leftSide, double siTime);
   size_t ChainStripTime0NumTimeBuckets(std::vector<mmTrack> matched);
   size_t ChainStripNumberTimeBuckets(std::vector<mmChainStrip> chain, std::vector<mmChainStrip> strip);
   void ChainStripMatchingOutward(std::vector<mmTrack> &chainStripMatched, std::vector<mmChainStrip> chain,
-                                 std::vector<mmChainStrip> strip, Bool_t leftSide, Double_t siTime);
+                                 std::vector<mmChainStrip> strip, bool leftSide, double siTime);
   void ChainStripMatchingBox(std::vector<mmTrack> &chainStripMatched, std::vector<mmChainStrip> chain,
-                             std::vector<mmChainStrip> strip, Bool_t leftSide, Double_t siTime);
+                             std::vector<mmChainStrip> strip, bool leftSide, double siTime);
   void ChainStripMatchingBoxTime0(std::vector<mmTrack> &chainStripMatched, std::vector<mmTrack> time0);
   void ChainStripMatchingTime(std::vector<mmTrack> &chainStripMatched, std::vector<mmChainStrip> chain,
-                              std::vector<mmChainStrip> strip, Bool_t leftSide, Double_t siTime, Int_t timeWindow);
+                              std::vector<mmChainStrip> strip, bool leftSide, double siTime, int timeWindow);
   void ChainStripMatchingTimeSlopeFit(std::vector<mmTrack> &chainStripMatched, std::vector<mmChainStrip> chain,
-                                      std::vector<mmChainStrip> strip, Bool_t leftSide, Double_t siTime,
-                                      Double_t timeWindow);
+                                      std::vector<mmChainStrip> strip, bool leftSide, double siTime,
+                                      double timeWindow);
   void ChainStripMatchingTimeSlopeHough(std::vector<mmTrack> &chainStripMatched, std::vector<mmChainStrip> chain,
-                                        std::vector<mmChainStrip> strip, Bool_t leftSide, Double_t siTime,
-                                        Double_t timeWindow);
-  Double_t ChainStripSize(std::vector<mmTrack> chainStripMatched);
+                                        std::vector<mmChainStrip> strip, bool leftSide, double siTime,
+                                        double timeWindow);
+  double ChainStripSize(std::vector<mmTrack> chainStripMatched);
 
 // Visualize Hough Transform
-  void GetMinMaxD(std::vector<mmTrack> initPoints, Int_t &minXY, Int_t &maxXY, Int_t &minYZ, Int_t &maxYZ);
+  void GetMinMaxD(std::vector<mmTrack> initPoints, int &minXY, int &maxXY, int &minYZ, int &maxYZ);
   void VisualizeHough(std::vector<mmTrack> initPoints, TH2I* fXY, TH2I* fYZ);
-  void GetMinMaxDRestricted(std::vector<mmTrack> initPoints, Int_t &minXY, Int_t &maxXY, Int_t &minYZ, Int_t &maxYZ, Int_t siDet);
-  void VisualizeHoughRestricted(std::vector<mmTrack> initPoints, TH2I* fXY, TH2I* fYZ, Int_t siDet);
-  void GetHoughStdDevXYRestricted(std::vector<mmTrack> initPoints, std::vector<Double_t> &angle_, std::vector<Double_t> &stdDev_, Int_t siDet);
+  void GetMinMaxDRestricted(std::vector<mmTrack> initPoints, int &minXY, int &maxXY, int &minYZ, int &maxYZ, int siDet);
+  void VisualizeHoughRestricted(std::vector<mmTrack> initPoints, TH2I* fXY, TH2I* fYZ, int siDet);
+  void GetHoughStdDevXYRestricted(std::vector<mmTrack> initPoints, std::vector<double> &angle_, std::vector<double> &stdDev_, int siDet);
 
 // Cross Section
 private:
@@ -433,25 +433,25 @@ private:
 private:
   void InitVariables();
   TFile *file;
-  Double_t m1;
-  Double_t m2;
-  Double_t rowConversion;
-  Double_t rowConversionOffset;
-  Double_t heightOffset;
-  Double_t driftVelocity;
-  Double_t timeResolution;
-  Long64_t entry;
-  Double_t beamEnergy;
-  Double_t density;
-  Double_t distanceHavarToSilicon;
-  Double_t distanceHavarToMM;
-  Double_t numberB8;
-  Double_t siXPosForward[10][4];
-  Double_t siYPosForward;
-  Double_t gasPositionResolution;
-  std::pair<Double_t, Double_t> mmColumnSize[6];
-  Double_t padError;
-  Double_t padErrorTwoColumns;
+  double m1;
+  double m2;
+  double rowConversion;
+  double rowConversionOffset;
+  double heightOffset;
+  double driftVelocity;
+  double timeResolution;
+  long entry;
+  double beamEnergy;
+  double density;
+  double distanceHavarToSilicon;
+  double distanceHavarToMM;
+  double numberB8;
+  double siXPosForward[10][4];
+  double siYPosForward;
+  double gasPositionResolution;
+  std::pair<double, double> mmColumnSize[6];
+  double padError;
+  double padErrorTwoColumns;
 
   EnergyLoss *boronMethane;
   EnergyLoss *protonMethane;
@@ -461,26 +461,26 @@ private:
   void FillTree();
   void WriteTree();
   TTree *outTree;
-  Int_t siDet;
-  Int_t siQuad;
-  Int_t siChannel;
-  Double_t siEnergy;
-  Double_t siEnergyCal;
-  Double_t siTime;
-  Double_t csiEnergy;
-  Double_t csiEnergyCal;
-  Double_t csiTime;
-  Double_t totalEnergy;
-  Bool_t punchthrough;
-  Double_t dE;
-  Double_t vertexPositionX;
-  Double_t vertexPositionY;
-  Double_t vertexPositionZ;
-  Double_t angle;
-  Double_t cmEnergy;
-  Double_t siPosX;
-  Double_t siPosY;
-  Double_t siPosZ;
+  int siDet;
+  int siQuad;
+  int siChannel;
+  float siEnergy;
+  float siEnergyCal;
+  float siTime;
+  float csiEnergy;
+  float csiEnergyCal;
+  float csiTime;
+  float totalEnergy;
+  bool punchthrough;
+  float dE;
+  float vertexPositionX;
+  float vertexPositionY;
+  float vertexPositionZ;
+  float angle;
+  float cmEnergy;
+  float siPosX;
+  float siPosY;
+  float siPosZ;
 
 };
 #endif
@@ -793,8 +793,8 @@ inline void Spectra::InitChannelMap() {
   // Asad 3 Aget 1+2 are beam right
 
   // Aget_Map
-  Int_t j = 0;
-  for(Int_t i = 0; i < 68; i++) {
+  int j = 0;
+  for(int i = 0; i < 68; i++) {
     if(i == 11 || i == 22 || i == 45 || i == 56) continue; // FPN Channels
     Aget_Map[j] = i;
     j++;
@@ -802,65 +802,65 @@ inline void Spectra::InitChannelMap() {
 
   // Asad0_Aget0
   j = 31;
-  for(Int_t i = 0; i < 64; i++) {
+  for(int i = 0; i < 64; i++) {
     if(i % 4 == 0 && i != 0) j--;
-    Int_t remain = i % 4;
+    int remain = i % 4;
     MM_Map_Asad0_Aget0[Aget_Map[i]] = std::make_pair(4 - remain, j);
   }
 
   // Asad0_Aget1
   j = 63;
-  for(Int_t i = 0; i < 64; i++) {
+  for(int i = 0; i < 64; i++) {
     if(i % 4 == 0 && i != 0) j--;
-    Int_t remain = i % 4;
+    int remain = i % 4;
     MM_Map_Asad0_Aget1[Aget_Map[i]] = std::make_pair(4 - remain, j);
   }
 
   // Asad0_Aget2
   j = 95;
-  for(Int_t i = 0; i < 64; i++) {
+  for(int i = 0; i < 64; i++) {
     if(i % 4 == 0 && i != 0) j--;
-    Int_t remain = i % 4;
+    int remain = i % 4;
     MM_Map_Asad0_Aget2[Aget_Map[i]] = std::make_pair(1 + remain, j);
   }
 
   // Asad0_Aget3
   j = 127;
-  for(Int_t i = 0; i < 64; i++) {
+  for(int i = 0; i < 64; i++) {
     if(i % 4 == 0 && i != 0) j--;
-    Int_t remain = i % 4;
+    int remain = i % 4;
     MM_Map_Asad0_Aget3[Aget_Map[i]] = std::make_pair(1 + remain, j);
   }
 
   // Asad1_Aget0
   j = 15;
-  for(Int_t i = 0; i < 64; i++) {
+  for(int i = 0; i < 64; i++) {
     if(i % 4 == 0 && i != 0) j--;
-    Int_t remain = i % 4;
+    int remain = i % 4;
     MM_Map_Asad1_Aget0[Aget_Map[i]] = std::make_pair(1 + remain, j);
   }
 
   // Asad1_Aget1
   j = 47;
-  for(Int_t i = 0; i < 64; i++) {
+  for(int i = 0; i < 64; i++) {
     if(i % 4 == 0 && i != 0) j--;
-    Int_t remain = i % 4;
+    int remain = i % 4;
     MM_Map_Asad1_Aget1[Aget_Map[i]] = std::make_pair(1 + remain, j);
   }
 
   // Asad1_Aget2
   j = 79;
-  for(Int_t i = 0; i < 64; i++) {
+  for(int i = 0; i < 64; i++) {
     if(i % 4 == 0 && i != 0) j--;
-    Int_t remain = i % 4;
+    int remain = i % 4;
     MM_Map_Asad1_Aget2[Aget_Map[i]] = std::make_pair(4 - remain, j);
   }
 
   // Asad1_Aget3
   j = 111;
-  for(Int_t i = 0; i < 64; i++) {
+  for(int i = 0; i < 64; i++) {
     if(i % 4 == 0 && i != 0) j--;
-    Int_t remain = i % 4;
+    int remain = i % 4;
     MM_Map_Asad1_Aget3[Aget_Map[i]] = std::make_pair(4 - remain, j);
   }
 
@@ -1002,14 +1002,14 @@ inline void Spectra::InitChannelMap() {
 
   // Asad2_Aget2
   j = 63;
-  for(Int_t i = 0; i < 64; i++) {
+  for(int i = 0; i < 64; i++) {
     MM_Map_Asad2_Aget2[Aget_Map[i]] = std::make_pair(0, j);
     j--;
   }
 
   // Asad2_Aget3
   j = 127;
-  for(Int_t i = 0; i < 64; i++) {
+  for(int i = 0; i < 64; i++) {
     MM_Map_Asad2_Aget3[Aget_Map[i]] = std::make_pair(0, j);
     j--;
   }
@@ -1017,13 +1017,13 @@ inline void Spectra::InitChannelMap() {
   // Asad3_Aget0 (Beam right)
   // Strips
   j = 31;
-  for(Int_t i = 0; i < 32; i++) {
+  for(int i = 0; i < 32; i++) {
     MM_Map_Asad3_Aget0[Aget_Map[i]] = j;
     j--;
   }
   // Chains
   j = 32;
-  for(Int_t i = 32; i < 64; i++) {
+  for(int i = 32; i < 64; i++) {
     MM_Map_Asad3_Aget0[Aget_Map[i]] = j;
     j++;
   }
@@ -1031,27 +1031,27 @@ inline void Spectra::InitChannelMap() {
   // Asad3_Aget1 (Beam right)
   // Strips
   j = 63;
-  for(Int_t i = 0; i < 32; i++) {
+  for(int i = 0; i < 32; i++) {
     MM_Map_Asad3_Aget1[Aget_Map[i]] = j;
     j--;
   }
   // Chains
   j = 0;
-  for(Int_t i = 32; i < 64; i++) {
+  for(int i = 32; i < 64; i++) {
     MM_Map_Asad3_Aget1[Aget_Map[i]] = j;
     j++;
   }
 
   // Asad3_Aget2
   j = 63;
-  for(Int_t i = 0; i < 64; i++) {
+  for(int i = 0; i < 64; i++) {
     MM_Map_Asad3_Aget2[Aget_Map[i]] = std::make_pair(5, j);
     j--;
   }
 
   // Asad3_Aget3
   j = 127;
-  for(Int_t i = 0; i < 64; i++) {
+  for(int i = 0; i < 64; i++) {
     MM_Map_Asad3_Aget3[Aget_Map[i]] = std::make_pair(5, j);
     j--;
   }
@@ -1097,7 +1097,7 @@ inline void Spectra::InitHistograms() {
   hSiFired->GetYaxis()->SetTitleOffset(1.4);
 
   // Histograms for the Forward Si Detectors
-  for(UInt_t i = 0; i < 10; i++) {
+  for(uint i = 0; i < 10; i++) {
     TString name = Form("siEForward_d%d", i);
     hSiEForwardDet[i] = new TH1F(name, name, 500, 0, 4000);
     hSiEForwardDet[i]->GetXaxis()->SetTitle("Energy [channels]"); hSiEForwardDet[i]->GetXaxis()->CenterTitle();
@@ -1116,7 +1116,7 @@ inline void Spectra::InitHistograms() {
     hSiTForwardDet[i]->GetYaxis()->SetTitle("Counts"); hSiTForwardDet[i]->GetYaxis()->CenterTitle();
     hSiTForwardDet[i]->GetYaxis()->SetTitleOffset(1.4);
 
-    for(UInt_t j = 0; j < 4; j++) {
+    for(uint j = 0; j < 4; j++) {
       TString name = Form("siEForward_d%d_q%d", i, j);
       hSiEForward[i][j] = new TH1F(name, name, 500, 0, 4000);
       hSiEForward[i][j]->GetXaxis()->SetTitle("Energy [channels]"); hSiEForward[i][j]->GetXaxis()->CenterTitle();
@@ -1138,7 +1138,7 @@ inline void Spectra::InitHistograms() {
   }
 
   // Histograms for the Forward Csi Detectors
-  for(UInt_t i = 0; i < 10; i++) {
+  for(uint i = 0; i < 10; i++) {
     TString name = Form("CsiEForward_d%d", i);
     hCsiEForward[i] = new TH1F(name, name, 500, 0, 4000);
     hCsiEForward[i]->GetXaxis()->SetTitle("Energy [channels]"); hCsiEForward[i]->GetXaxis()->CenterTitle();
@@ -1165,7 +1165,7 @@ inline void Spectra::InitHistograms() {
   }
 
   // Histograms for the Forward Total Energy
-  for(UInt_t i = 0; i < 10; i++) {
+  for(uint i = 0; i < 10; i++) {
     TString name = Form("totalEnergy_d%d", i);
     hTotalEForward[i] = new TH1F(name, name, 500, 0, 25000);
     hTotalEForward[i]->GetXaxis()->SetTitle("Total Energy [keV]"); hTotalEForward[i]->GetXaxis()->CenterTitle();
@@ -1174,7 +1174,7 @@ inline void Spectra::InitHistograms() {
   }
 
   // Si vs Csi Forward Detectors
-  for(UInt_t i = 0; i < 10; i++) {
+  for(uint i = 0; i < 10; i++) {
     TString name = Form("siCsiEForward_d%d", i);
     hSiCsiEForwardDet[i] = new TH2F(name, name, 500, 0, 4000, 500, 0, 10000);
     hSiCsiEForwardDet[i]->GetXaxis()->SetTitle("Si Energy [channels]"); hSiCsiEForwardDet[i]->GetXaxis()->CenterTitle();
@@ -1187,7 +1187,7 @@ inline void Spectra::InitHistograms() {
     hSiCsiEForwardDetCal[i]->GetYaxis()->SetTitle("CsI Energy [channels]"); hSiCsiEForwardDetCal[i]->GetYaxis()->CenterTitle();
     hSiCsiEForwardDetCal[i]->GetYaxis()->SetTitleOffset(1.4);
 
-    for(UInt_t j = 0; j < 4; j++) {
+    for(uint j = 0; j < 4; j++) {
       name = Form("siCsiEForward_d%d_q%d", i, j);
       hSiCsiEForward[i][j] = new TH2F(name, name, 500, 0, 4000, 500, 0, 10000);
       hSiCsiEForward[i][j]->GetXaxis()->SetTitle("Si Energy [channels]"); hSiCsiEForward[i][j]->GetXaxis()->CenterTitle();
@@ -1203,13 +1203,13 @@ inline void Spectra::InitHistograms() {
   }
 
   // Si + CsI (raw) vs Si (raw) Forward Detectors
-  for(UInt_t i = 0; i < 10; i++) {
+  for(uint i = 0; i < 10; i++) {
     TString name = Form("hSumSiEForward_d%d", i);
     hSumSiEForwardDet[i] = new TH2F(name, name, 500, 0, 8000, 500, 0, 4000);
     hSumSiEForwardDet[i]->GetXaxis()->SetTitle("Si + CsI [channels]"); hSumSiEForwardDet[i]->GetXaxis()->CenterTitle();
     hSumSiEForwardDet[i]->GetYaxis()->SetTitle("Si [channels]"); hSumSiEForwardDet[i]->GetYaxis()->CenterTitle();
     hSumSiEForwardDet[i]->GetYaxis()->SetTitleOffset(1.4);
-    for(UInt_t j = 0; j < 4; j++) {
+    for(uint j = 0; j < 4; j++) {
       name = Form("hSumSiEForward_d%d_q%d", i, j);
       hSumSiEForward[i][j] = new TH2F(name, name, 500, 0, 8000, 500, 0, 4000);
       hSumSiEForward[i][j]->GetXaxis()->SetTitle("Si + CsI [channels]"); hSumSiEForward[i][j]->GetXaxis()->CenterTitle();
@@ -1219,13 +1219,13 @@ inline void Spectra::InitHistograms() {
   }
 
   // Si + CsI (raw) vs CsI (raw) Forward Detectors
-  for(UInt_t i = 0; i < 10; i++) {
+  for(uint i = 0; i < 10; i++) {
     TString name = Form("hSumCsiEForward_d%d", i);
     hSumCsiEForwardDet[i] = new TH2F(name, name, 500, 0, 8000, 500, 0, 4000);
     hSumCsiEForwardDet[i]->GetXaxis()->SetTitle("Si + CsI [channels]"); hSumCsiEForwardDet[i]->GetXaxis()->CenterTitle();
     hSumCsiEForwardDet[i]->GetYaxis()->SetTitle("CsI [channels]"); hSumCsiEForwardDet[i]->GetYaxis()->CenterTitle();
     hSumCsiEForwardDet[i]->GetYaxis()->SetTitleOffset(1.4);
-    for(UInt_t j = 0; j < 4; j++) {
+    for(uint j = 0; j < 4; j++) {
       name = Form("hSumCsiEForward_d%d_q%d", i, j);
       hSumCsiEForward[i][j] = new TH2F(name, name, 500, 0, 8000, 500, 0, 4000);
       hSumCsiEForward[i][j]->GetXaxis()->SetTitle("Si + CsI [channels]"); hSumCsiEForward[i][j]->GetXaxis()->CenterTitle();
@@ -1235,7 +1235,7 @@ inline void Spectra::InitHistograms() {
   }
 
   // dE vs E Histograms
-  for(UInt_t i = 0; i < 10; i++) {
+  for(uint i = 0; i < 10; i++) {
     TString name = Form("dEEForward_d%d", i);
     hdEEForward[i] = new TH2F(name, name, 500, 0, 4000, 500, 0, 8000);
     hdEEForward[i]->GetXaxis()->SetTitle("Si Energy [channels]"); hdEEForward[i]->GetXaxis()->CenterTitle();
@@ -1256,14 +1256,14 @@ inline void Spectra::InitHistograms() {
   }
 
   // Hough Angle - Forward Detectors
-  for(UInt_t i = 0; i < 10; i++) {
+  for(uint i = 0; i < 10; i++) {
     TString name = Form("houghAngleSiForward_d%d", i);
     hHoughAngle[i] = new TH1F(name, name, 180, 0, 180);
     hHoughAngle[i]->GetXaxis()->SetTitle("Hough Angle"); hHoughAngle[i]->GetXaxis()->CenterTitle();
   }
 
   // Angle vs E Histograms hAngleEForward[10]
-  for(UInt_t i = 0; i < 10; i++) {
+  for(uint i = 0; i < 10; i++) {
     TString name = Form("angleSiEForward_d%d", i);
     hAngleEForward[i] = new TH2F(name, name, 200, 0, 4000, 75, 0, 1.7);
     hAngleEForward[i]->GetXaxis()->SetTitle("Si Energy [channels]"); hAngleEForward[i]->GetXaxis()->CenterTitle();
@@ -1296,7 +1296,7 @@ inline void Spectra::InitHistograms() {
   }
 
   // Vertex vs E Histograms
-  for(UInt_t i = 0; i < 10; i++) {
+  for(uint i = 0; i < 10; i++) {
     TString name = Form("vertexSiEForward_d%d", i);
     hVertexSiEForward[i] = new TH2F(name, name, 500, 0, 4000, 500, -450, 300);
     hVertexSiEForward[i]->GetXaxis()->SetTitle("Si Energy [channels]"); hVertexSiEForward[i]->GetXaxis()->CenterTitle();
@@ -1327,14 +1327,14 @@ inline void Spectra::InitHistograms() {
   hVertexCMERegion3->GetYaxis()->SetTitleOffset(1.4); hVertexCMERegion3->SetStats(false);
 
   // Vertex vs Angle Histograms Forward Si
-  for(UInt_t i = 0; i < 10; i++) {
+  for(uint i = 0; i < 10; i++) {
     TString name = Form("vertexAngleForward_d%d", i);
     hVertexAngleForward[i] = new TH2F(name, name, 500, -300, 300, 500, 0, 3);
   }
 
   // Time vs Column Number Forward Detectors
-  for(UInt_t i = 0; i < 10; i++) {
-    for(UInt_t j = 0; j < 4; j++) {
+  for(uint i = 0; i < 10; i++) {
+    for(uint j = 0; j < 4; j++) {
       TString name = Form("timeColumnForward_d%d_q%d", i, j);
       hTimeChainForward[i][j] = new TH2F(name, name, 68, -2, 66, 75, 0, 3000);
       hTimeChainForward[i][j]->GetXaxis()->SetTitle("Chain #"); hTimeChainForward[i][j]->GetXaxis()->CenterTitle();
@@ -1345,8 +1345,8 @@ inline void Spectra::InitHistograms() {
   }
 
   // Time vs Strip Number Forward Detectors
-  for(UInt_t i = 0; i < 10; i++) {
-    for(UInt_t j = 0; j < 4; j++) {
+  for(uint i = 0; i < 10; i++) {
+    for(uint j = 0; j < 4; j++) {
       TString name = Form("timeStripForward_d%d_q%d", i, j);
       hTimeStripForward[i][j] = new TH2F(name, name, 68, -2, 66, 75, 0, 3000);
       hTimeStripForward[i][j]->GetXaxis()->SetTitle("Strip #"); hTimeStripForward[i][j]->GetXaxis()->CenterTitle();
@@ -1357,7 +1357,7 @@ inline void Spectra::InitHistograms() {
   }
 
   // Time vs Central Region Forward Detectors
-  for(UInt_t i = 0; i < 10; i++) {
+  for(uint i = 0; i < 10; i++) {
     TString name = Form("timeCentralForward_d%d", i);
     hTimeCentralForward[i] = new TH2F(name, name, 130, -2, 128, 75, 0, 3000);
     hTimeCentralForward[i]->GetXaxis()->SetTitle("Row #"); hTimeCentralForward[i]->GetXaxis()->CenterTitle();
@@ -1367,7 +1367,7 @@ inline void Spectra::InitHistograms() {
   }
 
   // Time vs dE Row Number Forward Detectors
-  for(UInt_t i = 0; i < 10; i++) {
+  for(uint i = 0; i < 10; i++) {
     TString name = Form("timeCentraldEForward_d%d", i);
     hTimeCentraldEForward[i] = new TH2F(name, name, 130, -2, 128, 75, 0, 3000);
     hTimeCentraldEForward[i]->GetXaxis()->SetTitle("Row #"); hTimeCentraldEForward[i]->GetXaxis()->CenterTitle();
@@ -1383,7 +1383,7 @@ inline void Spectra::InitHistograms() {
   hHitPositionsXZForward->GetYaxis()->SetTitleOffset(1.4);
   hHitPositionsXZForward->SetStats(false);
 
-  for(UInt_t i = 0; i < 10; i++) {
+  for(uint i = 0; i < 10; i++) {
     TString name = Form("hitPositionXZForward_d%d", i);
     hHitPositionsXZForwardInd[i] = new TH2F(name, name, 200, -200, 200, 150, -150, 150);
     hHitPositionsXZForwardInd[i]->GetXaxis()->SetTitle("X [mm]"); hHitPositionsXZForwardInd[i]->GetXaxis()->CenterTitle();
@@ -1405,7 +1405,7 @@ inline void Spectra::InitHistograms() {
   hCWTSiE->SetStats(false);
 
   // Max Peak Location Central Pad vs Si E Forward Wall
-  for(UInt_t i = 0; i < 10; i++) {
+  for(uint i = 0; i < 10; i++) {
     TString name = Form("maxPeakSiE_d%d", i);
     hMaxPeakSiE[i] = new TH2F(name, name, 128, 0, 128, 500, 0, 15000);
     hMaxPeakSiE[i]->GetXaxis()->SetTitle("Max Peak [row #]"); hMaxPeakSiE[i]->GetXaxis()->CenterTitle();
@@ -1415,7 +1415,7 @@ inline void Spectra::InitHistograms() {
   }
 
   // Max Peak Location Central Pad vs Average E Forward Wall
-  for(UInt_t i = 0; i < 10; i++) {
+  for(uint i = 0; i < 10; i++) {
     TString name = Form("maxPeakAvgE_d%d", i);
     hMaxPeakAvgPeakE[i] = new TH2F(name, name, 128, 0, 128, 128, 0, 4096);
     hMaxPeakAvgPeakE[i]->GetXaxis()->SetTitle("Max Peak [row #]"); hMaxPeakAvgPeakE[i]->GetXaxis()->CenterTitle();
@@ -1425,7 +1425,7 @@ inline void Spectra::InitHistograms() {
   }
 
   // Max Peak Energy in Central Pad vs Average Peak Energy Forward Detectors
-  for(UInt_t i = 0; i < 10; i++) {
+  for(uint i = 0; i < 10; i++) {
     TString name = Form("maxPeakEAvgE_d%d", i);
     hMaxPeakEAvgPeakE[i] = new TH2F(name, name, 256, 0, 4096, 128, 0, 4096);
     hMaxPeakEAvgPeakE[i]->GetXaxis()->SetTitle("Max Peak Energy [channels]"); hMaxPeakEAvgPeakE[i]->GetXaxis()->CenterTitle();
@@ -1435,7 +1435,7 @@ inline void Spectra::InitHistograms() {
   }
 
   // Average Peak Energy vs Si E Forward Detectors
-  for(UInt_t i = 0; i < 10; i++) {
+  for(uint i = 0; i < 10; i++) {
     TString name = Form("avgPeakESiE_d%d", i);
     hAvgPeakESiE[i] = new TH2F(name, name, 128, 0, 4096, 500, 0, 15000);
     hAvgPeakESiE[i]->GetXaxis()->SetTitle("Average Peak Energy [channels]"); hAvgPeakESiE[i]->GetXaxis()->CenterTitle();
@@ -1445,7 +1445,7 @@ inline void Spectra::InitHistograms() {
   }
 
   // Max Peak Energy in Central Pad vs Derivative around Peak Forward Detectors
-  for(UInt_t i = 0; i < 10; i++) {
+  for(uint i = 0; i < 10; i++) {
     TString name = Form("maxPeakEDeriv_d%d", i);
     hMaxPeakEDerivPeak[i] = new TH2F(name, name, 256, 0, 4096, 128, 0, 2048);
     hMaxPeakEDerivPeak[i]->GetXaxis()->SetTitle("Max Peak Energy [channels]"); hMaxPeakEDerivPeak[i]->GetXaxis()->CenterTitle();
@@ -1455,7 +1455,7 @@ inline void Spectra::InitHistograms() {
   }
 
   // Max Peak Location in Central Pad vs Difference between Peak Location and Derivative Max
-  for(UInt_t i = 0; i < 10; i++) {
+  for(uint i = 0; i < 10; i++) {
     TString name = Form("maxPeakDerivDiff_d%d", i);
     hMaxPeakDerivDiff[i] = new TH2F(name, name, 128, 0, 128, 128, 0, 128);
     hMaxPeakDerivDiff[i]->GetXaxis()->SetTitle("Max Peak Location [row]"); hMaxPeakDerivDiff[i]->GetXaxis()->CenterTitle();
@@ -1465,7 +1465,7 @@ inline void Spectra::InitHistograms() {
   }
 
   // Derivative Location in Central Pad vs Difference between Peak Location and Derivative Max
-  for(UInt_t i = 0; i < 10; i++) {
+  for(uint i = 0; i < 10; i++) {
     TString name = Form("derivPeakDerivDiff_d%d", i);
     hDerivPeakDerivDiff[i] = new TH2F(name, name, 128, 0, 128, 128, 0, 128);
     hDerivPeakDerivDiff[i]->GetXaxis()->SetTitle("Derivative Peak Location [row]"); hDerivPeakDerivDiff[i]->GetXaxis()->CenterTitle();
@@ -1484,11 +1484,11 @@ inline void Spectra::InitHistograms() {
 
 inline void Spectra::InitCanvas() {
   totalCenterEnergyCanvas = 0;
-  centerEnergyCanvasNum = static_cast<Int_t>(sizeof(centerEnergyCanvas)/sizeof(centerEnergyCanvas[0]));
+  centerEnergyCanvasNum = static_cast<int>(sizeof(centerEnergyCanvas)/sizeof(centerEnergyCanvas[0]));
   centerEnergyCanvasXNum = 4;
   centerEnergyCanvasYNum = 4;
   centerEnergyCanvasXYNum = centerEnergyCanvasXNum*centerEnergyCanvasYNum;
-  for(Int_t i = 0; i < centerEnergyCanvasNum; i++) {
+  for(int i = 0; i < centerEnergyCanvasNum; i++) {
     TString name = Form("centerEnergy%d", i + 1);
     centerEnergyCanvas[i] = new TCanvas(name, name, 1600, 1200);
     centerEnergyCanvas[i]->Divide(centerEnergyCanvasXNum, centerEnergyCanvasYNum);
@@ -1496,11 +1496,11 @@ inline void Spectra::InitCanvas() {
   }
 
   totalCenterBeamCanvas = 0;
-  centerBeamCanvasNum = static_cast<Int_t>(sizeof(centerBeamCanvas)/sizeof(centerBeamCanvas[0]));
+  centerBeamCanvasNum = static_cast<int>(sizeof(centerBeamCanvas)/sizeof(centerBeamCanvas[0]));
   centerBeamCanvasXNum = 4;
   centerBeamCanvasYNum = 4;
   centerBeamCanvasXYNum = centerBeamCanvasXNum*centerBeamCanvasYNum;
-  for(Int_t i = 0; i < centerBeamCanvasNum; i++) {
+  for(int i = 0; i < centerBeamCanvasNum; i++) {
     TString name = Form("centerBeam%d", i + 1);
     centerBeamCanvas[i] = new TCanvas(name, name, 1600, 1200);
     centerBeamCanvas[i]->Divide(centerBeamCanvasXNum, centerBeamCanvasYNum);
@@ -1508,11 +1508,11 @@ inline void Spectra::InitCanvas() {
   }
 
   totalCenterNoiseCanvas = 0;
-  centerNoiseCanvasNum = static_cast<Int_t>(sizeof(centerNoiseCanvas)/sizeof(centerNoiseCanvas[0]));
+  centerNoiseCanvasNum = static_cast<int>(sizeof(centerNoiseCanvas)/sizeof(centerNoiseCanvas[0]));
   centerNoiseCanvasXNum = 4;
   centerNoiseCanvasYNum = 4;
   centerNoiseCanvasXYNum = centerNoiseCanvasXNum*centerNoiseCanvasYNum;
-  for(Int_t i = 0; i < centerNoiseCanvasNum; i++) {
+  for(int i = 0; i < centerNoiseCanvasNum; i++) {
     TString name = Form("centerNoise%d", i + 1);
     centerNoiseCanvas[i] = new TCanvas(name, name, 1600, 1200);
     centerNoiseCanvas[i]->Divide(centerNoiseCanvasXNum, centerNoiseCanvasYNum);
@@ -1520,11 +1520,11 @@ inline void Spectra::InitCanvas() {
   }
 
   totalCenterEnergyRunningCanvas = 0;
-  centerEnergyRunningCanvasNum = static_cast<Int_t>(sizeof(centerEnergyRunningCanvas)/sizeof(centerEnergyRunningCanvas[0]));
+  centerEnergyRunningCanvasNum = static_cast<int>(sizeof(centerEnergyRunningCanvas)/sizeof(centerEnergyRunningCanvas[0]));
   centerEnergyRunningCanvasXNum = 4;
   centerEnergyRunningCanvasYNum = 4;
   centerEnergyRunningCanvasXYNum = centerEnergyRunningCanvasXNum*centerEnergyRunningCanvasYNum;
-  for(Int_t i = 0; i < centerEnergyRunningCanvasNum; i++) {
+  for(int i = 0; i < centerEnergyRunningCanvasNum; i++) {
     TString name = Form("centerEnergyRunning%d", i + 1);
     centerEnergyRunningCanvas[i] = new TCanvas(name, name, 1600, 1200);
     centerEnergyRunningCanvas[i]->Divide(centerEnergyRunningCanvasXNum, centerEnergyRunningCanvasYNum);
@@ -1532,11 +1532,11 @@ inline void Spectra::InitCanvas() {
   }
 
   totalCenterEnergyDerivCanvas = 0;
-  centerEnergyDerivCanvasNum = static_cast<Int_t>(sizeof(centerEnergyDerivCanvas)/sizeof(centerEnergyDerivCanvas[0]));
+  centerEnergyDerivCanvasNum = static_cast<int>(sizeof(centerEnergyDerivCanvas)/sizeof(centerEnergyDerivCanvas[0]));
   centerEnergyDerivCanvasXNum = 4;
   centerEnergyDerivCanvasYNum = 4;
   centerEnergyDerivCanvasXYNum = centerEnergyDerivCanvasXNum*centerEnergyDerivCanvasYNum;
-  for(Int_t i = 0; i < centerEnergyDerivCanvasNum; i++) {
+  for(int i = 0; i < centerEnergyDerivCanvasNum; i++) {
     TString name = Form("centerEnergyDeriv%d", i + 1);
     centerEnergyDerivCanvas[i] = new TCanvas(name, name, 1600, 1200);
     centerEnergyDerivCanvas[i]->Divide(centerEnergyDerivCanvasXNum, centerEnergyDerivCanvasYNum);
@@ -1544,11 +1544,11 @@ inline void Spectra::InitCanvas() {
   }
 
   totalCenterBeamLinearCanvas = 0;
-  centerBeamLinearCanvasNum = static_cast<Int_t>(sizeof(centerBeamLinearCanvas)/sizeof(centerBeamLinearCanvas[0]));
+  centerBeamLinearCanvasNum = static_cast<int>(sizeof(centerBeamLinearCanvas)/sizeof(centerBeamLinearCanvas[0]));
   centerBeamLinearCanvasXNum = 4;
   centerBeamLinearCanvasYNum = 4;
   centerBeamLinearCanvasXYNum = centerBeamLinearCanvasXNum*centerBeamLinearCanvasYNum;
-  for(Int_t i = 0; i < centerBeamLinearCanvasNum; i++) {
+  for(int i = 0; i < centerBeamLinearCanvasNum; i++) {
     TString name = Form("centerBeamLinear%d", i + 1);
     centerBeamLinearCanvas[i] = new TCanvas(name, name, 1600, 1200);
     centerBeamLinearCanvas[i]->Divide(centerBeamLinearCanvasXNum, centerBeamLinearCanvasYNum);
@@ -1556,11 +1556,11 @@ inline void Spectra::InitCanvas() {
   }
 
   totalEventTrackSideCanvas = 0;
-  eventTrackSideCanvasNum = static_cast<Int_t>(sizeof(eventTrackSideCanvas)/sizeof(eventTrackSideCanvas[0]));
+  eventTrackSideCanvasNum = static_cast<int>(sizeof(eventTrackSideCanvas)/sizeof(eventTrackSideCanvas[0]));
   eventTrackSideCanvasXNum = 3;
   eventTrackSideCanvasYNum = 3;
   eventTrackSideCanvasXYNum = eventTrackSideCanvasXNum*eventTrackSideCanvasYNum;
-  for(Int_t i = 0; i < eventTrackSideCanvasNum; i++) {
+  for(int i = 0; i < eventTrackSideCanvasNum; i++) {
     TString name = Form("eventTrackSide%d", i + 1);
     eventTrackSideCanvas[i] = new TCanvas(name, name, 1600, 1200);
     eventTrackSideCanvas[i]->Divide(eventTrackSideCanvasXNum, eventTrackSideCanvasYNum);
@@ -1568,11 +1568,11 @@ inline void Spectra::InitCanvas() {
   }
 
   totalEventTrackSidedECanvas = 0;
-  eventTrackSidedECanvasNum = static_cast<Int_t>(sizeof(eventTrackSidedECanvas)/sizeof(eventTrackSidedECanvas[0]));
+  eventTrackSidedECanvasNum = static_cast<int>(sizeof(eventTrackSidedECanvas)/sizeof(eventTrackSidedECanvas[0]));
   eventTrackSidedECanvasXNum = 3;
   eventTrackSidedECanvasYNum = 3;
   eventTrackSidedECanvasXYNum = eventTrackSidedECanvasXNum*eventTrackSidedECanvasYNum;
-  for(Int_t i = 0; i < eventTrackSidedECanvasNum; i++) {
+  for(int i = 0; i < eventTrackSidedECanvasNum; i++) {
     TString name = Form("eventTrackSidedE%d", i + 1);
     eventTrackSidedECanvas[i] = new TCanvas(name, name, 1600, 1200);
     eventTrackSidedECanvas[i]->Divide(eventTrackSidedECanvasXNum, eventTrackSidedECanvasYNum);
@@ -1580,10 +1580,10 @@ inline void Spectra::InitCanvas() {
   }
 }
 
-inline void Spectra::DrawCenterEnergyCanvas(Int_t count, std::vector<mmCenter> centerMatched_,
+inline void Spectra::DrawCenterEnergyCanvas(int count, std::vector<mmCenter> centerMatched_,
                                             std::vector<mmTrack> centerBeamTotal_) {
   // Make maps of different central columns
-  std::map<Int_t, std::map<Int_t, Double_t> > centralEnergyMap;
+  std::map<int, std::map<int, double> > centralEnergyMap;
   for(auto mm : centerMatched_) {
     if(mm.row > 111) continue;
     centralEnergyMap[mm.column][mm.row] = mm.energy;
@@ -1596,7 +1596,7 @@ inline void Spectra::DrawCenterEnergyCanvas(Int_t count, std::vector<mmCenter> c
   TGraph* graphColumn3 = new TGraph();
   TGraph* graphColumn4 = new TGraph();
   TGraph* graphColumn5 = new TGraph();
-  Int_t i = 0;
+  int i = 0;
   for(auto map : centralEnergyMap[0]) {
     graphColumn0->SetPoint(i, map.first, map.second);
     i++;
@@ -1643,9 +1643,9 @@ inline void Spectra::DrawCenterEnergyCanvas(Int_t count, std::vector<mmCenter> c
   graphColumnTot->SetLineColor(1);
 
   if(count < centerEnergyCanvasNum*centerEnergyCanvasXYNum) {
-    TString name = Form("Event_%lld", entry);
+    TString name = Form("Event_%ld", entry);
     mgColumn->SetTitle(name);
-    Int_t histNum = count/centerEnergyCanvasXYNum;
+    int histNum = count/centerEnergyCanvasXYNum;
     centerEnergyCanvas[histNum]->cd(count + 1 - histNum*centerEnergyCanvasXYNum);
     if(graphColumn0->GetN() > 0) mgColumn->Add(graphColumn0);
     if(graphColumn1->GetN() > 0) mgColumn->Add(graphColumn1);
@@ -1661,15 +1661,15 @@ inline void Spectra::DrawCenterEnergyCanvas(Int_t count, std::vector<mmCenter> c
   }
 }
 
-inline void Spectra::DrawCenterBeamCanvas(Int_t count, std::vector<mmTrack> centerBeamTrack_,
-    std::vector<Double_t> pars, Int_t lastRow) {
+inline void Spectra::DrawCenterBeamCanvas(int count, std::vector<mmTrack> centerBeamTrack_,
+    std::vector<double> pars, int lastRow) {
   auto* beamMG = new TMultiGraph();
   auto* beamGraph = new TGraph();
   auto* beamGraphFit = new TGraph();
 
   // Draw beam
   beamGraph->SetMarkerStyle(8);
-  Int_t i = 0;
+  int i = 0;
   for(auto mm : centerBeamTrack_) {
     beamGraph->SetPoint(i, mm.xPosition, mm.yPosition/1.75);
     i++;
@@ -1678,12 +1678,12 @@ inline void Spectra::DrawCenterBeamCanvas(Int_t count, std::vector<mmTrack> cent
   // Draw fit
   beamGraphFit->SetMarkerStyle(7);
   beamGraphFit->SetMarkerColor(2);
-  Int_t numPoints = 1000;
-  Double_t x, y, z;
-  Double_t y_begin = centerBeamTrack_[0].yPosition;
-  Double_t y_end = centerBeamTrack_[centerBeamTrack_.size() - 1].yPosition;
-  Double_t y_step = (y_end - y_begin)/static_cast<Double_t>(numPoints);
-  for(Int_t i = 0; i < numPoints; i++) {
+  int numPoints = 1000;
+  double x, y, z;
+  double y_begin = centerBeamTrack_[0].yPosition;
+  double y_end = centerBeamTrack_[centerBeamTrack_.size() - 1].yPosition;
+  double y_step = (y_end - y_begin)/static_cast<double>(numPoints);
+  for(int i = 0; i < numPoints; i++) {
     line(i*y_step + y_begin, pars, x, y, z);
     if(y/1.75 > lastRow) continue;
     beamGraphFit->SetPoint(i, x, y/1.75);
@@ -1697,9 +1697,9 @@ inline void Spectra::DrawCenterBeamCanvas(Int_t count, std::vector<mmTrack> cent
   boundGraph->SetPoint(1, 20, 130);
 
   if(count < centerBeamCanvasNum*centerBeamCanvasXYNum) {
-    TString name = Form("Event_%lld", entry);
+    TString name = Form("Event_%ld", entry);
     beamMG->SetTitle(name);
-    Int_t histNum = count/centerBeamCanvasXYNum;
+    int histNum = count/centerBeamCanvasXYNum;
     centerBeamCanvas[histNum]->cd(count + 1 - histNum*centerBeamCanvasXYNum);
     beamMG->Add(beamGraph);
     beamMG->Add(beamGraphFit);
@@ -1709,13 +1709,13 @@ inline void Spectra::DrawCenterBeamCanvas(Int_t count, std::vector<mmTrack> cent
   }
 }
 
-inline void Spectra::DrawCenterNoiseCanvas(Int_t count, std::vector<mmCenter> centerReduced_,
+inline void Spectra::DrawCenterNoiseCanvas(int count, std::vector<mmCenter> centerReduced_,
                                            std::vector<mmCenter> centerReducedNoise_) {
   TMultiGraph* mgCenter = new TMultiGraph();
   TGraph* graphReduced = new TGraph();
   TGraph* graphReducedNoise = new TGraph();
 
-  Int_t i = 0;
+  int i = 0;
   for(auto mm : centerReduced_) {
     graphReduced->SetPoint(i, mm.column - 3, mm.row);
     i++;
@@ -1732,8 +1732,8 @@ inline void Spectra::DrawCenterNoiseCanvas(Int_t count, std::vector<mmCenter> ce
   graphReducedNoise->SetMarkerStyle(7);
 
   if(count < centerNoiseCanvasNum*centerNoiseCanvasXYNum) {
-    Int_t histNum = count/centerNoiseCanvasXYNum;
-    TString name = Form("Event_%lld", entry);
+    int histNum = count/centerNoiseCanvasXYNum;
+    TString name = Form("Event_%ld", entry);
     mgCenter->SetTitle(name);
     centerNoiseCanvas[histNum]->cd(count + 1 - histNum*centerNoiseCanvasXYNum);
     if(graphReduced->GetN() > 0) mgCenter->Add(graphReduced);
@@ -1746,13 +1746,13 @@ inline void Spectra::DrawCenterNoiseCanvas(Int_t count, std::vector<mmCenter> ce
   }
 }
 
-inline void Spectra::DrawCenterEnergyRunningAverageCanvas(Int_t count, std::vector<mmTrack> rawTrack_,
+inline void Spectra::DrawCenterEnergyRunningAverageCanvas(int count, std::vector<mmTrack> rawTrack_,
                                                           std::vector<mmTrack> averageTrack_) {
   TMultiGraph* mgColumn = new TMultiGraph();
   TGraph* graphRaw = new TGraph();
   TGraph* graphAverage = new TGraph();
 
-  Int_t i = 0;
+  int i = 0;
   for(auto mm : rawTrack_) {
     graphRaw->SetPoint(i, mm.row, mm.energy);
     i++;
@@ -1768,8 +1768,8 @@ inline void Spectra::DrawCenterEnergyRunningAverageCanvas(Int_t count, std::vect
   graphAverage->SetLineColor(2);
 
   if(count < centerEnergyRunningCanvasNum*centerEnergyRunningCanvasXYNum) {
-    Int_t histNum = count/centerEnergyRunningCanvasXYNum;
-    TString name = Form("Event_%lld", entry);
+    int histNum = count/centerEnergyRunningCanvasXYNum;
+    TString name = Form("Event_%ld", entry);
     mgColumn->SetTitle(name);
     centerEnergyRunningCanvas[histNum]->cd(count + 1 - histNum*centerEnergyRunningCanvasXYNum);
     if(graphRaw->GetN() > 0) mgColumn->Add(graphRaw);
@@ -1781,13 +1781,13 @@ inline void Spectra::DrawCenterEnergyRunningAverageCanvas(Int_t count, std::vect
   }
 }
 
-inline void Spectra::DrawCenterEnergyDerivCanvas(Int_t count, std::vector<centerDeriv> threePoint_,
+inline void Spectra::DrawCenterEnergyDerivCanvas(int count, std::vector<centerDeriv> threePoint_,
                                            std::vector<centerDeriv> fivePoint_) {
   TMultiGraph* mgColumn = new TMultiGraph();
   TGraph* graphThree = new TGraph();
   TGraph* graphFive = new TGraph();
 
-  Int_t i = 0;
+  int i = 0;
   for(auto mm : threePoint_) {
     graphThree->SetPoint(i, mm.row, mm.deriv);
     i++;
@@ -1803,8 +1803,8 @@ inline void Spectra::DrawCenterEnergyDerivCanvas(Int_t count, std::vector<center
   graphFive->SetLineColor(4);
 
   if(count < centerEnergyDerivCanvasNum*centerEnergyDerivCanvasXYNum) {
-    Int_t histNum = count/centerEnergyRunningCanvasXYNum;
-    TString name = Form("Event_%lld", entry);
+    int histNum = count/centerEnergyRunningCanvasXYNum;
+    TString name = Form("Event_%ld", entry);
     mgColumn->SetTitle(name);
     centerEnergyDerivCanvas[histNum]->cd(count + 1 - histNum*centerEnergyDerivCanvasXYNum);
     if(graphThree->GetN() > 0) mgColumn->Add(graphThree);
@@ -1815,14 +1815,14 @@ inline void Spectra::DrawCenterEnergyDerivCanvas(Int_t count, std::vector<center
   }
 }
 
-inline void Spectra::DrawCenterBeamLinearCanvas(Int_t count, std::vector<mmTrack> center_, std::vector<Double_t> parsBeam,
-                                                std::vector<Double_t> parsRecoil, Int_t vertexRow) {
+inline void Spectra::DrawCenterBeamLinearCanvas(int count, std::vector<mmTrack> center_, std::vector<double> parsBeam,
+                                                std::vector<double> parsRecoil, int vertexRow) {
   TMultiGraph* mgCenter = new TMultiGraph();
   TGraphErrors* graphCenter = new TGraphErrors();
   TGraph* graphBeam = new TGraph();
   TGraph* graphRecoil = new TGraph();
 
-  Int_t i = 0;
+  int i = 0;
   for(auto mm : center_) {
     if(mm.total == 1) {
       graphCenter->SetPoint(i, mm.row, mm.xPosition);
@@ -1836,8 +1836,8 @@ inline void Spectra::DrawCenterBeamLinearCanvas(Int_t count, std::vector<mmTrack
   }
 
   if(count < centerBeamLinearCanvasNum*centerBeamLinearCanvasXYNum) {
-    Int_t histNum = count/centerBeamCanvasXYNum;
-    TString name = Form("Event_%lld", entry);
+    int histNum = count/centerBeamCanvasXYNum;
+    TString name = Form("Event_%ld", entry);
     mgCenter->SetTitle(name);
     centerBeamLinearCanvas[histNum]->cd(count + 1 - histNum*centerBeamLinearCanvasXYNum);
     if(graphCenter->GetN() > 0) mgCenter->Add(graphCenter);
@@ -1849,7 +1849,7 @@ inline void Spectra::DrawCenterBeamLinearCanvas(Int_t count, std::vector<mmTrack
   }
 }
 
-inline void Spectra::DrawEventTrackSideCanvas(Int_t count, std::vector<mmTrack> center_,
+inline void Spectra::DrawEventTrackSideCanvas(int count, std::vector<mmTrack> center_,
     std::vector<mmTrack> left_, std::vector<mmTrack> leftRaw_, std::vector<mmTrack> right_, std::vector<mmTrack> rightRaw_) {
   TMultiGraph* mgEvent = new TMultiGraph();
   TGraph* graphCenter = new TGraph();
@@ -1858,7 +1858,7 @@ inline void Spectra::DrawEventTrackSideCanvas(Int_t count, std::vector<mmTrack> 
   TGraph* graphRight = new TGraph();
   TGraph* graphRightRaw = new TGraph();
 
-  Int_t i = 0;
+  int i = 0;
   for(auto mm : center_) {
     graphCenter->SetPoint(i, mm.xPosition, mm.yPosition);
     i++;
@@ -1902,8 +1902,8 @@ inline void Spectra::DrawEventTrackSideCanvas(Int_t count, std::vector<mmTrack> 
   graphRightRaw->SetMarkerStyle(7);
 
   if(count < eventTrackSideCanvasNum*eventTrackSideCanvasXYNum) {
-    Int_t histNum = count/eventTrackSideCanvasXYNum;
-    TString name = Form("Event_%lld", entry);
+    int histNum = count/eventTrackSideCanvasXYNum;
+    TString name = Form("Event_%ld", entry);
     mgEvent->SetTitle(name);
     eventTrackSideCanvas[histNum]->cd(count + 1 - histNum*eventTrackSideCanvasXYNum);
     if(graphCenter->GetN() > 0) mgEvent->Add(graphCenter);
@@ -1919,20 +1919,21 @@ inline void Spectra::DrawEventTrackSideCanvas(Int_t count, std::vector<mmTrack> 
   }
 }
 
-inline void Spectra::DrawEventTrackSidedECanvas(Int_t count, std::vector<mmTrack> leftRaw_, std::vector<mmTrack> rightRaw_) {
+inline void Spectra::DrawEventTrackSidedECanvas(int count, std::vector<mmTrack> leftRaw_, std::vector<mmTrack> rightRaw_,
+                                                double leftAngle, double rightAngle) {
   TMultiGraph* mgEvent = new TMultiGraph();
   TGraph* graphLeftRaw = new TGraph();
   TGraph* graphRightRaw = new TGraph();
 
-  Int_t i = 0;
+  int i = 0;
   for(auto mm : leftRaw_) {
-    graphLeftRaw->SetPoint(i, mm.yPosition, mm.energy);
+    graphLeftRaw->SetPoint(i, mm.yPosition, mm.energy*cos(leftAngle));
     i++;
   }
 
   i = 0;
   for(auto mm : rightRaw_) {
-    graphRightRaw->SetPoint(i, mm.yPosition, mm.energy);
+    graphRightRaw->SetPoint(i, mm.yPosition, mm.energy*cos(rightAngle));
     i++;
   }
 
@@ -1940,8 +1941,8 @@ inline void Spectra::DrawEventTrackSidedECanvas(Int_t count, std::vector<mmTrack
   graphRightRaw->SetLineColor(4);
 
   if(count < eventTrackSidedECanvasNum*eventTrackSideCanvasXYNum) {
-    Int_t histNum = count/eventTrackSidedECanvasXYNum;
-    TString name = Form("Event_%lld", entry);
+    int histNum = count/eventTrackSidedECanvasXYNum;
+    TString name = Form("Event_%ld", entry);
     mgEvent->SetTitle(name);
     eventTrackSidedECanvas[histNum]->cd(count + 1 - histNum*eventTrackSidedECanvasXYNum);
     if(graphLeftRaw->GetN() > 0) mgEvent->Add(graphLeftRaw);
@@ -1958,8 +1959,8 @@ inline void Spectra::InitSiEForwardCalibration() {
   printf("Reading Si Energy Forward Calibrations File\n");
   std::ifstream inSiCalFile("siCalibration.dat");
   assert(inSiCalFile.is_open());
-  Int_t var1, var2, var3;
-  Double_t slope, intercept;
+  int var1, var2, var3;
+  double slope, intercept;
   while(inSiCalFile >> var1 >> var2 >> var3 >> slope >> intercept) {
     if(var1 < 10) siEForwardCalibration[var1][var2] = std::make_pair(slope, intercept);
     else siELeftCalibration[var1 - 10][var2] = std::make_pair(slope, intercept);
@@ -1971,8 +1972,8 @@ inline void Spectra::InitCsIECalibration() {
   printf("Reading CsI Energy Calibrations File\n");
   std::ifstream inCsICalFile("csiCalibration.dat");
   assert(inCsICalFile.is_open());
-  Int_t var1, var2;
-  Double_t slope, intercept;
+  int var1, var2;
+  double slope, intercept;
   while(inCsICalFile >> var1 >> var2 >> slope >> intercept) {
     if(var1 < 10) csiEForwardCalibration[var1] = std::make_pair(slope, intercept);
     else csiEForwardCalibration[var1 - 10] = std::make_pair(slope, intercept);
@@ -1984,8 +1985,8 @@ inline void Spectra::InitCentralPadGainMatch() {
   printf("Reading Central Pad Gain Matching File\n");
   std::ifstream inGainFile("centerGain.dat");
   assert(inGainFile.is_open());
-  Int_t varI, varJ;
-  Double_t varScale;
+  int varI, varJ;
+  double varScale;
   while(inGainFile >> varI >> varJ >> varScale) {
     scale[varJ][varI] = varScale;
   }
@@ -1996,8 +1997,8 @@ inline void Spectra::InitAverageBeamEnergy() {
   printf("Reading Average Beam Energy File\n");
   std::ifstream inBeamFile("averageBeamEnergy.dat");
   assert(inBeamFile.is_open());
-  Int_t varI, varJ;
-  Double_t varE;
+  int varI, varJ;
+  double varE;
   while(inBeamFile >> varI >> varJ >> varE) {
     averageBeamEnergy[varJ][varI] = varE;
   }
@@ -2105,11 +2106,11 @@ inline void Spectra::WriteHistograms() {
   hSiFired->Write();
 
   // Forward Si and Csi Detectors
-  // for(UInt_t i = 0; i < 10; i++) {
+  // for(uint i = 0; i < 10; i++) {
     // hSiEForwardDet[i]->Write();
     // hSiEForwardDetCal[i]->Write();
     // hSiTForwardDet[i]->Write();
-    // for(UInt_t j = 0; j < 4; j++) {
+    // for(uint j = 0; j < 4; j++) {
       // hSiEForward[i][j]->Write();
       // hSiEForwardCal[i][j]->Write();
       // hSiTForward[i][j]->Write();
@@ -2120,39 +2121,39 @@ inline void Spectra::WriteHistograms() {
   // }
 
   // Forward Total Energy
-  // for(UInt_t i = 0; i < 10; i++) {
+  // for(uint i = 0; i < 10; i++) {
     // hTotalEForward[i]->Write();
   // }
 
   // Forward CsI Energy vs Time
-  // for(UInt_t i = 0; i < 10; i++) {
+  // for(uint i = 0; i < 10; i++) {
     // hCsiETForward[i]->Write();
   // }
 
   // Forward Si Energy vs CsI Energy
-  // for(UInt_t i = 0; i < 10; i++) {
+  // for(uint i = 0; i < 10; i++) {
     // hSiCsiEForwardDet[i]->Write();
     // hSiCsiEForwardDetCal[i]->Write();
-    // for(UInt_t j = 0; j < 4; j++) {
+    // for(uint j = 0; j < 4; j++) {
       // hSiCsiEForward[i][j]->Write();
       // hSiCsiEForwardCal[i][j]->Write();
     // }
    // }
 
   // Forward dE vs Si Energy
-  for(UInt_t i = 0; i < 10; i++) {
+  for(uint i = 0; i < 10; i++) {
     // hdEEForward[i]->Write();
     hdEEForwardCal[i]->Write();
     // hdEEForwardCalTotal[i]->Write();
   }
 
   // Forward Hough Angle
-  // for(UInt_t i = 0; i < 10; i++) {
+  // for(uint i = 0; i < 10; i++) {
     // hHoughAngle[i]->Write();
   // }
 
   // Forward Vertex vs Si Energy
-  // for(UInt_t i = 0; i < 10; i++) {
+  // for(uint i = 0; i < 10; i++) {
     // hVertexSiEForward[i]->Write();
     // hVertexSiEForwardCal[i]->Write();
     // hVertexSiEForwardCalTotal[i]->Write();
@@ -2161,7 +2162,7 @@ inline void Spectra::WriteHistograms() {
   // hVertexCMERegion3->Write();
 
   // Forward Angle vs Si Energy
-  // for(UInt_t i = 0; i < 10; i++) {
+  // for(uint i = 0; i < 10; i++) {
     // hAngleEForward[i]->Write();
     // hAngleEForwardCal[i]->Write();
     // hAngleEForwardCalTotal[i]->Write();
@@ -2170,73 +2171,73 @@ inline void Spectra::WriteHistograms() {
   // }
 
   // Forward Vertex vs Angle
-  // for(UInt_t i = 0; i < 10; i++) {
+  // for(uint i = 0; i < 10; i++) {
     // hVertexAngleForward[i]->Write();
   // }
 
   // Time vs Column/Strip Number Forward Detectors
-  // for(UInt_t i = 0; i < 10; i++) {
-    // for(UInt_t j = 0; j < 4; j++) {
+  // for(uint i = 0; i < 10; i++) {
+    // for(uint j = 0; j < 4; j++) {
       // hTimeChainForward[i][j]->Write();
       // hTimeStripForward[i][j]->Write();
     // }
   // }
 
   // Time vs Central Row Forward Detectors
-  // for(UInt_t i = 0; i < 10; i++) {
+  // for(uint i = 0; i < 10; i++) {
     // hTimeCentralForward[i]->Write();
   // }
 
   // Time vs dE Row Number Forward Detectors
-  // for(UInt_t i = 4; i < 6; i++) {
+  // for(uint i = 4; i < 6; i++) {
     // hTimeCentraldEForward[i]->Write();
   // }
 
   // Forward Wall XZ Hit Positions
   // hHitPositionsXZForward->Write();
-  // for(UInt_t i = 0; i < 10; i++) {
+  // for(uint i = 0; i < 10; i++) {
     // hHitPositionsXZForwardInd[i]->Write();
   // }
 
   // Max Peak Location Central Pad vs Si E Forward Wall
-  // for(UInt_t i = 0; i < 10; i++) {
-  // for(UInt_t i = 4; i < 6; i++) {
+  // for(uint i = 0; i < 10; i++) {
+  // for(uint i = 4; i < 6; i++) {
     // hMaxPeakSiE[i]->Write();
   // }
 
   // Max Peak Location Central Pad vs Average E Forward Wall
-  // for(UInt_t i = 0; i < 10; i++) {
-  // for(UInt_t i = 4; i < 6; i++) {
+  // for(uint i = 0; i < 10; i++) {
+  // for(uint i = 4; i < 6; i++) {
     // hMaxPeakAvgPeakE[i]->Write();
   // }
 
   // Max Peak Energy in Central Pad vs Average Peak Energy Forward Detectors
-  // for(UInt_t i = 0; i < 10; i++) {
-  // for(UInt_t i = 4; i < 6; i++) {
+  // for(uint i = 0; i < 10; i++) {
+  // for(uint i = 4; i < 6; i++) {
     // hMaxPeakEAvgPeakE[i]->Write();
   // }
 
   // Average Peak Energy vs Si E Forward Detectors
-  // for(UInt_t i = 0; i < 10; i++) {
-  // for(UInt_t i = 4; i < 6; i++) {
+  // for(uint i = 0; i < 10; i++) {
+  // for(uint i = 4; i < 6; i++) {
     // hAvgPeakESiE[i]->Write();
   // }
 
   // Max Peak Energy in Central Pad vs Derivative around Peak Forward Detectors
-  // for(UInt_t i = 0; i < 10; i++) {
-  // for(UInt_t i = 4; i < 6; i++) {
+  // for(uint i = 0; i < 10; i++) {
+  // for(uint i = 4; i < 6; i++) {
     // hMaxPeakEDerivPeak[i]->Write();
   // }
 
   // Max Peak Location in Central Pad vs Difference between Peak Location and Derivative Max
-  // for(UInt_t i = 0; i < 10; i++) {
-  // for(UInt_t i = 4; i < 6; i++) {
+  // for(uint i = 0; i < 10; i++) {
+  // for(uint i = 4; i < 6; i++) {
     // hMaxPeakDerivDiff[i]->Write();
   // }
 
   // Derivative Location in Central Pad vs Difference between Peak Location and Derivative Max
-  // for(UInt_t i = 0; i < 10; i++) {
-  // for(UInt_t i = 4; i < 6; i++) {
+  // for(uint i = 0; i < 10; i++) {
+  // for(uint i = 4; i < 6; i++) {
     // hDerivPeakDerivDiff[i]->Write();
   // }
 
@@ -2245,31 +2246,31 @@ inline void Spectra::WriteHistograms() {
 }
 
 inline void Spectra::WriteCanvas() {
-  // for(Int_t i = 0; i < centerEnergyCanvasNum; i++) {
+  // for(int i = 0; i < centerEnergyCanvasNum; i++) {
     // centerEnergyCanvas[i]->Write();
   // }
 
-  // for(Int_t i = 0; i < centerBeamCanvasNum; i++) {
+  // for(int i = 0; i < centerBeamCanvasNum; i++) {
     // centerBeamCanvas[i]->Write();
   // }
 
-  // for(Int_t i = 0; i < centerEnergyRunningCanvasNum; i++) {
+  // for(int i = 0; i < centerEnergyRunningCanvasNum; i++) {
     // centerEnergyRunningCanvas[i]->Write();
   // }
 
-  // for(Int_t i = 0; i < centerEnergyDerivCanvasNum; i++) {
+  // for(int i = 0; i < centerEnergyDerivCanvasNum; i++) {
     // centerEnergyDerivCanvas[i]->Write();
   // }
 
-  // for(Int_t i = 0; i < centerBeamLinearCanvasNum; i++) {
+  // for(int i = 0; i < centerBeamLinearCanvasNum; i++) {
     // centerBeamLinearCanvas[i]->Write();
   // }
 
-  for(Int_t i = 0; i < eventTrackSideCanvasNum; i++) {
+  for(int i = 0; i < eventTrackSideCanvasNum; i++) {
     eventTrackSideCanvas[i]->Write();
   }
 
-  for(Int_t i = 0; i < eventTrackSidedECanvasNum; i++) {
+  for(int i = 0; i < eventTrackSidedECanvasNum; i++) {
     eventTrackSidedECanvas[i]->Write();
   }
 }

@@ -16,11 +16,11 @@ public:
   ~Hough2D();
   Hough2D(std::vector<mmTrack> initPoints);
 
-  Hough2D(std::vector<mmTrack> initPoints, Int_t det, Int_t quad);
-  Hough2D(std::vector<mmTrack> initPoints, Int_t det, Int_t quad, Int_t binsX, Int_t binsY);
+  Hough2D(std::vector<mmTrack> initPoints, int det, int quad);
+  Hough2D(std::vector<mmTrack> initPoints, int det, int quad, int binsX, int binsY);
 
   void SetPoints(std::vector<mmTrack> initPoints);
-  void SetPoints(std::vector<mmTrack> initPoints, Int_t det);
+  void SetPoints(std::vector<mmTrack> initPoints, int det);
 
   void CalculateHough();
   void CalculateHoughXY();
@@ -30,12 +30,12 @@ public:
   void CalculateHoughXYRestricted();
   void CalculateHoughYZRestricted();
 
-  Double_t GetMaxThetaXY();
-  Double_t GetMaxDXY();
+  double GetMaxThetaXY();
+  double GetMaxDXY();
   TH2I GetHoughDiagramXY();
 
-  Double_t GetMaxThetaYZ();
-  Double_t GetMaxDYZ();
+  double GetMaxThetaYZ();
+  double GetMaxDYZ();
   TH2I GetHoughDiagramYZ();
 
   std::vector<xy> pointsXY;
@@ -45,13 +45,14 @@ public:
   TH2I* hHoughYZ = NULL;
 
 private:
-  Int_t nBinsX, nBinsY;
-  Int_t detFired;
-  Double_t maxThetaXY, maxDXY;
-  Double_t maxThetaYZ, maxDYZ;
+  int nBinsX, nBinsY;
+  int detFired;
+  int quadFired;
+  double maxThetaXY, maxDXY;
+  double maxThetaYZ, maxDYZ;
 
   void InitHough2D();
-  Float_t siXPosForward[10][4];
+  double siXPosForward[10][4];
 };
 
 // This is a shitty way to do this since it's defined in Spectra class

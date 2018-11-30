@@ -7,10 +7,10 @@ Hough2D::~Hough2D() {
   delete hHoughYZ;
 }
 
-Hough2D::Hough2D(std::vector<mmTrack> initPoints): nBinsX(360), nBinsY(5760) {
-  for(UInt_t i = 0; i < initPoints.size(); i++) {
-    xy initPointsXY = {initPoints[i].xPosition, initPoints[i].yPosition};
-    yz initPointsYZ = {initPoints[i].yPosition, initPoints[i].height};
+Hough2D::Hough2D(std::vector<mmTrack> initPoints): nBinsX(360), nBinsY(1440) {
+  for(auto point : initPoints) {
+    xy initPointsXY = {point.xPosition, point.yPosition};
+    yz initPointsYZ = {point.yPosition, point.height};
     pointsXY.push_back(initPointsXY);
     pointsYZ.push_back(initPointsYZ);
   }
@@ -18,46 +18,48 @@ Hough2D::Hough2D(std::vector<mmTrack> initPoints): nBinsX(360), nBinsY(5760) {
   CalculateHough();
 }
 
-Hough2D::Hough2D(std::vector<mmTrack> initPoints, Int_t det, Int_t quad): nBinsX(360), nBinsY(360) {
-  for(UInt_t i = 0; i < initPoints.size(); i++) {
-    xy initPointsXY = {initPoints[i].xPosition, initPoints[i].yPosition};
-    yz initPointsYZ = {initPoints[i].yPosition, initPoints[i].height};
-    pointsXY.push_back(initPointsXY);
-    if(i < initPoints.size() - 3) pointsYZ.push_back(initPointsYZ);
-  }
-
-  detFired = det;
-
-  CalculateHoughRestricted();
-}
-
-Hough2D::Hough2D(std::vector<mmTrack> initPoints, Int_t det, Int_t quad, Int_t binsX, Int_t binsY): nBinsX(binsX),
-  nBinsY(binsY) {
-  for(UInt_t i = 0; i < initPoints.size(); i++) {
-    xy initPointsXY = {initPoints[i].xPosition, initPoints[i].yPosition};
-    yz initPointsYZ = {initPoints[i].yPosition, initPoints[i].height};
+Hough2D::Hough2D(std::vector<mmTrack> initPoints, int det, int quad): nBinsX(360), nBinsY(1440) {
+  for(auto point : initPoints) {
+    xy initPointsXY = {point.xPosition, point.yPosition};
+    yz initPointsYZ = {point.yPosition, point.height};
     pointsXY.push_back(initPointsXY);
     pointsYZ.push_back(initPointsYZ);
   }
 
   detFired = det;
+  quadFired = quad;
+
+  CalculateHoughRestricted();
+}
+
+Hough2D::Hough2D(std::vector<mmTrack> initPoints, int det, int quad, int binsX, int binsY): nBinsX(binsX),
+  nBinsY(binsY) {
+  for(auto point : initPoints) {
+    xy initPointsXY = {point.xPosition, point.yPosition};
+    yz initPointsYZ = {point.yPosition, point.height};
+    pointsXY.push_back(initPointsXY);
+    pointsYZ.push_back(initPointsYZ);
+  }
+
+  detFired = det;
+  quadFired = quad;
 
   CalculateHoughRestricted();
 }
 
 void Hough2D::SetPoints(std::vector<mmTrack> initPoints) {
-  for(UInt_t i = 0; i < initPoints.size(); i++) {
-    xy initPointsXY = {initPoints[i].xPosition, initPoints[i].yPosition};
-    yz initPointsYZ = {initPoints[i].yPosition, initPoints[i].height};
+  for(auto point : initPoints) {
+    xy initPointsXY = {point.xPosition, point.yPosition};
+    yz initPointsYZ = {point.yPosition, point.height};
     pointsXY.push_back(initPointsXY);
     pointsYZ.push_back(initPointsYZ);
   }
 }
 
 void Hough2D::SetPoints(std::vector<mmTrack> initPoints, Int_t det) {
-  for(UInt_t i = 0; i < initPoints.size(); i++) {
-    xy initPointsXY = {initPoints[i].xPosition, initPoints[i].yPosition};
-    yz initPointsYZ = {initPoints[i].yPosition, initPoints[i].height};
+  for(auto point : initPoints) {
+    xy initPointsXY = {point.xPosition, point.yPosition};
+    yz initPointsYZ = {point.yPosition, point.height};
     pointsXY.push_back(initPointsXY);
     pointsYZ.push_back(initPointsYZ);
   }
@@ -70,23 +72,22 @@ void Hough2D::CalculateHough() {
 }
 
 void Hough2D::CalculateHoughXY() {
-  Double_t minDHistogram = 1000;
-  Double_t maxDHistogram = -1000;
-  for(Int_t j = 0; j < 180; j++) {
-    Double_t cosj = cos(j*M_PI/180.);
-    Double_t sinj = sin(j*M_PI/180.);
-    for(UInt_t i = 0; i < pointsXY.size(); i++) {
-      Double_t d = pointsXY[i].x*cosj + pointsXY[i].y*sinj;
+  double minDHistogram = 1000;
+  double maxDHistogram = -1000;
+  for(uint j = 0; j < 180; j++) {
+    double cosj = cos(j*M_PI/180.);
+    double sinj = sin(j*M_PI/180.);
+    for(uint i = 0; i < pointsXY.size(); i++) {
+      double d = pointsXY[i].x*cosj + pointsXY[i].y*sinj;
       if(d < minDHistogram) minDHistogram = d;
       if(d > maxDHistogram) maxDHistogram = d;
     }
   }
 
-  Double_t thetaStep = 180./static_cast<Double_t>(nBinsX);
+  double thetaStep = 180./static_cast<double>(nBinsX);
 
-  Double_t diffD = maxDHistogram - minDHistogram;
-  Int_t nBinsY = static_cast<Int_t>(diffD/0.005);
-//  std::cout << maxDHistogram << '\t' << minDHistogram << '\t' << diffD << '\t' << nBinsY << std::endl;
+  double diffD = maxDHistogram - minDHistogram;
+  int nBinsY = static_cast<int>(diffD/0.005);
 
   // Fill Hough Matrix
   // Go through the angles and find the angle with the smallest standard deviation
@@ -94,28 +95,28 @@ void Hough2D::CalculateHoughXY() {
   hHoughXY->GetXaxis()->SetTitle("#Theta"); hHoughXY->GetXaxis()->CenterTitle();
   hHoughXY->GetYaxis()->SetTitle("d"); hHoughXY->GetYaxis()->CenterTitle();
 
-  Double_t smallestTheta;
-  Double_t smallestStdDev = 10000;
-  for(Double_t j = 0; j < 180; j += thetaStep) {
+  double smallestTheta;
+  double smallestStdDev = 10000;
+  for(double j = 0; j < 180; j += thetaStep) {
     if(j > 89 && j < 91) continue;
-    Double_t cosj = cos(j*M_PI/180.);
-    Double_t sinj = sin(j*M_PI/180.);
-    std::vector<Double_t> dVector;
-    Double_t mean = 0.;
-    for(UInt_t i = 0; i < pointsXY.size(); i++) {
-      Double_t d = pointsXY[i].x*cosj + pointsXY[i].y*sinj;
+    double cosj = cos(j*M_PI/180.);
+    double sinj = sin(j*M_PI/180.);
+    std::vector<double> dVector;
+    double mean = 0.;
+    for(uint i = 0; i < pointsXY.size(); i++) {
+      double d = pointsXY[i].x*cosj + pointsXY[i].y*sinj;
       mean += d;
       dVector.push_back(d);
       hHoughXY->Fill(j, d);
     }
     if(dVector.empty()) continue;
-    mean /= static_cast<Double_t>(pointsXY.size());
-    Double_t stdDev = 0.;
-    for(UInt_t i = 0; i < pointsXY.size(); i++) {
-      Double_t d = pointsXY[i].x*cosj + pointsXY[i].y*sinj;
+    mean /= static_cast<double>(pointsXY.size());
+    double stdDev = 0.;
+    for(uint i = 0; i < pointsXY.size(); i++) {
+      double d = pointsXY[i].x*cosj + pointsXY[i].y*sinj;
       stdDev += (d - mean)*(d - mean);
     }
-    stdDev /= static_cast<Double_t>(pointsXY.size() - 1.);
+    stdDev /= static_cast<double>(pointsXY.size() - 1.);
     if(stdDev < smallestStdDev) {
       smallestStdDev = stdDev;
       smallestTheta = j;
@@ -123,27 +124,27 @@ void Hough2D::CalculateHoughXY() {
   }
 
   // For the theta with the smallest standard deviation, find the d with the max value
-  Int_t largestDValue = -1000;
-  Double_t largestDLocation;
-  Int_t binX = hHoughXY->GetXaxis()->FindBin(smallestTheta);
-  for(Int_t j = 0; j < hHoughXY->GetNbinsY() + 1; j++) {
+  int largestDValue = -1000;
+  double largestDLocation;
+  int binX = hHoughXY->GetXaxis()->FindBin(smallestTheta);
+  for(int j = 0; j < hHoughXY->GetNbinsY() + 1; j++) {
     if(hHoughXY->GetBinContent(binX, j) > largestDValue) {
       largestDValue = hHoughXY->GetBinContent(binX, j);
       largestDLocation = hHoughXY->GetYaxis()->GetBinCenter(j);
     }
   }
   // Check if there are any more values with the maximum, then take the average
-  Double_t dSum = 0.;
-  Int_t dCount = 0;
-  std::vector<Double_t> dVec;
-  for(Int_t j = 0; j < hHoughXY->GetNbinsY() + 1; j++) {
+  double dSum = 0.;
+  int dCount = 0;
+  std::vector<double> dVec;
+  for(int j = 0; j < hHoughXY->GetNbinsY() + 1; j++) {
     if(hHoughXY->GetBinContent(binX, j) == largestDValue) {
       dSum += hHoughXY->GetYaxis()->GetBinCenter(j);
       dCount++;
     }
   }
 
-  largestDLocation = dSum/ static_cast<Double_t>(dCount);
+  largestDLocation = dSum/ static_cast<double>(dCount);
 
   maxThetaXY = smallestTheta;
   maxDXY = largestDLocation;
@@ -153,19 +154,19 @@ void Hough2D::CalculateHoughXY() {
 }
 
 void Hough2D::CalculateHoughYZ() {
-  Double_t minDHistogram = 1000;
-  Double_t maxDHistogram = -1000;
-  for(Int_t j = 0; j < 180; j++) {
-    Double_t cosj = cos(j*M_PI/180.);
-    Double_t sinj = sin(j*M_PI/180.);
-    for(UInt_t i = 0; i < pointsYZ.size(); i++) {
-      Double_t d = pointsYZ[i].y*cosj + pointsYZ[i].z*sinj;
+  double minDHistogram = 1000;
+  double maxDHistogram = -1000;
+  for(uint j = 0; j < 180; j++) {
+    double cosj = cos(j*M_PI/180.);
+    double sinj = sin(j*M_PI/180.);
+    for(uint i = 0; i < pointsYZ.size(); i++) {
+      double d = pointsYZ[i].y*cosj + pointsYZ[i].z*sinj;
       if(d < minDHistogram) minDHistogram = d;
       if(d > maxDHistogram) maxDHistogram = d;
     }
   }
 
-  Double_t thetaStep = 180./static_cast<Double_t>(nBinsX);
+  double thetaStep = 180./static_cast<double>(nBinsX);
 
   // Fill Hough Matrix
   // Go through the angles and find the angle with the smallest standard deviation
@@ -173,28 +174,28 @@ void Hough2D::CalculateHoughYZ() {
   hHoughYZ->GetXaxis()->SetTitle("#Theta"); hHoughYZ->GetXaxis()->CenterTitle();
   hHoughYZ->GetYaxis()->SetTitle("d"); hHoughYZ->GetYaxis()->CenterTitle();
 
-  Double_t smallestTheta;
-  Double_t smallestStdDev = 10000;
-  for(Double_t j = 0; j < 180; j += thetaStep) {
+  double smallestTheta;
+  double smallestStdDev = 10000;
+  for(double j = 0; j < 180; j += thetaStep) {
     if(j > 89 && j < 91) continue;
-    Double_t cosj = cos(j*M_PI/180.);
-    Double_t sinj = sin(j*M_PI/180.);
-    std::vector<Double_t> dVector;
-    Double_t mean = 0.;
-    for(UInt_t i = 0; i < pointsYZ.size(); i++) {
-      Double_t d = pointsYZ[i].y*cosj + pointsYZ[i].z*sinj;
+    double cosj = cos(j*M_PI/180.);
+    double sinj = sin(j*M_PI/180.);
+    std::vector<double> dVector;
+    double mean = 0.;
+    for(uint i = 0; i < pointsYZ.size(); i++) {
+      double d = pointsYZ[i].y*cosj + pointsYZ[i].z*sinj;
       mean += d;
       dVector.push_back(d);
       hHoughYZ->Fill(j, d);
     }
     if(dVector.empty()) continue;
-    mean /= static_cast<Double_t>(pointsYZ.size());
-    Double_t stdDev = 0.;
-    for(UInt_t i = 0; i < pointsYZ.size(); i++) {
-      Double_t d = pointsYZ[i].y*cosj + pointsYZ[i].z*sinj;
+    mean /= static_cast<double>(pointsYZ.size());
+    double stdDev = 0.;
+    for(uint i = 0; i < pointsYZ.size(); i++) {
+      double d = pointsYZ[i].y*cosj + pointsYZ[i].z*sinj;
       stdDev += (d - mean)*(d - mean);
     }
-    stdDev /= static_cast<Double_t>(pointsYZ.size() - 1.);
+    stdDev /= static_cast<double>(pointsYZ.size() - 1.);
     if(stdDev < smallestStdDev) {
       smallestStdDev = stdDev;
       smallestTheta = j;
@@ -202,10 +203,10 @@ void Hough2D::CalculateHoughYZ() {
   }
 
   // For the theta with the smallest standard deviation, find the d with the max value
-  Double_t largestDValue = -1000;
-  Double_t largestDLocation;
-  Int_t binX = hHoughYZ->GetXaxis()->FindBin(smallestTheta);
-  for(Int_t j = 0; j < hHoughYZ->GetNbinsY() + 1; j++) {
+  double largestDValue = -1000;
+  double largestDLocation;
+  int binX = hHoughYZ->GetXaxis()->FindBin(smallestTheta);
+  for(int j = 0; j < hHoughYZ->GetNbinsY() + 1; j++) {
     if(hHoughYZ->GetBinContent(binX, j) > largestDValue) {
       largestDValue = hHoughYZ->GetBinContent(binX, j);
       largestDLocation = hHoughYZ->GetYaxis()->GetBinCenter(j);
@@ -225,8 +226,8 @@ void Hough2D::CalculateHoughRestricted() {
 }
 
 void Hough2D::CalculateHoughXYRestricted() {
-  Int_t minAngle = 0;
-  Int_t maxAngle = 0;
+  int minAngle = 0;
+  int maxAngle = 0;
   if(detFired < 4) {
     minAngle = 91;
     maxAngle = 179;
@@ -236,21 +237,21 @@ void Hough2D::CalculateHoughXYRestricted() {
     maxAngle = 89;
   }
 
-  Double_t minDHistogram = 1000;
-  Double_t maxDHistogram = -1000;
-  for(Int_t j = minAngle; j <= maxAngle; j++) {
-    Double_t cosj = cos(j*M_PI/180.);
-    Double_t sinj = sin(j*M_PI/180.);
-    for(UInt_t i = 0; i < pointsXY.size(); i++) {
-      Double_t d = pointsXY[i].x*cosj + pointsXY[i].y*sinj;
+  double minDHistogram = 1000;
+  double maxDHistogram = -1000;
+  for(int j = minAngle; j <= maxAngle; j++) {
+    double cosj = cos(j*M_PI/180.);
+    double sinj = sin(j*M_PI/180.);
+    for(uint i = 0; i < pointsXY.size(); i++) {
+      double d = pointsXY[i].x*cosj + pointsXY[i].y*sinj;
       if(d < minDHistogram) minDHistogram = d;
       if(d > maxDHistogram) maxDHistogram = d;
     }
   }
 
-  Double_t thetaRange = static_cast<Double_t>(maxAngle) - static_cast<Double_t>(minAngle);
+  double thetaRange = static_cast<double>(maxAngle) - static_cast<double>(minAngle);
 
-  Double_t thetaStep = thetaRange/static_cast<Double_t>(nBinsX);
+  double thetaStep = thetaRange/static_cast<double>(nBinsX);
 
   // Fill Hough Matrix
   // Go through the angles and find the angle with the smallest standard deviation
@@ -258,27 +259,27 @@ void Hough2D::CalculateHoughXYRestricted() {
   hHoughXY->GetXaxis()->SetTitle("#Theta"); hHoughXY->GetXaxis()->CenterTitle();
   hHoughXY->GetYaxis()->SetTitle("d"); hHoughXY->GetYaxis()->CenterTitle();
 
-  Double_t smallestTheta;
-  Double_t smallestStdDev = 10000;
-  for(Double_t j = minAngle; j <= maxAngle; j += thetaStep) {
-    Double_t cosj = cos(j*M_PI/180.);
-    Double_t sinj = sin(j*M_PI/180.);
-    std::vector<Double_t> dVector;
-    Double_t mean = 0.;
-    for(UInt_t i = 0; i < pointsXY.size(); i++) {
-      Double_t d = pointsXY[i].x*cosj + pointsXY[i].y*sinj;
+  double smallestTheta;
+  double smallestStdDev = 10000;
+  for(double j = minAngle; j <= maxAngle; j += thetaStep) {
+    double cosj = cos(j*M_PI/180.);
+    double sinj = sin(j*M_PI/180.);
+    std::vector<double> dVector;
+    double mean = 0.;
+    for(uint i = 0; i < pointsXY.size(); i++) {
+      double d = pointsXY[i].x*cosj + pointsXY[i].y*sinj;
       mean += d;
       dVector.push_back(d);
       hHoughXY->Fill(j, d);
     }
     if(dVector.empty()) continue;
-    mean /= static_cast<Double_t>(pointsXY.size());
-    Double_t stdDev = 0.;
-    for(UInt_t i = 0; i < pointsXY.size(); i++) {
-      Double_t d = pointsXY[i].x*cosj + pointsXY[i].y*sinj;
+    mean /= static_cast<double>(pointsXY.size());
+    double stdDev = 0.;
+    for(uint i = 0; i < pointsXY.size(); i++) {
+      double d = pointsXY[i].x*cosj + pointsXY[i].y*sinj;
       stdDev += (d - mean)*(d - mean);
     }
-    stdDev /= static_cast<Double_t>(pointsXY.size() - 1.);
+    stdDev /= static_cast<double>(pointsXY.size() - 1.);
     if(stdDev < smallestStdDev) {
       smallestStdDev = stdDev;
       smallestTheta = j;
@@ -286,27 +287,27 @@ void Hough2D::CalculateHoughXYRestricted() {
   }
 
   // For the theta with the smallest standard deviation, find the d with the max value
-  Int_t largestDValue = -1000;
-  Double_t largestDLocation;
-  Int_t binX = hHoughXY->GetXaxis()->FindBin(smallestTheta);
-  for(Int_t j = 0; j < hHoughXY->GetNbinsY() + 1; j++) {
+  int largestDValue = -1000;
+  double largestDLocation;
+  int binX = hHoughXY->GetXaxis()->FindBin(smallestTheta);
+  for(int j = 0; j < hHoughXY->GetNbinsY() + 1; j++) {
     if(hHoughXY->GetBinContent(binX, j) > largestDValue) {
       largestDValue = hHoughXY->GetBinContent(binX, j);
       largestDLocation = hHoughXY->GetYaxis()->GetBinCenter(j);
     }
   }
   // Check if there are any more values with the maximum, then take the average
-  Double_t dSum = 0.;
-  Int_t dCount = 0;
-  std::vector<Double_t> dVec;
-  for(Int_t j = 0; j < hHoughXY->GetNbinsY() + 1; j++) {
+  double dSum = 0.;
+  int dCount = 0;
+  std::vector<double> dVec;
+  for(int j = 0; j < hHoughXY->GetNbinsY() + 1; j++) {
     if(hHoughXY->GetBinContent(binX, j) == largestDValue) {
       dSum += hHoughXY->GetYaxis()->GetBinCenter(j);
       dCount++;
     }
   }
 
-  largestDLocation = dSum/ static_cast<Double_t>(dCount);
+  largestDLocation = dSum/ static_cast<double>(dCount);
 
   maxThetaXY = smallestTheta;
   maxDXY = largestDLocation;
@@ -316,19 +317,19 @@ void Hough2D::CalculateHoughXYRestricted() {
 }
 
 void Hough2D::CalculateHoughYZRestricted() {
-  Double_t minDHistogram = 1000;
-  Double_t maxDHistogram = -1000;
-  for(Int_t j = 0; j < 180; j++) {
-    Double_t cosj = cos(j*M_PI/180.);
-    Double_t sinj = sin(j*M_PI/180.);
-    for(UInt_t i = 0; i < pointsYZ.size(); i++) {
-      Double_t d = pointsYZ[i].y*cosj + pointsYZ[i].z*sinj;
+  double minDHistogram = 1000;
+  double maxDHistogram = -1000;
+  for(int j = 0; j < 180; j++) {
+    double cosj = cos(j*M_PI/180.);
+    double sinj = sin(j*M_PI/180.);
+    for(uint i = 0; i < pointsYZ.size(); i++) {
+      double d = pointsYZ[i].y*cosj + pointsYZ[i].z*sinj;
       if(d < minDHistogram) minDHistogram = d;
       if(d > maxDHistogram) maxDHistogram = d;
     }
   }
 
-  Double_t thetaStep = 180./static_cast<Double_t>(nBinsX);
+  double thetaStep = 180./static_cast<double>(nBinsX);
 
   // Fill Hough Matrix
   // Go through the angles and find the angle with the smallest standard deviation
@@ -336,28 +337,28 @@ void Hough2D::CalculateHoughYZRestricted() {
   hHoughYZ->GetXaxis()->SetTitle("#Theta"); hHoughYZ->GetXaxis()->CenterTitle();
   hHoughYZ->GetYaxis()->SetTitle("d"); hHoughYZ->GetYaxis()->CenterTitle();
 
-  Double_t smallestTheta;
-  Double_t smallestStdDev = 10000;
-  for(Double_t j = 0; j < 180; j += thetaStep) {
+  double smallestTheta;
+  double smallestStdDev = 10000;
+  for(double j = 0; j < 180; j += thetaStep) {
     if(j > 89 && j < 91) continue;
-    Double_t cosj = cos(j*M_PI/180.);
-    Double_t sinj = sin(j*M_PI/180.);
-    std::vector<Double_t> dVector;
-    Double_t mean = 0.;
-    for(UInt_t i = 0; i < pointsYZ.size(); i++) {
-      Double_t d = pointsYZ[i].y*cosj + pointsYZ[i].z*sinj;
+    double cosj = cos(j*M_PI/180.);
+    double sinj = sin(j*M_PI/180.);
+    std::vector<double> dVector;
+    double mean = 0.;
+    for(uint i = 0; i < pointsYZ.size(); i++) {
+      double d = pointsYZ[i].y*cosj + pointsYZ[i].z*sinj;
       mean += d;
       dVector.push_back(d);
       hHoughYZ->Fill(j, d);
     }
     if(dVector.empty()) continue;
-    mean /= static_cast<Double_t>(pointsYZ.size());
-    Double_t stdDev = 0.;
-    for(UInt_t i = 0; i < pointsYZ.size(); i++) {
-      Double_t d = pointsYZ[i].y*cosj + pointsYZ[i].z*sinj;
+    mean /= static_cast<double>(pointsYZ.size());
+    double stdDev = 0.;
+    for(uint i = 0; i < pointsYZ.size(); i++) {
+      double d = pointsYZ[i].y*cosj + pointsYZ[i].z*sinj;
       stdDev += (d - mean)*(d - mean);
     }
-    stdDev /= static_cast<Double_t>(pointsYZ.size() - 1.);
+    stdDev /= static_cast<double>(pointsYZ.size() - 1.);
     if(stdDev < smallestStdDev) {
       smallestStdDev = stdDev;
       smallestTheta = j;
@@ -365,10 +366,10 @@ void Hough2D::CalculateHoughYZRestricted() {
   }
 
   // For the theta with the smallest standard deviation, find the d with the max value
-  Double_t largestDValue = -1000;
-  Double_t largestDLocation;
-  Int_t binX = hHoughYZ->GetXaxis()->FindBin(smallestTheta);
-  for(Int_t j = 0; j < hHoughYZ->GetNbinsY() + 1; j++) {
+  double largestDValue = -1000;
+  double largestDLocation;
+  int binX = hHoughYZ->GetXaxis()->FindBin(smallestTheta);
+  for(int j = 0; j < hHoughYZ->GetNbinsY() + 1; j++) {
     if(hHoughYZ->GetBinContent(binX, j) > largestDValue) {
       largestDValue = hHoughYZ->GetBinContent(binX, j);
       largestDLocation = hHoughYZ->GetYaxis()->GetBinCenter(j);
@@ -382,11 +383,11 @@ void Hough2D::CalculateHoughYZRestricted() {
 //            << " with value " << smallestStdDev << " and max D at " << maxDYZ << std::endl;
 }
 
-Double_t Hough2D::GetMaxThetaXY() {
+double Hough2D::GetMaxThetaXY() {
   return maxThetaXY;
 }
 
-Double_t Hough2D::GetMaxDXY() {
+double Hough2D::GetMaxDXY() {
   return maxDXY;
 }
 
@@ -394,11 +395,11 @@ TH2I Hough2D::GetHoughDiagramXY() {
   return *hHoughXY;
 }
 
-Double_t Hough2D::GetMaxThetaYZ() {
+double Hough2D::GetMaxThetaYZ() {
   return maxThetaYZ;
 }
 
-Double_t Hough2D::GetMaxDYZ() {
+double Hough2D::GetMaxDYZ() {
   return maxDYZ;
 }
 

@@ -4,71 +4,71 @@
 #include <TROOT.h>
 
 typedef struct siDetect {
-  Int_t detect;
-  Int_t quad;
-  Int_t channel;
-  Double_t energy;
-  Double_t time;
-  Double_t cwt;
+  int detect;
+  int quad;
+  int channel;
+  double energy;
+  double time;
+  double cwt;
 } siDetect;
 
 typedef struct csiDetect {
-  Int_t detect;
-  Double_t energy;
-  Double_t time;
+  int detect;
+  double energy;
+  double time;
 } csiDetect;
 
 typedef struct protonDetect{
-  Int_t det;
-  Int_t quad;
-  Int_t siChannel;
-  Double_t siEnergy;
-  Double_t siEnergyCal;
-  Double_t siTime;
-  Double_t csiEnergy;
-  Double_t csiEnergyCal;
-  Double_t csiTime;
-  Double_t totalEnergy;
-  Bool_t punchthrough;
+  int det;
+  int quad;
+  int siChannel;
+  double siEnergy;
+  double siEnergyCal;
+  double siTime;
+  double csiEnergy;
+  double csiEnergyCal;
+  double csiTime;
+  double totalEnergy;
+  bool punchthrough;
 } protonDetect;
 
 typedef struct mmCenter {
-  Int_t column;
-  Int_t row;
-  Double_t energy;
-  Double_t time;
-  Double_t cwt;
+  int column;
+  int row;
+  double energy;
+  double time;
+  double cwt;
 } mmCenter;
 
 typedef struct mmTrack {
-  Int_t row;
-  Double_t xPosition;
-  Double_t yPosition;
-  Double_t time;
-  Double_t energy;
-  Double_t height;
-  Int_t total;
+  int row;
+  double xPosition;
+  double yPosition;
+  double time;
+  double energy;
+  double height;
+  int total;
 } mmTrack;
 
 typedef struct mmChainStrip {
-  Int_t row;
-  Double_t energy;
-  Double_t time;
+  int row;
+  double energy;
+  double time;
 } mmStripChain;
 
 typedef struct xy {
-  Double_t x;
-  Double_t y;
+  double x;
+  double y;
 } xy;
 
 typedef struct yz {
-  Double_t y;
-  Double_t z;
+  double y;
+  double z;
 } yz;
 
 typedef struct centerDeriv {
-  Int_t row;
-  Double_t deriv;
+  int row;
+  double deriv;
 } centerDeriv;
 
 #endif //TYPEDEF_H

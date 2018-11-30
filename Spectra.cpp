@@ -113,7 +113,7 @@ void Spectra::Loop() {
   TFile *cutFile = TFile::Open("cuts.root");
 
   // dE cuts (Calibrated Si energy vs dE)
-  for(UInt_t i = 0; i < 10; i++) {
+  for(uint i = 0; i < 10; i++) {
     if(i == 8) continue;
     dEEForwardCut[i] = (TCutG*)cutFile->Get(Form("dEEForward_d%dCut", i));
   }
@@ -124,9 +124,9 @@ void Spectra::Loop() {
   angleTotEnergyCut[9] = (TCutG*)cutFile->Get("angleTotEnergy_d9Cut");
 
   // Chain/Strip vs Time Cuts
-  for(UInt_t i = 0; i < 10; i++) {
+  for(uint i = 0; i < 10; i++) {
     if(i == 4 || i == 5) continue;
-    for(UInt_t j = 0; j < 4; j++) {
+    for(uint j = 0; j < 4; j++) {
       if(i == 7 && j == 0) continue;
       timeChainForwardCut[i][j] = (TCutG*)cutFile->Get(Form("timeChainForward_d%d_q%dCut", i, j));
       timeStripForwardCut[i][j] = (TCutG*)cutFile->Get(Form("timeStripForward_d%d_q%dCut", i, j));
@@ -158,22 +158,22 @@ void Spectra::Loop() {
 
   InitTree();
 
-  Long64_t nentries = fChain->GetEntriesFast();
+  long nentries = fChain->GetEntriesFast();
 
   printf("Starting Main Loop\n");
 
-  Long64_t nbytes = 0, nb = 0;
-  // for(Long64_t jentry = 0; jentry < 5000; jentry++) {
-  // for(Long64_t jentry = 4747; jentry < 4748; jentry++) {
-  for(Long64_t jentry = 0; jentry < nentries; jentry++) {
-    Long64_t ientry = LoadTree(jentry);
+  long nbytes = 0, nb = 0;
+  for(long jentry = 0; jentry < 50000; jentry++) {
+  // for(long jentry = 4747; jentry < 4748; jentry++) {
+  // for(long jentry = 0; jentry < nentries; jentry++) {
+    long ientry = LoadTree(jentry);
     if(ientry < 0) break;
     nb = fChain->GetEntry(jentry);   nbytes += nb;
     // if (Cut(ientry) < 0) continue;
 
     entry = jentry;
 
-    if(jentry != 0 && jentry % 10000 == 0) printf("Processed %lld events\n", jentry);
+    if(jentry != 0 && jentry % 10000 == 0) printf("Processed %ld events\n", jentry);
 
     // Find hit in Si detectors
     std::vector<siDetect> siDetect_;
@@ -198,10 +198,10 @@ void Spectra::Loop() {
     std::vector<mmChainStrip> mmRightChain_;
 
     // IC
-    Double_t icE = 0.;
-    Double_t icT = 0.;
+    double icE = 0.;
+    double icT = 0.;
 
-    for(Int_t i = 0; i < mmMul; i++) {
+    for(int i = 0; i < mmMul; i++) {
       if(mmChan[i] == 11 || mmChan[i] == 22 || mmChan[i] == 45 || mmChan[i] == 56) continue; // Skip FPN Channels
 
       if(mmEnergy[i] < 0) continue;
@@ -212,38 +212,38 @@ void Spectra::Loop() {
         if(mmAsad[i] == 0) {
           // Aget0
           if(mmAget[i] == 0) {
-            std::pair<Int_t, Int_t> pad = MM_Map_Asad0_Aget0[mmChan[i]];
-            mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i], mmPa[i][3]/mmPa[i][1]};
+            std::pair<int, int> pad = MM_Map_Asad0_Aget0[mmChan[i]];
+            mmCenter mmHit = {pad.first, pad.second, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1])};
             mmCenter_.push_back(mmHit);
-            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i],
-                                     mmPa[i][3]/mmPa[i][1]};
+            mmCenter mmHitMatched = {pad.first, pad.second, static_cast<double>(mmEnergy[i])*scale[pad.first][pad.second], static_cast<double>(mmTime[i]),
+                                     static_cast<double>(mmPa[i][3]/mmPa[i][1])};
             mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget1
           else if(mmAget[i] == 1) {
-            std::pair<Int_t, Int_t> pad = MM_Map_Asad0_Aget1[mmChan[i]];
-            mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i], mmPa[i][3]/mmPa[i][1]};
+            std::pair<int, int> pad = MM_Map_Asad0_Aget1[mmChan[i]];
+            mmCenter mmHit = {pad.first, pad.second, static_cast<double>(mmEnergy[i]),static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1])};
             mmCenter_.push_back(mmHit);
-            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i],
-                                     mmPa[i][3]/mmPa[i][1]};
+            mmCenter mmHitMatched = {pad.first, pad.second, static_cast<double>(mmEnergy[i])*scale[pad.first][pad.second], static_cast<double>(mmTime[i]),
+                                     static_cast<double>(mmPa[i][3]/mmPa[i][1])};
             mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget2
           else if(mmAget[i] == 2) {
-            std::pair<Int_t, Int_t> pad = MM_Map_Asad0_Aget2[mmChan[i]];
-            mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i], mmPa[i][3]/mmPa[i][1]};
+            std::pair<int, int> pad = MM_Map_Asad0_Aget2[mmChan[i]];
+            mmCenter mmHit = {pad.first, pad.second, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1])};
             mmCenter_.push_back(mmHit);
-            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i],
-                                     mmPa[i][3]/mmPa[i][1]};
+            mmCenter mmHitMatched = {pad.first, pad.second, static_cast<double>(mmEnergy[i])*scale[pad.first][pad.second], static_cast<double>(mmTime[i]),
+                                     static_cast<double>(mmPa[i][3]/mmPa[i][1])};
             mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget3
           else if(mmAget[i] == 3) {
-            std::pair<Int_t, Int_t> pad = MM_Map_Asad0_Aget3[mmChan[i]];
-            mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i], mmPa[i][3]/mmPa[i][1]};
+            std::pair<int, int> pad = MM_Map_Asad0_Aget3[mmChan[i]];
+            mmCenter mmHit = {pad.first, pad.second, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1])};
             mmCenter_.push_back(mmHit);
-            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i],
-                                     mmPa[i][3]/mmPa[i][1]};
+            mmCenter mmHitMatched = {pad.first, pad.second, static_cast<double>(mmEnergy[i])*scale[pad.first][pad.second], static_cast<double>(mmTime[i]),
+                                     static_cast<double>(mmPa[i][3]/mmPa[i][1])};
             mmCenterMatched_.push_back(mmHitMatched);
           }
         }
@@ -251,38 +251,38 @@ void Spectra::Loop() {
         else if(mmAsad[i] == 1) {
           // Aget0
           if(mmAget[i] == 0) {
-            std::pair<Int_t, Int_t> pad = MM_Map_Asad1_Aget0[mmChan[i]];
-            mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i], mmPa[i][3]/mmPa[i][1]};
+            std::pair<int, int> pad = MM_Map_Asad1_Aget0[mmChan[i]];
+            mmCenter mmHit = {pad.first, pad.second, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1])};
             mmCenter_.push_back(mmHit);
-            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i],
-                                     mmPa[i][3]/mmPa[i][1]};
+            mmCenter mmHitMatched = {pad.first, pad.second, static_cast<double>(mmEnergy[i])*scale[pad.first][pad.second], static_cast<double>(mmTime[i]),
+                                     static_cast<double>(mmPa[i][3]/mmPa[i][1])};
             mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget1
           else if(mmAget[i] == 1) {
-            std::pair<Int_t, Int_t> pad = MM_Map_Asad1_Aget1[mmChan[i]];
-            mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i], mmPa[i][3]/mmPa[i][1]};
+            std::pair<int, int> pad = MM_Map_Asad1_Aget1[mmChan[i]];
+            mmCenter mmHit = {pad.first, pad.second, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1])};
             mmCenter_.push_back(mmHit);
-            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i],
-                                     mmPa[i][3]/mmPa[i][1]};
+            mmCenter mmHitMatched = {pad.first, pad.second, static_cast<double>(mmEnergy[i])*scale[pad.first][pad.second], static_cast<double>(mmTime[i]),
+                                     static_cast<double>(mmPa[i][3]/mmPa[i][1])};
             mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget2
           else if(mmAget[i] == 2) {
-            std::pair<Int_t, Int_t> pad = MM_Map_Asad1_Aget2[mmChan[i]];
-            mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i], mmPa[i][3]/mmPa[i][1]};
+            std::pair<int, int> pad = MM_Map_Asad1_Aget2[mmChan[i]];
+            mmCenter mmHit = {pad.first, pad.second, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1])};
             mmCenter_.push_back(mmHit);
-            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i],
-                                     mmPa[i][3]/mmPa[i][1]};
+            mmCenter mmHitMatched = {pad.first, pad.second, static_cast<double>(mmEnergy[i])*scale[pad.first][pad.second], static_cast<double>(mmTime[i]),
+                                     static_cast<double>(mmPa[i][3]/mmPa[i][1])};
             mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget3
           else if(mmAget[i] == 3) {
-            std::pair<Int_t, Int_t> pad = MM_Map_Asad1_Aget3[mmChan[i]];
-            mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i], mmPa[i][3]/mmPa[i][1]};
+            std::pair<int, int> pad = MM_Map_Asad1_Aget3[mmChan[i]];
+            mmCenter mmHit = {pad.first, pad.second, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1])};
             mmCenter_.push_back(mmHit);
-            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i],
-                                     mmPa[i][3]/mmPa[i][1]};
+            mmCenter mmHitMatched = {pad.first, pad.second, static_cast<double>(mmEnergy[i])*scale[pad.first][pad.second], static_cast<double>(mmTime[i]),
+                                     static_cast<double>(mmPa[i][3]/mmPa[i][1])};
             mmCenterMatched_.push_back(mmHitMatched);
           }
         }
@@ -290,44 +290,44 @@ void Spectra::Loop() {
         else if(mmAsad[i] == 2) {
           // Aget0 - Strips and Chains (Beam left)
           if(mmAget[i] == 0) {
-            Int_t bin = MM_Map_Asad2_Aget0[mmChan[i]];
+            int bin = MM_Map_Asad2_Aget0[mmChan[i]];
             if(mmChan[i] < 34) { // Strips
-              mmChainStrip mmHit = {bin, mmEnergy[i], mmTime[i]};
+              mmChainStrip mmHit = {bin, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i])};
               mmLeftStrip_.push_back(mmHit);
             }
             else if(mmChan[i] > 33 && mmChan[i] < 68) { // Chains
-              mmChainStrip mmHit = {bin, mmEnergy[i], mmTime[i]};
+              mmChainStrip mmHit = {bin, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i])};
               mmLeftChain_.push_back(mmHit);
             }
           }
           // Aget1 - Strips and Chains (Beam left)
           else if(mmAget[i] == 1) {
-            Int_t bin = MM_Map_Asad2_Aget1[mmChan[i]];
+            int bin = MM_Map_Asad2_Aget1[mmChan[i]];
             if(mmChan[i] < 34) { // Strips
-              mmChainStrip mmHit = {bin, mmEnergy[i], mmTime[i]};
+              mmChainStrip mmHit = {bin, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i])};
               mmLeftStrip_.push_back(mmHit);
             }
             else if(mmChan[i] > 33 && mmChan[i] < 68) { // Chains
-              mmChainStrip mmHit = {bin, mmEnergy[i], mmTime[i]};
+              mmChainStrip mmHit = {bin, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i])};
               mmLeftChain_.push_back(mmHit);
             }
           }
           // Aget2 - Outside Central Pads
           else if(mmAget[i] == 2) {
-            std::pair<Int_t, Int_t> pad = MM_Map_Asad2_Aget2[mmChan[i]];
-            mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i], mmPa[i][3]/mmPa[i][1]};
+            std::pair<int, int> pad = MM_Map_Asad2_Aget2[mmChan[i]];
+            mmCenter mmHit = {pad.first, pad.second, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1])};
             mmCenter_.push_back(mmHit);
-            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i],
-                                     mmPa[i][3]/mmPa[i][1]};
+            mmCenter mmHitMatched = {pad.first, pad.second, static_cast<double>(mmEnergy[i])*scale[pad.first][pad.second], static_cast<double>(mmTime[i]),
+                                     static_cast<double>(mmPa[i][3]/mmPa[i][1])};
             mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget3 - Outside Central Pads
           else if(mmAget[i] == 3) {
-            std::pair<Int_t, Int_t> pad = MM_Map_Asad2_Aget3[mmChan[i]];
-            mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i], mmPa[i][3]/mmPa[i][1]};
+            std::pair<int, int> pad = MM_Map_Asad2_Aget3[mmChan[i]];
+            mmCenter mmHit = {pad.first, pad.second, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1])};
             mmCenter_.push_back(mmHit);
-            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i],
-                                     mmPa[i][3]/mmPa[i][1]};
+            mmCenter mmHitMatched = {pad.first, pad.second, static_cast<double>(mmEnergy[i])*scale[pad.first][pad.second], static_cast<double>(mmTime[i]),
+                                     static_cast<double>(mmPa[i][3]/mmPa[i][1])};
             mmCenterMatched_.push_back(mmHitMatched);
           }
         }
@@ -335,44 +335,44 @@ void Spectra::Loop() {
         else if(mmAsad[i] == 3) {
           // Aget0 - Strips and Chains (Beam right)
           if(mmAget[i] == 0) {
-            Int_t bin = MM_Map_Asad3_Aget0[mmChan[i]];
+            int bin = MM_Map_Asad3_Aget0[mmChan[i]];
             if(mmChan[i] < 34) { // Strips
-              mmChainStrip mmHit = {bin, mmEnergy[i], mmTime[i]};
+              mmChainStrip mmHit = {bin, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i])};
               mmRightStrip_.push_back(mmHit);
             }
             else if(mmChan[i] > 33 && mmChan[i] < 68) { // Chains
-              mmChainStrip mmHit = {bin, mmEnergy[i], mmTime[i]};
+              mmChainStrip mmHit = {bin, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i])};
               mmRightChain_.push_back(mmHit);
             }
           }
           // Aget1 - Strips and Chains (Beam right)
           else if(mmAget[i] == 1) {
-            Int_t bin = MM_Map_Asad3_Aget1[mmChan[i]];
+            int bin = MM_Map_Asad3_Aget1[mmChan[i]];
             if(mmChan[i] < 34) { // Strips
-              mmChainStrip mmHit = {bin, mmEnergy[i], mmTime[i]};
+              mmChainStrip mmHit = {bin, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i])};
               mmRightStrip_.push_back(mmHit);
             }
             else if(mmChan[i] > 33 && mmChan[i] < 68) { // Chains
-              mmChainStrip mmHit = {bin, mmEnergy[i], mmTime[i]};
+              mmChainStrip mmHit = {bin, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i])};
               mmRightChain_.push_back(mmHit);
             }
           }
           // Aget2
           else if(mmAget[i] == 2) {
-            std::pair<Int_t, Int_t> pad = MM_Map_Asad3_Aget2[mmChan[i]];
-            mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i], mmPa[i][3]/mmPa[i][1]};
+            std::pair<int, int> pad = MM_Map_Asad3_Aget2[mmChan[i]];
+            mmCenter mmHit = {pad.first, pad.second, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1])};
             mmCenter_.push_back(mmHit);
-            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i],
-                                     mmPa[i][3]/mmPa[i][1]};
+            mmCenter mmHitMatched = {pad.first, pad.second, static_cast<double>(mmEnergy[i])*scale[pad.first][pad.second], static_cast<double>(mmTime[i]),
+                                     static_cast<double>(mmPa[i][3]/mmPa[i][1])};
             mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget3
           else if(mmAget[i] == 3) {
-            std::pair<Int_t, Int_t> pad = MM_Map_Asad3_Aget3[mmChan[i]];
-            mmCenter mmHit = {pad.first, pad.second, mmEnergy[i], mmTime[i], mmPa[i][3]/mmPa[i][1]};
+            std::pair<int, int> pad = MM_Map_Asad3_Aget3[mmChan[i]];
+            mmCenter mmHit = {pad.first, pad.second, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1])};
             mmCenter_.push_back(mmHit);
-            mmCenter mmHitMatched = {pad.first, pad.second, mmEnergy[i]*scale[pad.first][pad.second], mmTime[i],
-                                     mmPa[i][3]/mmPa[i][1]};
+            mmCenter mmHitMatched = {pad.first, pad.second, static_cast<double>(mmEnergy[i])*scale[pad.first][pad.second], static_cast<double>(mmTime[i]),
+                                     static_cast<double>(mmPa[i][3]/mmPa[i][1])};
             mmCenterMatched_.push_back(mmHitMatched);
           }
         }
@@ -384,19 +384,19 @@ void Spectra::Loop() {
           // Forward Detectors
           if(mmAget[i] == 0) {
             if(siForwardMap.count(mmChan[i]) == 0) continue;
-            Int_t detect = siForwardMap[mmChan[i]].first;
-            Int_t quad = siForwardMap[mmChan[i]].second;
-            Int_t channel = mmChan[i];
-            siDetect siHit = {detect, quad, channel, mmEnergy[i], mmTime[i], mmPa[i][3]/mmPa[i][1]};
+            int detect = siForwardMap[mmChan[i]].first;
+            int quad = siForwardMap[mmChan[i]].second;
+            int channel = mmChan[i];
+            siDetect siHit = {detect, quad, channel, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1])};
             siDetect_.push_back(siHit);
           }
           // Beam Left Detectors
           else if(mmAget[i] == 3) {
             if(siLeftMap.count(mmChan[i]) == 0) continue;
-            Int_t detect = siLeftMap[mmChan[i]].first;
-            Int_t quad = siLeftMap[mmChan[i]].second;
-            Int_t channel = mmChan[i];
-            siDetect siHit = {detect+10, quad, channel, mmEnergy[i], mmTime[i], mmPa[i][3]/mmPa[i][1]};
+            int detect = siLeftMap[mmChan[i]].first;
+            int quad = siLeftMap[mmChan[i]].second;
+            int channel = mmChan[i];
+            siDetect siHit = {detect+10, quad, channel, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1])};
             siDetect_.push_back(siHit);
           }
         }
@@ -405,17 +405,17 @@ void Spectra::Loop() {
         else if(mmAsad[i] == 1) {
           // Ionization Chamber
           if(mmAget[i] == 0 && mmChan[i] == 10) {
-            icE = mmEnergy[i];
-            icT = mmTime[i];
+            icE = static_cast<double>(mmEnergy[i]);
+            icT = static_cast<double>(mmTime[i]);
           }
           // CsI Detectors
           else if(mmAget[i] == 3) {
             if(mmChan[i] < 43) {
-              csiDetect csiHit = {csiForwardMap[mmChan[i]], mmEnergy[i], mmTime[i]};
+              csiDetect csiHit = {csiForwardMap[mmChan[i]], static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i])};
               csiDetect_.push_back(csiHit);
             }
             else {
-              csiDetect csiHit = {csiLeftMap[mmChan[i]], mmEnergy[i], mmTime[i]};
+              csiDetect csiHit = {csiLeftMap[mmChan[i]], static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i])};
               csiDetect_.push_back(csiHit);
             }
           }
@@ -429,9 +429,9 @@ void Spectra::Loop() {
     if(icE < 1400 || icE > 1900) continue;
     if(icT < 5500 || icT > 6500) continue;
 
-    Bool_t central = false;
-    Bool_t left = false;
-    Bool_t right = false;
+    bool central = false;
+    bool left = false;
+    bool right = false;
 
     //*********//
     // Silicon //
@@ -455,7 +455,7 @@ void Spectra::Loop() {
     }
 
     for(auto &det : protonDet_) {
-      Double_t siEnergyCal = det.siEnergy*siEForwardCalibration[det.det][det.quad].first +
+      double siEnergyCal = det.siEnergy*siEForwardCalibration[det.det][det.quad].first +
           siEForwardCalibration[det.det][det.quad].second;
       det.siEnergyCal = siEnergyCal;
       det.totalEnergy = siEnergyCal;
@@ -473,7 +473,7 @@ void Spectra::Loop() {
       for(auto &det : protonDet_) {
         if(det.det != csi.detect) continue;
         if(!siCsiEForwardCut[det.det]->IsInside(det.siEnergy, csi.energy)) continue;
-        Double_t csiEnergyCal = csi.energy*csiEForwardCalibration[det.det].first + csiEForwardCalibration[det.det].second;
+        float csiEnergyCal = csi.energy*csiEForwardCalibration[det.det].first + csiEForwardCalibration[det.det].second;
         det.csiEnergy = csi.energy;
         det.csiEnergyCal = csiEnergyCal;
         det.csiTime = csi.time;
@@ -528,7 +528,7 @@ void Spectra::Loop() {
     // Gate on time for central pads
     std::vector<mmCenter> mmCenterMatchedReduced_;
     for(auto mm : mmCenterMatched_) {
-      Double_t time = mm.time;
+      double time = mm.time;
       if(mm.row < 2) continue;
       if(mm.row < 112) {
         if(time < 4700 || time > 6300) continue;
@@ -561,16 +561,16 @@ void Spectra::Loop() {
     }
 
     // Reduce mmCenter to one entry per row for beam and protons
-    std::map<Int_t, Double_t> centralPadPosition;
-    std::map<Int_t, Double_t> centralPadTotalEnergy;
-    std::map<Int_t, Double_t> centralPadTime;
-    std::map<Int_t, Int_t> centralPadTotal;
-    for(UInt_t i = 0; i < 128; i++) {
+    std::map<int, double> centralPadPosition;
+    std::map<int, double> centralPadTotalEnergy;
+    std::map<int, double> centralPadTime;
+    std::map<int, int> centralPadTotal;
+    for(int i = 0; i < 128; i++) {
       centralPadTotal[i] = 0;
     }
     for(auto mm : mmCenterMatchedReducedNoise_) {
-      Double_t xPosition = mm.column*3.5 - 8.75;
-      Double_t yPosition = mm.row*rowConversion + rowConversionOffset;
+      float xPosition = mm.column*3.5 - 8.75;
+      float yPosition = mm.row*rowConversion + rowConversionOffset;
       hMicroMegasCenterCumulative->Fill(mm.column - 3, mm.row);
       hMicroMegasCenterCumulativePositionRaw->Fill(xPosition, yPosition);
       hMicroMegasCenterTime->Fill(mm.row, mm.time);
@@ -592,16 +592,16 @@ void Spectra::Loop() {
     // Separate beam and proton in central Micromegas
     std::vector<mmTrack> mmCenterBeamTotal_;
     std::vector<mmTrack> mmCenterProton_;
-    std::map<Int_t, Double_t>::iterator it;
+    std::map<int, double>::iterator it;
     for(it = centralPadPosition.begin(); it != centralPadPosition.end(); it++) {
-      Int_t row = it->first;
+      int row = it->first;
       mmTrack hit = {0, 0., 0., 0., 0., 0., 0};
       if(centralPadTotalEnergy[row] == 0) continue;
       if(centralPadTotal[row] == 0) continue;
       hit.row = row;
       hit.xPosition = centralPadPosition[row]/centralPadTotalEnergy[row];
       hit.yPosition = row*rowConversion + rowConversionOffset;
-      hit.time = centralPadTime[row]/static_cast<Double_t>(centralPadTotal[row]) - siTime;
+      hit.time = centralPadTime[row]/static_cast<double>(centralPadTotal[row]) - siTime;
       hit.energy = centralPadTotalEnergy[row];
       hit.height = heightOffset - hit.time*driftVelocity;
       hit.total = centralPadTotal[row];
@@ -619,8 +619,8 @@ void Spectra::Loop() {
     //*************************************//
 
     // Central region
-    Double_t dECentral = 0.;
-    Int_t totalRowsCentral = 0;
+    double dECentral = 0.;
+    int totalRowsCentral = 0;
     for(auto mm : mmCenterProton_) {
       if(mm.row > 115 && mm.row < 124 && mm.row != 117) {
         dECentral += mm.energy;
@@ -628,34 +628,34 @@ void Spectra::Loop() {
       }
     }
     if(totalRowsCentral > 0) {
-      dECentral /= static_cast<Double_t>(totalRowsCentral);
+      dECentral /= static_cast<double>(totalRowsCentral);
     }
 
     // Side Region
-    Double_t dELeft = 0.;
-    Int_t totalRowsLeft = 0;
+    double dELeft = 0.;
+    int totalRowsLeft = 0;
     for(auto mm : mmLeftStrip_) {
       if(mm.row < 50 || mm.row > 62) continue;
       dELeft += mm.energy;
       totalRowsLeft++;
     }
     if(totalRowsLeft > 0) {
-      dELeft /= static_cast<Double_t>(totalRowsLeft);
+      dELeft /= static_cast<double>(totalRowsLeft);
     }
-    Double_t dERight = 0.;
-    Int_t totalRowsRight = 0;
+    double dERight = 0.;
+    int totalRowsRight = 0;
     for(auto mm : mmRightStrip_) {
       if(mm.row < 50 || mm.row > 62) continue;
       dERight += mm.energy;
       totalRowsRight++;
     }
     if(totalRowsRight > 0) {
-      dERight /= static_cast<Double_t>(totalRowsRight);
+      dERight /= static_cast<double>(totalRowsRight);
     }
 
     std::vector<protonDetect> protonDetReduced_;
     for(auto det : protonDet_) {
-      Double_t dERegion = 0.;
+      double dERegion = 0.;
       if(det.det < 4) dERegion = dERight;
       else if(det.det > 5) dERegion = dELeft;
       else dERegion = dECentral;
@@ -676,29 +676,29 @@ void Spectra::Loop() {
     siDet = protonDetReduced_[0].det;
     siQuad = protonDetReduced_[0].quad;
     siChannel = protonDetReduced_[0].siChannel;
-    siEnergy = protonDetReduced_[0].siEnergy;
-    siEnergyCal = protonDetReduced_[0].siEnergyCal;
-    siTime = protonDetReduced_[0].siTime;
-    csiEnergy = protonDetReduced_[0].csiEnergy;
-    csiEnergyCal = protonDetReduced_[0].csiEnergyCal;
-    csiTime = protonDetReduced_[0].csiTime;
-    totalEnergy = protonDetReduced_[0].totalEnergy;
+    siEnergy = static_cast<float>(protonDetReduced_[0].siEnergy);
+    siEnergyCal = static_cast<float>(protonDetReduced_[0].siEnergyCal);
+    siTime = static_cast<float>(protonDetReduced_[0].siTime);
+    csiEnergy = static_cast<float>(protonDetReduced_[0].csiEnergy);
+    csiEnergyCal = static_cast<float>(protonDetReduced_[0].csiEnergyCal);
+    csiTime = static_cast<float>(protonDetReduced_[0].csiTime);
+    totalEnergy = static_cast<float>(protonDetReduced_[0].totalEnergy);
     punchthrough = protonDetReduced_[0].punchthrough;
     if(siDet < 4) {
-      dE = dERight;
+      dE = static_cast<float>(dERight);
       right = true;
     }
     else if(siDet > 5) {
-      dE = dELeft;
+      dE = static_cast<float>(dELeft);
       left = true;
     }
     else {
-      dE = dECentral;
+      dE = static_cast<float>(dECentral);
       central = true;
     }
 
 
-    Bool_t event = false;
+    bool event = false;
 //    if(central) {
 //      event = AnalysisForwardCentral(mmCenterMatchedReducedNoise_, mmCenterBeamTotal_, mmCenterProton_, centralPadTotalEnergy);
 //    }
@@ -723,12 +723,12 @@ void Spectra::Loop() {
   file->Close();
 }
 
-Bool_t Spectra::AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std::vector<mmTrack> centerBeamTotal_,
-                                     std::vector<mmTrack> centerProton_, std::map<Int_t, Double_t> centralPadTotalEnergy) {
+bool Spectra::AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std::vector<mmTrack> centerBeamTotal_,
+                                     std::vector<mmTrack> centerProton_, std::map<int, double> centralPadTotalEnergy) {
 
   // Find dE for center region
   dE = 0.;
-  Int_t totalRows = 0;
+  int totalRows = 0;
   for(auto mm : centerProton_) {
     if(mm.row > 115 && mm.row < 124 && mm.row != 117) {
       if(mm.energy < 50) continue;
@@ -736,7 +736,7 @@ Bool_t Spectra::AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std
       totalRows++;
     }
   }
-  dE /= static_cast<Double_t>(totalRows);
+  dE /= static_cast<float>(totalRows);
 
   for(auto mm : centerMatched_) {
     hTimeCentraldEForward[siDet]->Fill(mm.row, mm.time - siTime);
@@ -753,30 +753,30 @@ Bool_t Spectra::AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std
 
   if(centerBeamTotal_.size() > 10) {
     // Make reduced beam (70% of beam track)
-    Int_t centerBeamSize = static_cast<Int_t>(centerBeamTotal_.size());
-    centerBeamSize = static_cast<Int_t>(floor(0.7*centerBeamSize));
+    int centerBeamSize = static_cast<int>(centerBeamTotal_.size());
+    centerBeamSize = static_cast<int>(floor(0.7*centerBeamSize));
 
     std::vector<mmTrack> centerBeamSmall_;
-    for(Int_t i = 0; i < centerBeamSize; i++) {
+    for(int i = 0; i < centerBeamSize; i++) {
       centerBeamSmall_.push_back(centerBeamTotal_[i]);
     }
 
-    // Int_t lastRow = centerBeamTotal_[centerBeamTotal_.size() - 1].row;
+    // int lastRow = centerBeamTotal_[centerBeamTotal_.size() - 1].row;
     // auto *fitBeam = new HoughTrack();
     // fitBeam->AddTrack(centerBeamTotal_, siDet, siQuad);
-    // Double_t minDist = fitBeam->Fit();
-    // std::vector<Double_t> parsBeam = fitBeam->GetPars();
+    // double minDist = fitBeam->Fit();
+    // std::vector<double> parsBeam = fitBeam->GetPars();
     // delete fitBeam;
 
-    Int_t lastRow = centerBeamSmall_[centerBeamSmall_.size() - 1].row;
+    int lastRow = centerBeamSmall_[centerBeamSmall_.size() - 1].row;
     auto *fitBeam = new HoughTrack();
     fitBeam->AddTrack(centerBeamSmall_, siDet, siQuad);
-    Double_t minDist = fitBeam->Fit();
-    std::vector<Double_t> parsBeam = fitBeam->GetPars();
+    double minDist = fitBeam->Fit();
+    std::vector<double> parsBeam = fitBeam->GetPars();
     delete fitBeam;
 
-    Int_t maxPeakRow;
-    Double_t maxPeakEnergy, avgPeakEnergy, maxPeakDeriv;
+    int maxPeakRow;
+    double maxPeakEnergy, avgPeakEnergy, maxPeakDeriv;
     FindMaxCentralEnergy(centerBeamTotal_, maxPeakRow, maxPeakEnergy, avgPeakEnergy, maxPeakDeriv);
 
     hMaxPeakSiE[siDet]->Fill(maxPeakRow, siEnergyCal);
@@ -785,10 +785,10 @@ Bool_t Spectra::AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std
     hAvgPeakESiE[siDet]->Fill(avgPeakEnergy, siEnergyCal);
     hMaxPeakEDerivPeak[siDet]->Fill(maxPeakEnergy, maxPeakDeriv);
 
-    Bool_t singleColumn = CenterOnlyOneColumn(centerBeamTotal_);
+    bool singleColumn = CenterOnlyOneColumn(centerBeamTotal_);
     // if(!singleColumn) return true;
 
-    std::vector<Double_t> parsRecoil;
+    std::vector<double> parsRecoil;
     DrawCenterBeamLinearCanvas(totalCenterBeamLinearCanvas, centerBeamTotal_, parsBeam, parsRecoil, 0);
     totalCenterBeamLinearCanvas++;
 
@@ -804,8 +804,8 @@ Bool_t Spectra::AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std
     DrawCenterEnergyDerivCanvas(totalCenterEnergyDerivCanvas, threePoint_, fivePoint_);
     totalCenterEnergyDerivCanvas++;
 
-    std::pair<Int_t, Int_t> derivPeak = CenterGetDerivMax(threePoint_, fivePoint_);
-    Int_t derivDiff = maxPeakRow - derivPeak.first;
+    std::pair<int, int> derivPeak = CenterGetDerivMax(threePoint_, fivePoint_);
+    int derivDiff = maxPeakRow - derivPeak.first;
     hMaxPeakDerivDiff[siDet]->Fill(maxPeakRow, derivDiff);
     hDerivPeakDerivDiff[siDet]->Fill(derivPeak.first, derivDiff);
 
@@ -819,7 +819,7 @@ Bool_t Spectra::AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std
   return true;
 }
 
-Bool_t Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::vector<mmTrack> centerBeamTotal_,
+bool Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::vector<mmTrack> centerBeamTotal_,
                                   std::vector<mmChainStrip> leftChain_, std::vector<mmChainStrip> leftStrip_,
                                   std::vector<mmChainStrip> rightChain_, std::vector<mmChainStrip> rightStrip_) {
   // Sorting mmCenterBeamTotal_ by row
@@ -847,8 +847,8 @@ Bool_t Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::v
     std::sort(rightStrip_.begin(), rightStrip_.end(), sortByRowMMChainStrip());
   }
 
-  Bool_t left = false;
-  Bool_t right = false;
+  bool left = false;
+  bool right = false;
   if(siDet < 4) right = true;
   else if(siDet > 5) left = true;
 
@@ -916,13 +916,13 @@ Bool_t Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::v
                     siTime);
   }
 
-  Double_t leftTrackLength = 0.;
-  Double_t rightTrackLength = 0.;
+  double leftTrackLength = 0.;
+  double rightTrackLength = 0.;
   if(!chainStripMatchedLeft_.empty()) leftTrackLength = ChainStripSize(chainStripMatchedLeft_);
   if(!chainStripMatchedRight_.empty()) rightTrackLength = ChainStripSize(chainStripMatchedRight_);
 
-  Double_t protonTrackLength = 0.;
-  Double_t otherTrackLength = 0.;
+  double protonTrackLength = 0.;
+  double otherTrackLength = 0.;
   if(right) {
     protonTrackLength = rightTrackLength;
     otherTrackLength = leftTrackLength;
@@ -940,7 +940,23 @@ Bool_t Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::v
           chainStripMatchedRight_, chainStripRawRight_);
     totalEventTrackSideCanvas++;
 
-    DrawEventTrackSidedECanvas(totalEventTrackSidedECanvas, chainStripRawLeft_, chainStripRawRight_);
+    auto *fitLeft = new HoughTrack();
+    fitLeft->AddTrack(chainStripMatchedLeft_, siDet, siQuad);
+    double minDistLeft = fitLeft->Fit();
+    std::vector<double> parsLeft = fitLeft->GetPars();
+    delete fitLeft;
+    double m_xcomponentLeft = fabs(parsLeft[1]);
+    double xAngleLeft = atan(m_xcomponentLeft);
+
+    auto *fitRight = new HoughTrack();
+    fitRight->AddTrack(chainStripMatchedRight_, siDet, siQuad);
+    double minDistRight = fitRight->Fit();
+    std::vector<double> parsRight = fitRight->GetPars();
+    delete fitRight;
+    double m_xcomponentRight = fabs(parsRight[1]);
+    double xAngleRight = atan(m_xcomponentRight);
+
+    DrawEventTrackSidedECanvas(totalEventTrackSidedECanvas, chainStripRawLeft_, chainStripRawRight_, xAngleLeft, xAngleRight);
     totalEventTrackSidedECanvas++;
   }
 
@@ -977,7 +993,7 @@ Bool_t Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::v
   vertexPositionY = -400.;
   vertexPositionZ = 0.;
 
-  Double_t protonEnergy = 0.;
+  double protonEnergy = 0.;
 
   if(protonTrack.empty()) {
     // std::cout << "protonTrack Empty: " << protonTrackLength << " OtherTrack: " << otherTrackLength << std::endl;
@@ -987,38 +1003,38 @@ Bool_t Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::v
 
   auto *fitProton = new HoughTrack();
   fitProton->AddTrack(protonTrack, siDet, siQuad);
-  Double_t minDist = fitProton->FitRestricted();
-  std::vector<Double_t> parsProton = fitProton->GetPars();
-  Double_t houghAngleXY = fitProton->GetHoughAngleXY();
-  Double_t houghAngleYZ = fitProton->GetHoughAngleYZ();
+  double minDist = fitProton->FitRestricted();
+  std::vector<double> parsProton = fitProton->GetPars();
+  double houghAngleXY = fitProton->GetHoughAngleXY();
+  double houghAngleYZ = fitProton->GetHoughAngleYZ();
   hHoughAngle[siDet]->Fill(houghAngleXY);
 
   delete fitProton;
 
-  ULong_t mmCenterSize = centerBeamTotal_.size();
+  unsigned long mmCenterSize = centerBeamTotal_.size();
   /*
   if(mmCenterSize == 0) {
-    Double_t beamX_old = 0.;
-    Double_t beamY_old = 250.;
-    Double_t beamZ_old = 0.;
-    Double_t beamX = beamX_old;
-    Double_t beamY = beamY_old;
-    Double_t beamZ = beamZ_old;
-    Double_t x, y, z;
+    double beamX_old = 0.;
+    double beamY_old = 250.;
+    double beamZ_old = 0.;
+    double beamX = beamX_old;
+    double beamY = beamY_old;
+    double beamZ = beamZ_old;
+    double x, y, z;
     line(beamY, parsProton, x, y, z);
-    Double_t protonX_old = x;
-    Double_t protonX = protonX_old;
-    Double_t xDiff_old = beamX - protonX_old;
-    Double_t xDiff = xDiff_old;
-    Double_t yPos = beamY_old;
+    double protonX_old = x;
+    double protonX = protonX_old;
+    double xDiff_old = beamX - protonX_old;
+    double xDiff = xDiff_old;
+    double yPos = beamY_old;
     while(yPos > -300.) {
       beamY = yPos;
       line(beamY, parsProton, x, y, z);
       protonX = x;
       xDiff = beamX - protonX;
       if(xDiff_old*xDiff < 0) {
-        Double_t m = (beamY - beamY_old)/(xDiff - xDiff_old);
-        Double_t b = beamY - m*xDiff;
+        double m = (beamY - beamY_old)/(xDiff - xDiff_old);
+        double b = beamY - m*xDiff;
         vertexPositionX = beamX;
         vertexPositionY = beamY;
         vertexPositionZ = beamZ;
@@ -1031,10 +1047,10 @@ Bool_t Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::v
     }
     // Did not fit well
     if(vertexPositionY == -400) {
-      Double_t m_xcomponent = fabs(parsProton[1]);
-      Double_t xAngle = atan(m_xcomponent);
+      double m_xcomponent = fabs(parsProton[1]);
+      double xAngle = atan(m_xcomponent);
 
-      Double_t yDist = siXPosForward[siDet][siQuad]/fabs(tan(xAngle));
+      double yDist = siXPosForward[siDet][siQuad]/fabs(tan(xAngle));
 
       if(250. - yDist < -400) {
         vertexPositionY = -400.;
@@ -1047,18 +1063,18 @@ Bool_t Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::v
   else if()
   else {
     // Loop through beam in central region starting from last
-    Double_t beamX_old = centerBeamTotal_[mmCenterSize - 1].xPosition;
-    Double_t beamY_old = centerBeamTotal_[mmCenterSize - 1].yPosition;
-    Double_t beamZ_old = centerBeamTotal_[mmCenterSize - 1].height;
-    Double_t beamX = beamX_old;
-    Double_t beamY = beamY_old;
-    Double_t beamZ = beamZ_old;
-    Double_t x, y, z;
+    double beamX_old = centerBeamTotal_[mmCenterSize - 1].xPosition;
+    double beamY_old = centerBeamTotal_[mmCenterSize - 1].yPosition;
+    double beamZ_old = centerBeamTotal_[mmCenterSize - 1].height;
+    double beamX = beamX_old;
+    double beamY = beamY_old;
+    double beamZ = beamZ_old;
+    double x, y, z;
     line(beamY, parsProton, x, y, z);
-    Double_t protonX_old = x;
-    Double_t protonX = protonX_old;
-    Double_t xDiff_old = beamX - protonX_old;
-    Double_t xDiff = xDiff_old;
+    double protonX_old = x;
+    double protonX = protonX_old;
+    double xDiff_old = beamX - protonX_old;
+    double xDiff = xDiff_old;
     Bool_t foundVertex = false;
     for(ULong_t i = mmCenterSize - 1; i > -1; i--) {
       beamX = centerBeamTotal_[i].xPosition;
@@ -1068,8 +1084,8 @@ Bool_t Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::v
       protonX = x;
       xDiff = beamX - protonX;
       if(xDiff_old*xDiff < 0) {
-        Double_t m = (beamY - beamY_old)/(xDiff - xDiff_old);
-        Double_t b = beamY - m*xDiff;
+        double m = (beamY - beamY_old)/(xDiff - xDiff_old);
+        double b = beamY - m*xDiff;
         vertexPositionX = beamX;
         vertexPositionY = b;
         vertexPositionZ = beamZ;
@@ -1083,14 +1099,14 @@ Bool_t Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::v
       xDiff_old = xDiff;
     }
     if(!foundVertex) {
-      Double_t beamY = -1.;
+      double beamY = -1.;
       while(beamY > -300.) {
         line(beamY, parsProton, x, y, z);
         protonX = x;
         xDiff = beamX - x;
         if(xDiff*xDiff_old < 0) {
-          Double_t m = (beamY - beamY_old)/(xDiff - xDiff_old);
-          Double_t b = beamY - m*xDiff;
+          double m = (beamY - beamY_old)/(xDiff - xDiff_old);
+          double b = beamY - m*xDiff;
           vertexPositionX = beamX;
           vertexPositionY = b;
           vertexPositionZ = 0.;
@@ -1104,10 +1120,10 @@ Bool_t Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::v
     }
     // Did not fit well
     if(vertexPositionY == -400) {
-      Double_t m_xcomponent = fabs(parsProton[1]);
-      Double_t xAngle = atan(m_xcomponent);
+      double m_xcomponent = fabs(parsProton[1]);
+      double xAngle = atan(m_xcomponent);
 
-      Double_t yDist = siXPosForward[siDet][siQuad]/fabs(tan(xAngle));
+      double yDist = siXPosForward[siDet][siQuad]/fabs(tan(xAngle));
 
       if(250. - yDist < -400) {
         vertexPositionY = -400.;
@@ -1119,7 +1135,7 @@ Bool_t Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::v
   }
 
   // Plot XZ hit position of forward non-central detectors
-  Double_t x, y, z;
+  double x, y, z;
   line(siYPosForward, parsProton, x, y, z);
   siPosX = x;
   siPosY = siYPosForward;
@@ -1127,28 +1143,28 @@ Bool_t Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::v
   hHitPositionsXZForward->Fill(x, z);
   hHitPositionsXZForwardInd[siDet]->Fill(x, z);
 
-  Double_t vertexToSi = siYPosForward - vertexPositionY;
+  double vertexToSi = siYPosForward - vertexPositionY;
 
-  Double_t siX, siY, siZ;
+  double siX, siY, siZ;
   line(siYPosForward, parsProton, siX, siY, siZ);
 
-  // Double_t angleX = atan(fabs(siX)/(vertexToSi));
-  // Double_t angleZ = atan(fabs(siZ)/(vertexToSi));
-  // Double_t cosAngle = cos(angleX)*cos(angleZ);
+  // double angleX = atan(fabs(siX)/(vertexToSi));
+  // double angleZ = atan(fabs(siZ)/(vertexToSi));
+  // double cosAngle = cos(angleX)*cos(angleZ);
   // angle = acos(cosAngle);
 
   TVector3 v1(siX, vertexToSi, siZ);
   TVector3 v2(0, vertexToSi, 0);
   angle = v1.Angle(v2);
-  Double_t cosAngle = cos(angle);
+  double cosAngle = cos(angle);
 
-  Double_t pathLength = vertexToSi/cosAngle;
+  double pathLength = vertexToSi/cosAngle;
 
   if(pathLength < 0) pathLength = 200.;
   if(pathLength > 700) pathLength = 700.;
 
   protonEnergy = protonMethane->AddBack(totalEnergy/1000., pathLength);
-  Double_t beamEnergy = protonEnergy*(m1 + m2)*(m1 + m2)/(4.*m1*m2*cosAngle*cosAngle);
+  double beamEnergy = protonEnergy*(m1 + m2)*(m1 + m2)/(4.*m1*m2*cosAngle*cosAngle);
 
   cmEnergy = beamEnergy*m2/(m1 + m2);
 
@@ -1178,7 +1194,7 @@ Bool_t Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::v
 std::vector<mmCenter> Spectra::CenterReduceNoise(std::vector<mmCenter> center) {
   std::vector<mmCenter> mmNew;
 
-  std::vector<Int_t> rows[128];
+  std::vector<int> rows[128];
 
   for(auto mm : center) {
     if(mm.row > 111 && mm.column != 0 && mm.column != 5) {
@@ -1193,12 +1209,12 @@ std::vector<mmCenter> Spectra::CenterReduceNoise(std::vector<mmCenter> center) {
         // Check previous 2 rows if they have any columns
         if(rows[mm.row - 4].empty() && rows[mm.row - 3].empty()) continue;
         if(!rows[mm.row - 3].empty()) {
-          Bool_t found = false;
+          bool found = false;
           for(auto column : rows[mm.row - 3]) {
             if(column == mm.column - 1 || column == mm.column || column == mm.column + 1) found = true;
           }
           if(found) {
-            Bool_t inRow = false;
+            bool inRow = false;
             for(auto column : rows[mm.row - 2]) {
               if(column == mm.column) inRow = true;
             }
@@ -1209,12 +1225,12 @@ std::vector<mmCenter> Spectra::CenterReduceNoise(std::vector<mmCenter> center) {
           }
         }
         else if(!rows[mm.row - 4].empty()) {
-          Bool_t found = false;
+          bool found = false;
           for(auto column : rows[mm.row - 4]) {
             if(column == mm.column - 1 || column == mm.column || column == mm.column + 1) found = true;
           }
           if(found) {
-            Bool_t inRow = false;
+            bool inRow = false;
             for(auto column : rows[mm.row - 2]) {
               if(column == mm.column) inRow = true;
             }
@@ -1231,27 +1247,28 @@ std::vector<mmCenter> Spectra::CenterReduceNoise(std::vector<mmCenter> center) {
   return mmNew;
 }
 
-void Spectra::CorrectCenterEnergy(std::vector<mmTrack> &centerBeam_, std::vector<Double_t> parsBeam, Int_t lastRow) {
-  Double_t x, y, z;
+void Spectra::CorrectCenterEnergy(std::vector<mmTrack> &centerBeam_, std::vector<double> parsBeam, int lastRow) {
+  double x, y, z;
 
   // Correct energy
-//  for(auto mm : centerBeam_) {
-  for(Int_t i = 0; i < centerBeam_.size(); i++) {
+  // for(auto mm : centerBeam_) {
+  for(uint i = 0; i < centerBeam_.size(); i++) {
     if(centerBeam_[i].row > lastRow) continue;
 
     // if(centerBeam_[i].total != 1) continue;
     line(centerBeam_[i].yPosition, parsBeam, x, y, z);
-    Double_t distToMesh = 6.54 + centerBeam_[i].height/10.;
-    Double_t gasSigma = sqrt(distToMesh)*gasPositionResolution*10.;
-    // Double_t gausSigma = gasSigma;
-    Double_t gausSigma = sqrt(gasSigma*gasSigma + 1.5*1.5);
-    Double_t gausMean = x;
+    double distToMesh = 6.54 + centerBeam_[i].height/10.;
+    double gasSigma = sqrt(distToMesh)*gasPositionResolution*10.;
+    // double gausSigma = gasSigma;
+    double gausSigma = sqrt(gasSigma*gasSigma + 1.5*1.5);
+    double gausMean = x;
 
     // Find pad where the hit fell into
-    Double_t padFirst, padSecond;
+    double padFirst = 0;
+    double padSecond = 0;
 
     if(centerBeam_[i].total == 1) {
-      for(Int_t j = 0; j < 6; j++) {
+      for(int j = 0; j < 6; j++) {
         if((centerBeam_[i].xPosition > mmColumnSize[j].first) &&
             (centerBeam_[i].xPosition < mmColumnSize[j].second)) {
           padFirst = mmColumnSize[j].first;
@@ -1262,7 +1279,7 @@ void Spectra::CorrectCenterEnergy(std::vector<mmTrack> &centerBeam_, std::vector
 //      std::cout << entry << '\t' << centerBeam_[i].row << '\t' << centerBeam_[i].xPosition << '\t' << padFirst << '\t' << padSecond << std::endl;
     }
     else if(centerBeam_[i].total == 2) {
-      for(Int_t j = 1; j < 6; j++) {
+      for(int j = 1; j < 6; j++) {
         if((centerBeam_[i].xPosition > mmColumnSize[j - 1].first) &&
            (centerBeam_[i].xPosition < mmColumnSize[j].second) &&
            fabs(centerBeam_[i].xPosition - mmColumnSize[j - 1].first) < 5) {
@@ -1275,9 +1292,9 @@ void Spectra::CorrectCenterEnergy(std::vector<mmTrack> &centerBeam_, std::vector
     }
     else continue;
 
-    Double_t gausCDFFirst = GaussianCDF(padFirst, gausMean, gausSigma);
-    Double_t gausCDFSecond = GaussianCDF(padSecond, gausMean, gausSigma);
-    Double_t gausPercentage = gausCDFSecond - gausCDFFirst;
+    double gausCDFFirst = GaussianCDF(padFirst, gausMean, gausSigma);
+    double gausCDFSecond = GaussianCDF(padSecond, gausMean, gausSigma);
+    double gausPercentage = gausCDFSecond - gausCDFFirst;
 
     if(gausPercentage > 0.5) {
       centerBeam_[i].energy = centerBeam_[i].energy/gausPercentage;
@@ -1289,27 +1306,27 @@ void Spectra::CorrectCenterEnergy(std::vector<mmTrack> &centerBeam_, std::vector
   }
 }
 
-Double_t Spectra::GaussianCDF(Double_t x, Double_t mean, Double_t sigma) {
+double Spectra::GaussianCDF(double x, double mean, double sigma) {
 
   return 0.5*(1. + erf((x - mean)/(sqrt(2.)*sigma)));
 }
 
-void Spectra::FindMaxCentralEnergy(std::vector<mmTrack> centerMatched_, Int_t &maxEnergyRow, Double_t &maxEnergy,
-                                   Double_t &averageMaxEnergy, Double_t &maxDeriv) {
+void Spectra::FindMaxCentralEnergy(std::vector<mmTrack> centerMatched_, int &maxEnergyRow, double &maxEnergy,
+                                   double &averageMaxEnergy, double &maxDeriv) {
   maxEnergy = -1000.;
-  Int_t maxRow = -1;
-  Int_t maxRowBin = 0;
-  Double_t totalEnergy = 0.;
+  int maxRow = -1;
+  int maxRowBin = 0;
+  double totalEnergy = 0.;
 
-  for(UInt_t i = 0; i < centerMatched_.size(); i++) {
+  for(uint i = 0; i < centerMatched_.size(); i++) {
     if(centerMatched_[i].energy > maxEnergy) {
       maxEnergy = centerMatched_[i].energy;
       maxRow = centerMatched_[i].row;
-      maxRowBin = i;
+      maxRowBin = static_cast<int>(i);
     }
   }
 
-  Int_t minRowBin;
+  int minRowBin;
   if(maxRowBin < 5) {
     minRowBin = 0;
   }
@@ -1317,30 +1334,30 @@ void Spectra::FindMaxCentralEnergy(std::vector<mmTrack> centerMatched_, Int_t &m
     minRowBin = maxRowBin - 4;
   }
 
-  Double_t derivative;
+  double derivative;
   if(maxRowBin > 1) {
-    derivative = (centerMatched_[maxRowBin].energy - centerMatched_[maxRowBin- 2].energy)/2.;
+    derivative = (centerMatched_[maxRowBin].energy - centerMatched_[maxRowBin - 2].energy)/2.;
   }
   else {
     derivative = 0.;
   }
 
-  Int_t count = 0;
-  for(Int_t i = minRowBin; i < maxRowBin + 1; i++) {
+  int count = 0;
+  for(int i = minRowBin; i < maxRowBin + 1; i++) {
     totalEnergy += centerMatched_[i].energy;
     count++;
   }
 
   maxEnergyRow = maxRow;
-  averageMaxEnergy = totalEnergy/static_cast<Double_t>(count);
+  averageMaxEnergy = totalEnergy/static_cast<double>(count);
   maxDeriv = derivative;
 }
 
 std::vector<mmTrack> Spectra::GetRunningEnergyAverageThree(std::vector<mmTrack> centerMatched_) {
   std::vector<mmTrack> newTrack_;
   newTrack_.push_back(centerMatched_[0]);
-  for(UInt_t i = 1; i < centerMatched_.size() - 2; i++) {
-    Double_t avgEnergy = (centerMatched_[i - 1].energy + centerMatched_[i].energy + centerMatched_[i + 1].energy)/3.;
+  for(uint i = 1; i < centerMatched_.size() - 2; i++) {
+    double avgEnergy = (centerMatched_[i - 1].energy + centerMatched_[i].energy + centerMatched_[i + 1].energy)/3.;
     newTrack_.push_back(centerMatched_[i]);
     newTrack_[i].energy = avgEnergy;
   }
@@ -1353,8 +1370,8 @@ std::vector<mmTrack> Spectra::GetRunningEnergyAverageFive(std::vector<mmTrack> c
   std::vector<mmTrack> newTrack_;
   newTrack_.push_back(centerMatched_[0]);
   newTrack_.push_back(centerMatched_[1]);
-  for(UInt_t i = 2; i < centerMatched_.size() - 3; i++) {
-    Double_t avgEnergy = (centerMatched_[i - 2].energy + centerMatched_[i - 1].energy +
+  for(uint i = 2; i < centerMatched_.size() - 3; i++) {
+    double avgEnergy = (centerMatched_[i - 2].energy + centerMatched_[i - 1].energy +
         centerMatched_[i].energy + centerMatched_[i + 1].energy + centerMatched_[i + 2].energy)/5.;
     newTrack_.push_back(centerMatched_[i]);
     newTrack_[i].energy = avgEnergy;
@@ -1365,8 +1382,8 @@ std::vector<mmTrack> Spectra::GetRunningEnergyAverageFive(std::vector<mmTrack> c
   return newTrack_;
 }
 
-Bool_t Spectra::CenterOnlyOneColumn(std::vector<mmTrack> centerMatched_) {
-  Bool_t singleColumn = true;
+bool Spectra::CenterOnlyOneColumn(std::vector<mmTrack> centerMatched_) {
+  bool singleColumn = true;
 
   for(auto mm : centerMatched_) {
     if(mm.total > 1) singleColumn = false;
@@ -1377,8 +1394,8 @@ Bool_t Spectra::CenterOnlyOneColumn(std::vector<mmTrack> centerMatched_) {
 
 std::vector<centerDeriv> Spectra::CenterEnergyThreePointDeriv(std::vector<mmTrack> center_) {
   std::vector<centerDeriv> mmDeriv;
-  for(UInt_t i = 1; i < center_.size() - 1; i++) {
-    Double_t deriv = (center_[i + 1].energy - center_[i - 1].energy)/2.;
+  for(uint i = 1; i < center_.size() - 1; i++) {
+    double deriv = (center_[i + 1].energy - center_[i - 1].energy)/2.;
     centerDeriv hit = {center_[i].row, deriv};
     mmDeriv.push_back(hit);
   }
@@ -1387,8 +1404,8 @@ std::vector<centerDeriv> Spectra::CenterEnergyThreePointDeriv(std::vector<mmTrac
 
 std::vector<centerDeriv> Spectra::CenterEnergyFivePointDeriv(std::vector<mmTrack> center_) {
   std::vector<centerDeriv> mmDeriv;
-  for(UInt_t i = 2; i < center_.size() - 2; i++) {
-    Double_t deriv = (-center_[i + 2].energy + 8.*center_[i + 1].energy -
+  for(uint i = 2; i < center_.size() - 2; i++) {
+    double deriv = (-center_[i + 2].energy + 8.*center_[i + 1].energy -
                       8.*center_[i - 1].energy + center_[i - 2].energy)/12.;
     centerDeriv hit = {center_[i].row, deriv};
     mmDeriv.push_back(hit);
@@ -1396,12 +1413,12 @@ std::vector<centerDeriv> Spectra::CenterEnergyFivePointDeriv(std::vector<mmTrack
   return mmDeriv;
 }
 
-std::pair<Int_t, Int_t> Spectra::CenterGetDerivMax(std::vector<centerDeriv> threePoint_, std::vector<centerDeriv> fivePoint_) {
-  Int_t maxThreePointRow, maxFivePointRow;
+std::pair<int, int> Spectra::CenterGetDerivMax(std::vector<centerDeriv> threePoint_, std::vector<centerDeriv> fivePoint_) {
+  int maxThreePointRow, maxFivePointRow;
 
-  std::pair<Int_t, Int_t> pair;
+  std::pair<int, int> pair;
 
-  Double_t maxDeriv = -1000.;
+  double maxDeriv = -1000.;
   for(auto mm : threePoint_) {
     if(mm.deriv > maxDeriv) {
       maxDeriv = mm.deriv;
@@ -1424,7 +1441,7 @@ std::pair<Int_t, Int_t> Spectra::CenterGetDerivMax(std::vector<centerDeriv> thre
 
 void Spectra::ChainStripMatch(std::vector<mmTrack> &chainStripMatched, std::vector<mmTrack> &chainStripRaw,
                               std::vector<mmChainStrip> chain_,
-                              std::vector<mmChainStrip> strip_, Bool_t leftSide, Double_t siTime) {
+                              std::vector<mmChainStrip> strip_, bool leftSide, double siTime) {
   // Function that matches chains and strips together
   // If number of different time buckets < 4, uses box method
   // If > 3, uses the same time to match
@@ -1432,24 +1449,28 @@ void Spectra::ChainStripMatch(std::vector<mmTrack> &chainStripMatched, std::vect
   chainStripMatched.clear();
   chainStripRaw.clear();
   std::vector<mmTrack> totalTime0;
+  std::vector<mmTrack> totalTime1;
   ChainStripMatchingTime(totalTime0, chain_, strip_, leftSide, siTime, 0);
+  ChainStripMatchingTime(totalTime1, chain_, strip_, leftSide, siTime, 1);
 
-  size_t numTimeBuckets = ChainStripTime0NumTimeBuckets(totalTime0);
+  unsigned long numTimeBuckets = ChainStripTime0NumTimeBuckets(totalTime0);
   if(numTimeBuckets < 4) {
     ChainStripMatchingBoxTime0(chainStripMatched, totalTime0);
+    // ChainStripMatchingBoxTime0(chainStripMatched, totalTime1);
   }
   else {
     ChainStripMatchingTime(chainStripMatched, chain_, strip_, leftSide, siTime, 0);
   }
 
   chainStripRaw = totalTime0;
+  // chainStripRaw = totalTime1;
 }
 
 size_t Spectra::ChainStripTime0NumTimeBuckets(std::vector<mmTrack> matched) {
   // Function that finds the number of different time buckets for the time0 algorithm
   // This is used if you want to change the strip/chain matching algorithm (if all on the same plane)
 
-  std::map<Int_t, Int_t> timeMap;
+  std::map<int, int> timeMap;
 
   for(auto mm : matched) {
     timeMap[mm.time] = 1;
@@ -1458,12 +1479,12 @@ size_t Spectra::ChainStripTime0NumTimeBuckets(std::vector<mmTrack> matched) {
   return timeMap.size();
 }
 
-size_t Spectra::ChainStripNumberTimeBuckets(std::vector<mmChainStrip> chain, std::vector<mmChainStrip> strip) {
+unsigned long Spectra::ChainStripNumberTimeBuckets(std::vector<mmChainStrip> chain, std::vector<mmChainStrip> strip) {
   // Function that finds the number of different time buckets for strips and chains
   // This is used if you want to change the strip/chain matching algorithm (if all on the same plane)
 
-  std::map<Int_t, Int_t> individualTimeStripMap;
-  std::map<Int_t, Int_t> individualTimeChainMap;
+  std::map<int, int> individualTimeStripMap;
+  std::map<int, int> individualTimeChainMap;
 
   for(auto mm : chain) {
     individualTimeChainMap[mm.time] = 1;
@@ -1472,14 +1493,14 @@ size_t Spectra::ChainStripNumberTimeBuckets(std::vector<mmChainStrip> chain, std
     individualTimeStripMap[mm.time] = 1;
   }
 
-  size_t sizeTimeChainMap = individualTimeChainMap.size();
-  size_t sizeTimeStripMap = individualTimeStripMap.size();
+  unsigned long sizeTimeChainMap = individualTimeChainMap.size();
+  unsigned long sizeTimeStripMap = individualTimeStripMap.size();
 
   return std::min(sizeTimeChainMap, sizeTimeStripMap);
 }
 
 void Spectra::ChainStripMatchingOutward(std::vector<mmTrack> &chainStripMatched, std::vector<mmChainStrip> chain,
-                                        std::vector<mmChainStrip> strip, Bool_t leftSide, Double_t siTime) {
+                                        std::vector<mmChainStrip> strip, bool leftSide, double siTime) {
   // Function to match strips and chains outward. Meaning that the matched strips and chains must be moving away from the central region
   // Strip and chains need to be sorted for this
   // Position transform = 10.5 + 1.75/2 + 1.75*chain (chain starting at 0)
@@ -1487,15 +1508,15 @@ void Spectra::ChainStripMatchingOutward(std::vector<mmTrack> &chainStripMatched,
   // Row position transform = Row * rowConversion + rowConversionOffset
 
   std::vector<mmChainStrip> stripCopy = strip;
-  for(UInt_t i = 0; i < chain.size(); i++) {
-    Double_t timeChain = chain[i].time;
+  for(uint i = 0; i < chain.size(); i++) {
+    double timeChain = chain[i].time;
     // Look in the strip vector for this time
     auto it = std::find_if(stripCopy.begin(), stripCopy.end(),
       [timeChain] (const mmChainStrip& d) { return d.time == timeChain; });
     if(it != stripCopy.end()) {
-      Double_t position = 10.5 + 1.75/2 + 1.75*chain[i].row;
+      double position = 10.5 + 1.75/2 + 1.75*chain[i].row;
       if(leftSide) position = -position;
-      Int_t row = (*it).row*2;
+      int row = (*it).row*2;
       mmTrack hit = {0, 0., 0., 0., 0., 0., 0};
       hit.row = row;
       hit.xPosition = position;
@@ -1513,19 +1534,19 @@ void Spectra::ChainStripMatchingOutward(std::vector<mmTrack> &chainStripMatched,
 }
 
 void Spectra::ChainStripMatchingBox(std::vector<mmTrack> &chainStripMatched, std::vector<mmChainStrip> chain,
-                                    std::vector<mmChainStrip> strip, Bool_t leftSide, Double_t siTime) {
+                                    std::vector<mmChainStrip> strip, bool leftSide, double siTime) {
   // Function to match strips and chains. This is the simplest algorithm, making two points in the side
   // region which is where the particle entered and exited.
   // Strips and chains need to be sorted for this
   // Position transform = 10.5 + 1.75/2 + 1.75*chain (chain starting at 0)
   // Row transform = (strip - 1)*2
   // Row position transform = Row * rowConversion + rowConversionOffset
-  Size_t chainSize = chain.size();
-  Size_t stripSize = strip.size();
+  unsigned long chainSize = chain.size();
+  unsigned long stripSize = strip.size();
 
-  Double_t position0 = 10.5 + 1.75/2 + 1.75*chain[0].row;
+  double position0 = 10.5 + 1.75/2 + 1.75*chain[0].row;
   if(leftSide) position0 = -1.*position0;
-  Int_t row0 = strip[0].row*2;
+  int row0 = strip[0].row*2;
   mmTrack hit0 = {0, 0., 0., 0., 0., 0., 0};
   hit0.row = row0;
   hit0.xPosition = position0;
@@ -1535,9 +1556,9 @@ void Spectra::ChainStripMatchingBox(std::vector<mmTrack> &chainStripMatched, std
   hit0.height = heightOffset - hit0.time*driftVelocity;
   hit0.total = 1;
 
-  Double_t position1 = 10.5 + 1.75/2 + 1.75*chain[chainSize - 1].row;
+  double position1 = 10.5 + 1.75/2 + 1.75*chain[chainSize - 1].row;
   if(leftSide) position1 = -1.*position1;
-  Int_t row1 = strip[stripSize - 1].row*2;
+  int row1 = strip[stripSize - 1].row*2;
   mmTrack hit1 = {0, 0., 0., 0., 0., 0., 0};
   hit1.row = row1;
   hit1.xPosition = position1;
@@ -1558,12 +1579,12 @@ void Spectra::ChainStripMatchingBoxTime0(std::vector<mmTrack> &chainStripMatched
   if(time0.empty()) return;
 
   mmTrack closestHit;
-  Double_t closestDistance = 5000.;
+  double closestDistance = 5000.;
   mmTrack furthestHit;
-  Double_t furthestDistance = 0.;
+  double furthestDistance = 0.;
 
   for(auto mm : time0) {
-    Double_t distance = sqrt(mm.xPosition*mm.xPosition + mm.yPosition*mm.yPosition);
+    double distance = sqrt(mm.xPosition*mm.xPosition + mm.yPosition*mm.yPosition);
     if(distance < closestDistance) {
       closestHit = mm;
       closestDistance = distance;
@@ -1579,8 +1600,8 @@ void Spectra::ChainStripMatchingBoxTime0(std::vector<mmTrack> &chainStripMatched
 }
 
 void Spectra::ChainStripMatchingTime(std::vector<mmTrack> &chainStripMatched, std::vector<mmChainStrip> chain,
-                                     std::vector<mmChainStrip> strip, Bool_t leftSide, Double_t siTime,
-                                     Int_t timeWindow) {
+                                     std::vector<mmChainStrip> strip, bool leftSide, double siTime,
+                                     int timeWindow) {
   // Function to match strips and chains. Chains and strips are matched if their time is within the timeWindow parameter
   // The timeWindow parameter is the window of time buckets to look for using the timeResolution parameter
   // which is the ns -> bucket
@@ -1589,15 +1610,15 @@ void Spectra::ChainStripMatchingTime(std::vector<mmTrack> &chainStripMatched, st
   // Row position transform = Row * rowConversion + rowConversionOffset
 
   for(auto chainVec : chain) {
-    Double_t timeChain = chainVec.time;
+    double timeChain = chainVec.time;
     // Loop over strips and find strips when the time is within the timeWindow
     for(auto stripVec : strip) {
       if((stripVec.time > timeChain - timeWindow*timeResolution - timeResolution/2.) &&
           (stripVec.time < timeChain + timeWindow*timeResolution + timeResolution/2.)) {
         mmTrack hit = {0, 0., 0., 0., 0., 0., 0};
-        Double_t position = 10.5 + 1.75/2 + 1.75*chainVec.row;
+        double position = 10.5 + 1.75/2 + 1.75*chainVec.row;
         if(leftSide) position = -position;
-        Int_t row = stripVec.row*2;
+        int row = stripVec.row*2;
         hit.row = row;
         hit.xPosition = position;
         hit.yPosition = hit.row*rowConversion + rowConversionOffset;
@@ -1612,8 +1633,8 @@ void Spectra::ChainStripMatchingTime(std::vector<mmTrack> &chainStripMatched, st
 }
 
 void Spectra::ChainStripMatchingTimeSlopeFit(std::vector<mmTrack> &chainStripMatched, std::vector<mmChainStrip> chain,
-                                             std::vector<mmChainStrip> strip, Bool_t leftSide, Double_t siTime,
-                                             Double_t timeWindow) {
+                                             std::vector<mmChainStrip> strip, bool leftSide, double siTime,
+                                             double timeWindow) {
   // Function to match strips and chains by fitting with time individually
   // Then is able to correlate strips and chains by time. Requires multiple time steps in both strips and chains
   // After the fit, it goes through each chain and finds strips based off of the fit when match within the timeWindow input parameter
@@ -1625,7 +1646,7 @@ void Spectra::ChainStripMatchingTimeSlopeFit(std::vector<mmTrack> &chainStripMat
   auto *hStrip = new TGraph();
 
   // Fill hChain
-  Int_t i = 0;
+  int i = 0;
   for(auto mm : chain) {
     hChain->SetPoint(i, mm.row, mm.time);
     i++;
@@ -1644,29 +1665,29 @@ void Spectra::ChainStripMatchingTimeSlopeFit(std::vector<mmTrack> &chainStripMat
   TF1 *fitChain = hChain->GetFunction("pol1");
   TF1 *fitStrip = hStrip->GetFunction("pol1");
 
-  hChain->SetName(Form("hChain_%lld", entry));
-  hStrip->SetName(Form("hStrip_%lld", entry));
+  hChain->SetName(Form("hChain_%ld", entry));
+  hStrip->SetName(Form("hStrip_%ld", entry));
   // hChain->Write();
   // hStrip->Write();
 
-  Double_t chainP0 = fitChain->GetParameter(0);
-  Double_t chainP1 = fitChain->GetParameter(1);
-  Double_t stripP0 = fitStrip->GetParameter(0);
-  Double_t stripP1 = fitStrip->GetParameter(1);
+  double chainP0 = fitChain->GetParameter(0);
+  double chainP1 = fitChain->GetParameter(1);
+  double stripP0 = fitStrip->GetParameter(0);
+  double stripP1 = fitStrip->GetParameter(1);
 
   // Loop through chains and find strips within timeWindow
-  for(UInt_t i = 0; i < chain.size(); i++) {
-    Double_t chainTime = chain[i].row*chainP1 + chainP0;
-    for(UInt_t j = 0; j < strip.size(); j++) {
-      Double_t stripTime = strip[j].row*stripP1 + stripP0;
+  for(uint i = 0; i < chain.size(); i++) {
+    double chainTime = chain[i].row*chainP1 + chainP0;
+    for(uint j = 0; j < strip.size(); j++) {
+      double stripTime = strip[j].row*stripP1 + stripP0;
       if((stripTime > chainTime - timeWindow) && (stripTime < chainTime + timeWindow)) {
         // Check if chains and strips are actually within a timebucket
         if((chain[i].time < strip[j].time - timeResolution) ||
            (chain[i].time > strip[j].time + timeResolution)) continue;
         mmTrack hit = {0, 0., 0., 0., 0., 0., 0};
-        Double_t position = 10.5 + 1.75/2 + 1.75*chain[i].row;
+        double position = 10.5 + 1.75/2 + 1.75*chain[i].row;
         if(leftSide) position = -position;
-        Int_t row = strip[j].row*2;
+        int row = strip[j].row*2;
         hit.row = row;
         hit.xPosition = position;
         hit.yPosition = hit.row*rowConversion + rowConversionOffset;
@@ -1687,8 +1708,8 @@ void Spectra::ChainStripMatchingTimeSlopeFit(std::vector<mmTrack> &chainStripMat
 }
 
 void Spectra::ChainStripMatchingTimeSlopeHough(std::vector<mmTrack> &chainStripMatched, std::vector<mmChainStrip> chain,
-                                               std::vector<mmChainStrip> strip, Bool_t leftSide, Double_t siTime,
-                                               Double_t timeWindow) {
+                                               std::vector<mmChainStrip> strip, bool leftSide, double siTime,
+                                               double timeWindow) {
   // Function to match strips and chains by fitting with time individually (using Hough 2D)
   // Then is able to correlate strips and chains by time. Requires multiple time steps in both strips and chains
   // After the fit, it goes through each chain and finds strips based off of the fit when match within the timeWindow input parameter
@@ -1715,25 +1736,25 @@ void Spectra::ChainStripMatchingTimeSlopeHough(std::vector<mmTrack> &chainStripM
   auto *houghChain = new Hough2D();
   houghChain->SetPoints(newChain);
   houghChain->CalculateHoughXY();
-  Double_t chainTheta = houghChain->GetMaxThetaXY();
-  Double_t chainD = houghChain->GetMaxDXY();
+  double chainTheta = houghChain->GetMaxThetaXY();
+  double chainD = houghChain->GetMaxDXY();
   delete houghChain;
 
   auto *houghStrip = new Hough2D();
   houghStrip->SetPoints(newStrip);
   houghStrip->CalculateHoughXY();
-  Double_t stripTheta = houghStrip->GetMaxThetaXY();
-  Double_t stripD = houghStrip->GetMaxDXY();
+  double stripTheta = houghStrip->GetMaxThetaXY();
+  double stripD = houghStrip->GetMaxDXY();
   delete houghStrip;
 
   // Loop through chains and find strips within timeWindow
-  for(UInt_t i = 0; i < chain.size(); i++) {
-    Double_t chainTime = -(cos(chainTheta*M_PI/180.)/sin(chainTheta*M_PI/180.))*chain[i].row +
+  for(uint i = 0; i < chain.size(); i++) {
+    double chainTime = -(cos(chainTheta*M_PI/180.)/sin(chainTheta*M_PI/180.))*chain[i].row +
         chainD/sin(chainTheta*M_PI/180.);
     chainTime *= 40.;
-    for(UInt_t j = 0; j < strip.size(); j++) {
-      // Double_t stripTime = strip[j].row*stripP1 + stripP0;
-      Double_t stripTime = -(cos(stripTheta*M_PI/180.)/sin(stripTheta*M_PI/180.))*strip[j].row +
+    for(uint j = 0; j < strip.size(); j++) {
+      // double stripTime = strip[j].row*stripP1 + stripP0;
+      double stripTime = -(cos(stripTheta*M_PI/180.)/sin(stripTheta*M_PI/180.))*strip[j].row +
           stripD/sin(stripTheta*M_PI/180.);
       stripTime *= 40.;
       if((stripTime > chainTime - timeWindow) && (stripTime < chainTime + timeWindow)) {
@@ -1741,9 +1762,9 @@ void Spectra::ChainStripMatchingTimeSlopeHough(std::vector<mmTrack> &chainStripM
         if((chain[i].time < strip[j].time - timeResolution) ||
            (chain[i].time > strip[j].time + timeResolution)) continue;
         mmTrack hit = {0, 0., 0., 0., 0., 0., 0};
-        Double_t position = 10.5 + 1.75/2 + 1.75*chain[i].row;
+        double position = 10.5 + 1.75/2 + 1.75*chain[i].row;
         if(leftSide) position = -position;
-        Int_t row = strip[j].row*2;
+        int row = strip[j].row*2;
         hit.row = row;
         hit.xPosition = position;
         hit.yPosition = hit.row*rowConversion + rowConversionOffset;
@@ -1757,36 +1778,36 @@ void Spectra::ChainStripMatchingTimeSlopeHough(std::vector<mmTrack> &chainStripM
   }
 }
 
-Double_t Spectra::ChainStripSize(std::vector<mmTrack> chainStripMatched) {
-  Double_t initX = chainStripMatched[0].xPosition;
-  Double_t initY = chainStripMatched[0].yPosition;
-  Double_t finalX = chainStripMatched[chainStripMatched.size() - 1].xPosition;
-  Double_t finalY = chainStripMatched[chainStripMatched.size() - 1].yPosition;
+double Spectra::ChainStripSize(std::vector<mmTrack> chainStripMatched) {
+  double initX = chainStripMatched[0].xPosition;
+  double initY = chainStripMatched[0].yPosition;
+  double finalX = chainStripMatched[chainStripMatched.size() - 1].xPosition;
+  double finalY = chainStripMatched[chainStripMatched.size() - 1].yPosition;
 
-  Double_t diffX = fabs(finalX - initX);
-  Double_t diffY = fabs(finalY - initY);
+  double diffX = fabs(finalX - initX);
+  double diffY = fabs(finalY - initY);
 
-  Double_t distance = sqrt(diffX*diffX + diffY*diffY);
+  double distance = sqrt(diffX*diffX + diffY*diffY);
 
   return distance;
 }
 
 void Spectra::DivideTargetThickness(TH1F *f) {
-  Int_t i_size = f->GetSize();
+  int i_size = f->GetSize();
 
   TAxis *x_axis = f->GetXaxis();
-  for(Int_t i = 1; i <= i_size - 1; i++) {
-    Double_t binLowEdge = x_axis->GetBinLowEdge(i);
-    Double_t binUpEdge = x_axis->GetBinUpEdge(i);
+  for(int i = 1; i <= i_size - 1; i++) {
+    double binLowEdge = x_axis->GetBinLowEdge(i);
+    double binUpEdge = x_axis->GetBinUpEdge(i);
     if(binLowEdge == 0.) binLowEdge += 0.001;
     binLowEdge *= (m1 + m2)/m2;
     binUpEdge *= (m1 + m2)/m2;
-    Double_t binContent = f->GetBinContent(i);
-    Double_t binError = f->GetBinError(i);
-    Double_t delta_x = boronMethane->CalcRange(binUpEdge, binLowEdge);
+    double binContent = f->GetBinContent(i);
+    double binError = f->GetBinError(i);
+    double delta_x = boronMethane->CalcRange(binUpEdge, binLowEdge);
     delta_x /= 10.;
-    Double_t molarMassMethane = 0.01604;
-    Double_t factor = 4.e-27*density*delta_x*TMath::Na()/molarMassMethane;
+    double molarMassMethane = 0.01604;
+    double factor = 4.e-27*density*delta_x*TMath::Na()/molarMassMethane;
     binContent /= factor;
     binError /= factor;
     f->SetBinContent(i, binContent);
@@ -1798,8 +1819,8 @@ void Spectra::ReadSolidAngle() {
   std::ifstream in("csReg3.out");
   assert(in.is_open());
 
-  Double_t var1, var2, var3, var4;
-  std::vector<Double_t> cmEnergy_, solidAngle_, labAngle_, cmAngle_;
+  double var1, var2, var3, var4;
+  std::vector<double> cmEnergy_, solidAngle_, labAngle_, cmAngle_;
   while(in >> var1 >> var2 >> var3 >> var3) {
     cmEnergy_.push_back(var1);
     solidAngle_.push_back(var2);
@@ -1814,15 +1835,15 @@ void Spectra::ReadSolidAngle() {
 }
 
 void Spectra::SolidAngle(TH1F *f) {
-  Int_t i_size = f->GetSize();
+  int i_size = f->GetSize();
   TAxis *x_axis = f->GetXaxis();
 
-  for(Int_t i = 1; i <= i_size - 1; i++) {
-    Double_t binCenter = x_axis->GetBinCenter(i);
-    Double_t binContent = f->GetBinContent(i);
-    Double_t binError = f->GetBinError(i);
+  for(int i = 1; i <= i_size - 1; i++) {
+    double binCenter = x_axis->GetBinCenter(i);
+    double binContent = f->GetBinContent(i);
+    double binError = f->GetBinError(i);
 
-    Double_t simCS = reg3SA(binCenter);
+    double simCS = reg3SA(binCenter);
     // std::cout << binCenter << '\t' << simCS << std::endl;
 
     if(simCS == 0) {
@@ -1836,18 +1857,18 @@ void Spectra::SolidAngle(TH1F *f) {
   }
 }
 
-void Spectra::WriteSpectrumToFile(TH1F *f, Int_t region) {
+void Spectra::WriteSpectrumToFile(TH1F *f, int region) {
   FILE* spectrumFile = fopen(Form("spectrum_reg%d.out", region), "w");
 
-  Int_t i_size = f->GetSize();
+  int i_size = f->GetSize();
   TAxis *x_axis = f->GetXaxis();
 
-  for(Int_t i = 1; i <= i_size - 1; i++) {
-    Double_t binCenter = x_axis->GetBinCenter(i);
-    Double_t binContent = f->GetBinContent(i);
-    Double_t binError = f->GetBinError(i);
+  for(int i = 1; i <= i_size - 1; i++) {
+    double binCenter = x_axis->GetBinCenter(i);
+    double binContent = f->GetBinContent(i);
+    double binError = f->GetBinError(i);
 
-    Double_t cmAngle = reg3CMAngle(binCenter);
+    double cmAngle = reg3CMAngle(binCenter);
 
     fprintf(spectrumFile, "%f %f %f %f\n", binCenter, binContent, binError, cmAngle);
   }
@@ -1856,70 +1877,70 @@ void Spectra::WriteSpectrumToFile(TH1F *f, Int_t region) {
   fclose(spectrumFile);
 }
 
-void Spectra::GetMinMaxD(std::vector<mmTrack> initPoints, Int_t &minXY, Int_t &maxXY, Int_t &minYZ, Int_t &maxYZ) {
+void Spectra::GetMinMaxD(std::vector<mmTrack> initPoints, int &minXY, int &maxXY, int &minYZ, int &maxYZ) {
   std::vector<xy> pointsXY;
   std::vector<yz> pointsYZ;
-  for(UInt_t i = 0; i < initPoints.size(); i++) {
+  for(uint i = 0; i < initPoints.size(); i++) {
     xy initPointsXY = {initPoints[i].xPosition, initPoints[i].yPosition};
     yz initPointsYZ = {initPoints[i].yPosition, initPoints[i].height};
     pointsXY.push_back(initPointsXY);
     pointsYZ.push_back(initPointsYZ);
   }
 
-  Double_t minDHistogramXY = 1000;
-  Double_t maxDHistogramXY = -1000;
-  Double_t minDHistogramYZ = 1000;
-  Double_t maxDHistogramYZ = -1000;
-  for(Int_t j = 0; j < 180; j++) {
-    Double_t cosj = cos(j*M_PI/180.);
-    Double_t sinj = sin(j*M_PI/180.);
-    for(UInt_t i = 0; i < pointsXY.size(); i++) {
-      Double_t d = pointsXY[i].x*cosj + pointsXY[i].y*sinj;
+  double minDHistogramXY = 1000;
+  double maxDHistogramXY = -1000;
+  double minDHistogramYZ = 1000;
+  double maxDHistogramYZ = -1000;
+  for(int j = 0; j < 180; j++) {
+    double cosj = cos(j*M_PI/180.);
+    double sinj = sin(j*M_PI/180.);
+    for(uint i = 0; i < pointsXY.size(); i++) {
+      double d = pointsXY[i].x*cosj + pointsXY[i].y*sinj;
       if(d < minDHistogramXY) minDHistogramXY = d;
       if(d > maxDHistogramXY) maxDHistogramXY = d;
     }
-    for(UInt_t i = 0; i < pointsYZ.size(); i++) {
-      Double_t d = pointsYZ[i].y*cosj + pointsYZ[i].z*sinj;
+    for(uint i = 0; i < pointsYZ.size(); i++) {
+      double d = pointsYZ[i].y*cosj + pointsYZ[i].z*sinj;
       if(d < minDHistogramYZ) minDHistogramYZ = d;
       if(d > maxDHistogramYZ) maxDHistogramYZ = d;
     }
   }
 
-  minXY = static_cast<Int_t>(minDHistogramXY);
-  maxXY = static_cast<Int_t>(maxDHistogramXY);
-  minYZ = static_cast<Int_t>(minDHistogramYZ);
-  maxYZ = static_cast<Int_t>(maxDHistogramYZ);
+  minXY = static_cast<int>(minDHistogramXY);
+  maxXY = static_cast<int>(maxDHistogramXY);
+  minYZ = static_cast<int>(minDHistogramYZ);
+  maxYZ = static_cast<int>(maxDHistogramYZ);
 }
 
 void Spectra::VisualizeHough(std::vector<mmTrack> initPoints, TH2I* fXY, TH2I* fYZ) {
-  Int_t nBinsX = 500;
-  Int_t nBinsY = 500;
+  int nBinsX = 500;
+  int nBinsY = 500;
   std::vector<xy> pointsXY;
   std::vector<yz> pointsYZ;
-  for(UInt_t i = 0; i < initPoints.size(); i++) {
+  for(uint i = 0; i < initPoints.size(); i++) {
     xy initPointsXY = {initPoints[i].xPosition, initPoints[i].yPosition};
     yz initPointsYZ = {initPoints[i].yPosition, initPoints[i].height};
     pointsXY.push_back(initPointsXY);
     pointsYZ.push_back(initPointsYZ);
   }
 
-  Double_t thetaStepXY = 180./static_cast<Double_t>(nBinsX);
+  double thetaStepXY = 180./static_cast<double>(nBinsX);
 
   // Fill Hough Matrix
-  for(Double_t j = 0; j < 180; j += thetaStepXY) {
+  for(double j = 0; j < 180; j += thetaStepXY) {
     if(j > 89 && j < 91) continue;
-    Double_t cosj = cos(j*M_PI/180.);
-    Double_t sinj = sin(j*M_PI/180.);
-    for(UInt_t i = 0; i < pointsXY.size(); i++) {
-      Double_t d = pointsXY[i].x*cosj + pointsXY[i].y*sinj;
+    double cosj = cos(j*M_PI/180.);
+    double sinj = sin(j*M_PI/180.);
+    for(uint i = 0; i < pointsXY.size(); i++) {
+      double d = pointsXY[i].x*cosj + pointsXY[i].y*sinj;
       fXY->Fill(j, d);
     }
   }
 }
 
-void Spectra::GetMinMaxDRestricted(std::vector<mmTrack> initPoints, Int_t &minXY, Int_t &maxXY, Int_t &minYZ, Int_t &maxYZ, Int_t siDet) {
-  Int_t minAngle = 0;
-  Int_t maxAngle = 0;
+void Spectra::GetMinMaxDRestricted(std::vector<mmTrack> initPoints, int &minXY, int &maxXY, int &minYZ, int &maxYZ, int siDet) {
+  int minAngle = 0;
+  int maxAngle = 0;
   if(siDet < 4) {
     minAngle = 91;
     maxAngle = 179;
@@ -1931,41 +1952,41 @@ void Spectra::GetMinMaxDRestricted(std::vector<mmTrack> initPoints, Int_t &minXY
 
   std::vector<xy> pointsXY;
   std::vector<yz> pointsYZ;
-  for(UInt_t i = 0; i < initPoints.size(); i++) {
+  for(uint i = 0; i < initPoints.size(); i++) {
     xy initPointsXY = {initPoints[i].xPosition, initPoints[i].yPosition};
     yz initPointsYZ = {initPoints[i].yPosition, initPoints[i].height};
     pointsXY.push_back(initPointsXY);
     pointsYZ.push_back(initPointsYZ);
   }
 
-  Double_t minDHistogramXY = 1000;
-  Double_t maxDHistogramXY = -1000;
-  Double_t minDHistogramYZ = 1000;
-  Double_t maxDHistogramYZ = -1000;
-  for(Int_t j = minAngle; j < maxAngle; j++) {
-    Double_t cosj = cos(j*M_PI/180.);
-    Double_t sinj = sin(j*M_PI/180.);
-    for(UInt_t i = 0; i < pointsXY.size(); i++) {
-      Double_t d = pointsXY[i].x*cosj + pointsXY[i].y*sinj;
+  double minDHistogramXY = 1000;
+  double maxDHistogramXY = -1000;
+  double minDHistogramYZ = 1000;
+  double maxDHistogramYZ = -1000;
+  for(int j = minAngle; j < maxAngle; j++) {
+    double cosj = cos(j*M_PI/180.);
+    double sinj = sin(j*M_PI/180.);
+    for(uint i = 0; i < pointsXY.size(); i++) {
+      double d = pointsXY[i].x*cosj + pointsXY[i].y*sinj;
       if(d < minDHistogramXY) minDHistogramXY = d;
       if(d > maxDHistogramXY) maxDHistogramXY = d;
     }
-    for(UInt_t i = 0; i < pointsYZ.size(); i++) {
-      Double_t d = pointsYZ[i].y*cosj + pointsYZ[i].z*sinj;
+    for(uint i = 0; i < pointsYZ.size(); i++) {
+      double d = pointsYZ[i].y*cosj + pointsYZ[i].z*sinj;
       if(d < minDHistogramYZ) minDHistogramYZ = d;
       if(d > maxDHistogramYZ) maxDHistogramYZ = d;
     }
   }
 
-  minXY = static_cast<Int_t>(minDHistogramXY);
-  maxXY = static_cast<Int_t>(maxDHistogramXY);
-  minYZ = static_cast<Int_t>(minDHistogramYZ);
-  maxYZ = static_cast<Int_t>(maxDHistogramYZ);
+  minXY = static_cast<int>(minDHistogramXY);
+  maxXY = static_cast<int>(maxDHistogramXY);
+  minYZ = static_cast<int>(minDHistogramYZ);
+  maxYZ = static_cast<int>(maxDHistogramYZ);
 }
 
-void Spectra::VisualizeHoughRestricted(std::vector<mmTrack> initPoints, TH2I* fXY, TH2I* fYZ, Int_t siDet) {
-  Int_t minAngle = 0;
-  Int_t maxAngle = 180;
+void Spectra::VisualizeHoughRestricted(std::vector<mmTrack> initPoints, TH2I* fXY, TH2I* fYZ, int siDet) {
+  int minAngle = 0;
+  int maxAngle = 180;
   if(siDet < 4) {
     minAngle = 91;
     maxAngle = 179;
@@ -1975,8 +1996,8 @@ void Spectra::VisualizeHoughRestricted(std::vector<mmTrack> initPoints, TH2I* fX
     maxAngle = 89;
   }
 
-  Int_t nBinsX = 360;
-  Int_t nBinsY = 360;
+  int nBinsX = 360;
+  int nBinsY = 360;
   std::vector<xy> pointsXY;
   std::vector<yz> pointsYZ;
   for(auto point : initPoints) {
@@ -1986,27 +2007,27 @@ void Spectra::VisualizeHoughRestricted(std::vector<mmTrack> initPoints, TH2I* fX
     pointsYZ.push_back(initPointsYZ);
   }
 
-  Double_t thetaStepXY = 180./static_cast<Double_t>(nBinsX);
+  double thetaStepXY = 180./static_cast<double>(nBinsX);
 
   // Fill Hough Matrix
-  for(Double_t j = minAngle; j < maxAngle; j += thetaStepXY) {
+  for(double j = minAngle; j < maxAngle; j += thetaStepXY) {
     if(j > 89 && j < 91) continue;
-    Double_t cosj = cos(j*M_PI/180.);
-    Double_t sinj = sin(j*M_PI/180.);
+    double cosj = cos(j*M_PI/180.);
+    double sinj = sin(j*M_PI/180.);
     for(auto point : pointsXY) {
-      Double_t d = point.x*cosj + point.y*sinj;
+      double d = point.x*cosj + point.y*sinj;
       fXY->Fill(j, d);
     }
   }
 }
 
-void Spectra::GetHoughStdDevXYRestricted(std::vector<mmTrack> initPoints, std::vector<Double_t> &angle_, std::vector<Double_t> &stdDev_, Int_t siDet) {
+void Spectra::GetHoughStdDevXYRestricted(std::vector<mmTrack> initPoints, std::vector<double> &angle_, std::vector<double> &stdDev_, int siDet) {
 
   angle_.clear();
   stdDev_.clear();
 
-  Int_t minAngle = 0;
-  Int_t maxAngle = 180;
+  int minAngle = 0;
+  int maxAngle = 180;
   if(siDet < 4) {
     minAngle = 91;
     maxAngle = 179;
@@ -2016,40 +2037,40 @@ void Spectra::GetHoughStdDevXYRestricted(std::vector<mmTrack> initPoints, std::v
     maxAngle = 89;
   }
 
-  Int_t nBinsX = 360;
-  Int_t nBinsY = 360;
+  int nBinsX = 360;
+  int nBinsY = 360;
   std::vector<xy> pointsXY;
   std::vector<yz> pointsYZ;
-  for(UInt_t i = 0; i < initPoints.size(); i++) {
+  for(uint i = 0; i < initPoints.size(); i++) {
     xy initPointsXY = {initPoints[i].xPosition, initPoints[i].yPosition};
     yz initPointsYZ = {initPoints[i].yPosition, initPoints[i].height};
     pointsXY.push_back(initPointsXY);
     pointsYZ.push_back(initPointsYZ);
   }
 
-  Double_t thetaStepXY = 180./static_cast<Double_t>(nBinsX);
+  double thetaStepXY = 180./static_cast<double>(nBinsX);
 
   // Fill Hough Matrix
-  for(Double_t j = minAngle; j < maxAngle; j += thetaStepXY) {
+  for(double j = minAngle; j < maxAngle; j += thetaStepXY) {
     if(j > 89 && j < 91) continue;
-    Double_t cosj = cos(j*M_PI/180.);
-    Double_t sinj = sin(j*M_PI/180.);
-    std::vector<Double_t> dVector;
-    Double_t mean = 0.;
-    for(UInt_t i = 0; i < pointsXY.size(); i++) {
-      Double_t d = pointsXY[i].x*cosj + pointsXY[i].y*sinj;
+    double cosj = cos(j*M_PI/180.);
+    double sinj = sin(j*M_PI/180.);
+    std::vector<double> dVector;
+    double mean = 0.;
+    for(uint i = 0; i < pointsXY.size(); i++) {
+      double d = pointsXY[i].x*cosj + pointsXY[i].y*sinj;
       mean += d;
       dVector.push_back(d);
     }
     if(dVector.empty()) continue;
 
-    mean /= static_cast<Double_t>(pointsXY.size());
-    Double_t stdDev = 0.;
-    for(UInt_t i = 0; i < pointsXY.size(); i++) {
-      Double_t d = pointsXY[i].x*cosj + pointsXY[i].y*sinj;
+    mean /= static_cast<double>(pointsXY.size());
+    double stdDev = 0.;
+    for(uint i = 0; i < pointsXY.size(); i++) {
+      double d = pointsXY[i].x*cosj + pointsXY[i].y*sinj;
       stdDev += (d - mean)*(d - mean);
     }
-    stdDev /= static_cast<Double_t>(pointsXY.size() - 1.);
+    stdDev /= static_cast<double>(pointsXY.size() - 1.);
 
     angle_.push_back(j);
     stdDev_.push_back(stdDev);

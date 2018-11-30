@@ -12,7 +12,7 @@
 
 #ifndef DISTANCE2FUNC
 #define DISTANCE2FUNC
-extern Double_t distance2(Double_t x, Double_t y, Double_t z, const Double_t *p);
+extern double distance2(double x, double y, double z, const double *p);
 #endif //DISTANCE2FUNC
 
 #ifndef SUMDISTANCE2FUNC
@@ -24,15 +24,15 @@ struct SumDistance2 {
   SumDistance2(TGraph2D *g) : fGraph(g) {}
 
   // implementation of the function to be minimized
-  Double_t operator() (const Double_t *par) {
+  double operator() (const double *par) {
     assert(fGraph != 0);
-    Double_t *x = fGraph->GetX();
-    Double_t *y = fGraph->GetY();
-    Double_t *z = fGraph->GetZ();
-    Int_t npoints = fGraph->GetN();
-    Double_t sum = 0;
-    for(Int_t i = 0; i < npoints; i++) {
-      Double_t d = distance2(x[i], y[i], z[i], par);
+    double *x = fGraph->GetX();
+    double *y = fGraph->GetY();
+    double *z = fGraph->GetZ();
+    int npoints = fGraph->GetN();
+    double sum = 0;
+    for(uint i = 0; i < npoints; i++) {
+      double d = distance2(x[i], y[i], z[i], par);
       sum += d;
     }
     return sum;
@@ -49,30 +49,30 @@ struct SumDistance2 {
 class HoughTrack {
 public:
   HoughTrack();
-  HoughTrack(std::vector<mmTrack> inputTrack, Int_t det, Int_t quad);
-  void AddTrack(std::vector<mmTrack> inputTrack, Int_t det, Int_t quad);
+  HoughTrack(std::vector<mmTrack> inputTrack, int det, int quad);
+  void AddTrack(std::vector<mmTrack> inputTrack, int det, int quad);
 
-  Double_t Fit();
-  Double_t FitRestricted();
-  Double_t CalculateDistance();
+  double Fit();
+  double FitRestricted();
+  double CalculateDistance();
 
-  std::vector<Double_t> GetPars() { return par;};
-  Double_t GetHoughAngleXY() {return houghAngleXY;};
-  Double_t GetHoughDXY() {return houghDXY;};
-  Double_t GetHoughAngleYZ() {return houghAngleYZ;};
-  Double_t GetHoughDYZ() {return houghDYZ;};
+  std::vector<double> GetPars() { return par;};
+  double GetHoughAngleXY() {return houghAngleXY;};
+  double GetHoughDXY() {return houghDXY;};
+  double GetHoughAngleYZ() {return houghAngleYZ;};
+  double GetHoughDYZ() {return houghDYZ;};
 
 private:
   std::vector<mmTrack> track;
-  std::vector<Double_t> par;
-  Double_t minDist;
-  Int_t detFired;
-  Int_t quadFired;
+  std::vector<double> par;
+  double minDist;
+  int detFired;
+  int quadFired;
 
-  Double_t houghAngleXY;
-  Double_t houghDXY;
-  Double_t houghAngleYZ;
-  Double_t houghDYZ;
+  double houghAngleXY;
+  double houghDXY;
+  double houghAngleYZ;
+  double houghDYZ;
 };
 
 
