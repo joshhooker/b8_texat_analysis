@@ -473,7 +473,7 @@ void Spectra::Loop() {
       for(auto &det : protonDet_) {
         if(det.det != csi.detect) continue;
         if(!siCsiEForwardCut[det.det]->IsInside(det.siEnergy, csi.energy)) continue;
-        float csiEnergyCal = csi.energy*csiEForwardCalibration[det.det].first + csiEForwardCalibration[det.det].second;
+        double csiEnergyCal = csi.energy*csiEForwardCalibration[det.det].first + csiEForwardCalibration[det.det].second;
         det.csiEnergy = csi.energy;
         det.csiEnergyCal = csiEnergyCal;
         det.csiTime = csi.time;
@@ -569,8 +569,8 @@ void Spectra::Loop() {
       centralPadTotal[i] = 0;
     }
     for(auto mm : mmCenterMatchedReducedNoise_) {
-      float xPosition = mm.column*3.5 - 8.75;
-      float yPosition = mm.row*rowConversion + rowConversionOffset;
+      double xPosition = mm.column*3.5 - 8.75;
+      double yPosition = mm.row*rowConversion + rowConversionOffset;
       hMicroMegasCenterCumulative->Fill(mm.column - 3, mm.row);
       hMicroMegasCenterCumulativePositionRaw->Fill(xPosition, yPosition);
       hMicroMegasCenterTime->Fill(mm.row, mm.time);
@@ -676,24 +676,24 @@ void Spectra::Loop() {
     siDet = protonDetReduced_[0].det;
     siQuad = protonDetReduced_[0].quad;
     siChannel = protonDetReduced_[0].siChannel;
-    siEnergy = static_cast<float>(protonDetReduced_[0].siEnergy);
-    siEnergyCal = static_cast<float>(protonDetReduced_[0].siEnergyCal);
-    siTime = static_cast<float>(protonDetReduced_[0].siTime);
-    csiEnergy = static_cast<float>(protonDetReduced_[0].csiEnergy);
-    csiEnergyCal = static_cast<float>(protonDetReduced_[0].csiEnergyCal);
-    csiTime = static_cast<float>(protonDetReduced_[0].csiTime);
-    totalEnergy = static_cast<float>(protonDetReduced_[0].totalEnergy);
+    siEnergy = protonDetReduced_[0].siEnergy;
+    siEnergyCal = protonDetReduced_[0].siEnergyCal;
+    siTime = protonDetReduced_[0].siTime;
+    csiEnergy = protonDetReduced_[0].csiEnergy;
+    csiEnergyCal = protonDetReduced_[0].csiEnergyCal;
+    csiTime = protonDetReduced_[0].csiTime;
+    totalEnergy = protonDetReduced_[0].totalEnergy;
     punchthrough = protonDetReduced_[0].punchthrough;
     if(siDet < 4) {
-      dE = static_cast<float>(dERight);
+      dE = static_cast<double>(dERight);
       right = true;
     }
     else if(siDet > 5) {
-      dE = static_cast<float>(dELeft);
+      dE = static_cast<double>(dELeft);
       left = true;
     }
     else {
-      dE = static_cast<float>(dECentral);
+      dE = static_cast<double>(dECentral);
       central = true;
     }
 
@@ -736,7 +736,7 @@ bool Spectra::AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std::
       totalRows++;
     }
   }
-  dE /= static_cast<float>(totalRows);
+  dE /= static_cast<double>(totalRows);
 
   for(auto mm : centerMatched_) {
     hTimeCentraldEForward[siDet]->Fill(mm.row, mm.time - siTime);
