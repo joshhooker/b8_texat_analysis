@@ -17,10 +17,10 @@ TChain* MakeChain() {
   auto *chain = new TChain("mfmData");
 
   // Home
-  // TString PathToFiles = "/hd3/research/data/run0817a/rootM2R-WaveformReduced/run";
+  TString PathToFiles = "/hd/research/data/run0817a/rootM2R-WaveformReduced/run";
 
   // Mac Laptop
-  TString PathToFiles = "/Users/joshhooker/Desktop/data/run0817a/run";
+  // TString PathToFiles = "/Users/joshhooker/Desktop/data/run0817a/run";
 
   // Alpha source test in gas
   // chain->Add(PathToFiles+"004.root");
@@ -213,37 +213,41 @@ void Spectra::Loop() {
           // Aget0
           if(mmAget[i] == 0) {
             std::pair<int, int> pad = MM_Map_Asad0_Aget0[mmChan[i]];
-            mmCenter mmHit = {pad.first, pad.second, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1])};
+            mmCenter mmHit = {pad.first, pad.second, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1]),
+                             static_cast<int>(floor((static_cast<double>(mmTime[i]) + 0.01)/timeResolution))};
             mmCenter_.push_back(mmHit);
             mmCenter mmHitMatched = {pad.first, pad.second, static_cast<double>(mmEnergy[i])*scale[pad.first][pad.second], static_cast<double>(mmTime[i]),
-                                     static_cast<double>(mmPa[i][3]/mmPa[i][1])};
+                                     static_cast<double>(mmPa[i][3]/mmPa[i][1]), static_cast<int>(floor((static_cast<double>(mmTime[i]) + 0.01)/timeResolution))};
             mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget1
           else if(mmAget[i] == 1) {
             std::pair<int, int> pad = MM_Map_Asad0_Aget1[mmChan[i]];
-            mmCenter mmHit = {pad.first, pad.second, static_cast<double>(mmEnergy[i]),static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1])};
+            mmCenter mmHit = {pad.first, pad.second, static_cast<double>(mmEnergy[i]),static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1]),
+                             static_cast<int>(floor((static_cast<double>(mmTime[i]) + 0.01)/timeResolution))};
             mmCenter_.push_back(mmHit);
             mmCenter mmHitMatched = {pad.first, pad.second, static_cast<double>(mmEnergy[i])*scale[pad.first][pad.second], static_cast<double>(mmTime[i]),
-                                     static_cast<double>(mmPa[i][3]/mmPa[i][1])};
+                                     static_cast<double>(mmPa[i][3]/mmPa[i][1]), static_cast<int>(floor((static_cast<double>(mmTime[i]) + 0.01)/timeResolution))};
             mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget2
           else if(mmAget[i] == 2) {
             std::pair<int, int> pad = MM_Map_Asad0_Aget2[mmChan[i]];
-            mmCenter mmHit = {pad.first, pad.second, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1])};
+            mmCenter mmHit = {pad.first, pad.second, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1]),
+                             static_cast<int>(floor((static_cast<double>(mmTime[i]) + 0.01)/timeResolution))};
             mmCenter_.push_back(mmHit);
             mmCenter mmHitMatched = {pad.first, pad.second, static_cast<double>(mmEnergy[i])*scale[pad.first][pad.second], static_cast<double>(mmTime[i]),
-                                     static_cast<double>(mmPa[i][3]/mmPa[i][1])};
+                                     static_cast<double>(mmPa[i][3]/mmPa[i][1]), static_cast<int>(floor((static_cast<double>(mmTime[i]) + 0.01)/timeResolution))};
             mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget3
           else if(mmAget[i] == 3) {
             std::pair<int, int> pad = MM_Map_Asad0_Aget3[mmChan[i]];
-            mmCenter mmHit = {pad.first, pad.second, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1])};
+            mmCenter mmHit = {pad.first, pad.second, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1]),
+                             static_cast<int>(floor((static_cast<double>(mmTime[i]) + 0.01)/timeResolution))};
             mmCenter_.push_back(mmHit);
             mmCenter mmHitMatched = {pad.first, pad.second, static_cast<double>(mmEnergy[i])*scale[pad.first][pad.second], static_cast<double>(mmTime[i]),
-                                     static_cast<double>(mmPa[i][3]/mmPa[i][1])};
+                                     static_cast<double>(mmPa[i][3]/mmPa[i][1]), static_cast<int>(floor((static_cast<double>(mmTime[i]) + 0.01)/timeResolution))};
             mmCenterMatched_.push_back(mmHitMatched);
           }
         }
@@ -252,37 +256,41 @@ void Spectra::Loop() {
           // Aget0
           if(mmAget[i] == 0) {
             std::pair<int, int> pad = MM_Map_Asad1_Aget0[mmChan[i]];
-            mmCenter mmHit = {pad.first, pad.second, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1])};
+            mmCenter mmHit = {pad.first, pad.second, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1]),
+                             static_cast<int>(floor((static_cast<double>(mmTime[i]) + 0.01)/timeResolution))};
             mmCenter_.push_back(mmHit);
             mmCenter mmHitMatched = {pad.first, pad.second, static_cast<double>(mmEnergy[i])*scale[pad.first][pad.second], static_cast<double>(mmTime[i]),
-                                     static_cast<double>(mmPa[i][3]/mmPa[i][1])};
+                                     static_cast<double>(mmPa[i][3]/mmPa[i][1]), static_cast<int>(floor((static_cast<double>(mmTime[i]) + 0.01)/timeResolution))};
             mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget1
           else if(mmAget[i] == 1) {
             std::pair<int, int> pad = MM_Map_Asad1_Aget1[mmChan[i]];
-            mmCenter mmHit = {pad.first, pad.second, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1])};
+            mmCenter mmHit = {pad.first, pad.second, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1]),
+                             static_cast<int>(floor((static_cast<double>(mmTime[i]) + 0.01)/timeResolution))};
             mmCenter_.push_back(mmHit);
             mmCenter mmHitMatched = {pad.first, pad.second, static_cast<double>(mmEnergy[i])*scale[pad.first][pad.second], static_cast<double>(mmTime[i]),
-                                     static_cast<double>(mmPa[i][3]/mmPa[i][1])};
+                                     static_cast<double>(mmPa[i][3]/mmPa[i][1]), static_cast<int>(floor((static_cast<double>(mmTime[i]) + 0.01)/timeResolution))};
             mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget2
           else if(mmAget[i] == 2) {
             std::pair<int, int> pad = MM_Map_Asad1_Aget2[mmChan[i]];
-            mmCenter mmHit = {pad.first, pad.second, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1])};
+            mmCenter mmHit = {pad.first, pad.second, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1]),
+                             static_cast<int>(floor((static_cast<double>(mmTime[i]) + 0.01)/timeResolution))};
             mmCenter_.push_back(mmHit);
             mmCenter mmHitMatched = {pad.first, pad.second, static_cast<double>(mmEnergy[i])*scale[pad.first][pad.second], static_cast<double>(mmTime[i]),
-                                     static_cast<double>(mmPa[i][3]/mmPa[i][1])};
+                                     static_cast<double>(mmPa[i][3]/mmPa[i][1]), static_cast<int>(floor((static_cast<double>(mmTime[i]) + 0.01)/timeResolution))};
             mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget3
           else if(mmAget[i] == 3) {
             std::pair<int, int> pad = MM_Map_Asad1_Aget3[mmChan[i]];
-            mmCenter mmHit = {pad.first, pad.second, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1])};
+            mmCenter mmHit = {pad.first, pad.second, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1]),
+                             static_cast<int>(floor((static_cast<double>(mmTime[i]) + 0.01)/timeResolution))};
             mmCenter_.push_back(mmHit);
             mmCenter mmHitMatched = {pad.first, pad.second, static_cast<double>(mmEnergy[i])*scale[pad.first][pad.second], static_cast<double>(mmTime[i]),
-                                     static_cast<double>(mmPa[i][3]/mmPa[i][1])};
+                                     static_cast<double>(mmPa[i][3]/mmPa[i][1]), static_cast<int>(floor((static_cast<double>(mmTime[i]) + 0.01)/timeResolution))};
             mmCenterMatched_.push_back(mmHitMatched);
           }
         }
@@ -292,11 +300,11 @@ void Spectra::Loop() {
           if(mmAget[i] == 0) {
             int bin = MM_Map_Asad2_Aget0[mmChan[i]];
             if(mmChan[i] < 34) { // Strips
-              mmChainStrip mmHit = {bin, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i])};
+              mmChainStrip mmHit = {bin, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<int>(floor((static_cast<double>(mmTime[i]) + 0.01)/timeResolution))};
               mmLeftStrip_.push_back(mmHit);
             }
             else if(mmChan[i] > 33 && mmChan[i] < 68) { // Chains
-              mmChainStrip mmHit = {bin, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i])};
+              mmChainStrip mmHit = {bin, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<int>(floor((static_cast<double>(mmTime[i]) + 0.01)/timeResolution))};
               mmLeftChain_.push_back(mmHit);
             }
           }
@@ -304,30 +312,32 @@ void Spectra::Loop() {
           else if(mmAget[i] == 1) {
             int bin = MM_Map_Asad2_Aget1[mmChan[i]];
             if(mmChan[i] < 34) { // Strips
-              mmChainStrip mmHit = {bin, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i])};
+              mmChainStrip mmHit = {bin, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<int>(floor((static_cast<double>(mmTime[i]) + 0.01)/timeResolution))};
               mmLeftStrip_.push_back(mmHit);
             }
             else if(mmChan[i] > 33 && mmChan[i] < 68) { // Chains
-              mmChainStrip mmHit = {bin, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i])};
+              mmChainStrip mmHit = {bin, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<int>(floor((static_cast<double>(mmTime[i]) + 0.01)/timeResolution))};
               mmLeftChain_.push_back(mmHit);
             }
           }
           // Aget2 - Outside Central Pads
           else if(mmAget[i] == 2) {
             std::pair<int, int> pad = MM_Map_Asad2_Aget2[mmChan[i]];
-            mmCenter mmHit = {pad.first, pad.second, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1])};
+            mmCenter mmHit = {pad.first, pad.second, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1]),
+                             static_cast<int>(floor((static_cast<double>(mmTime[i]) + 0.01)/timeResolution))};
             mmCenter_.push_back(mmHit);
             mmCenter mmHitMatched = {pad.first, pad.second, static_cast<double>(mmEnergy[i])*scale[pad.first][pad.second], static_cast<double>(mmTime[i]),
-                                     static_cast<double>(mmPa[i][3]/mmPa[i][1])};
+                                     static_cast<double>(mmPa[i][3]/mmPa[i][1]), static_cast<int>(floor((static_cast<double>(mmTime[i]) + 0.01)/timeResolution))};
             mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget3 - Outside Central Pads
           else if(mmAget[i] == 3) {
             std::pair<int, int> pad = MM_Map_Asad2_Aget3[mmChan[i]];
-            mmCenter mmHit = {pad.first, pad.second, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1])};
+            mmCenter mmHit = {pad.first, pad.second, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1]),
+                             static_cast<int>(floor((static_cast<double>(mmTime[i]) + 0.01)/timeResolution))};
             mmCenter_.push_back(mmHit);
             mmCenter mmHitMatched = {pad.first, pad.second, static_cast<double>(mmEnergy[i])*scale[pad.first][pad.second], static_cast<double>(mmTime[i]),
-                                     static_cast<double>(mmPa[i][3]/mmPa[i][1])};
+                                     static_cast<double>(mmPa[i][3]/mmPa[i][1]), static_cast<int>(floor((static_cast<double>(mmTime[i]) + 0.01)/timeResolution))};
             mmCenterMatched_.push_back(mmHitMatched);
           }
         }
@@ -337,11 +347,11 @@ void Spectra::Loop() {
           if(mmAget[i] == 0) {
             int bin = MM_Map_Asad3_Aget0[mmChan[i]];
             if(mmChan[i] < 34) { // Strips
-              mmChainStrip mmHit = {bin, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i])};
+              mmChainStrip mmHit = {bin, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<int>(floor((static_cast<double>(mmTime[i]) + 0.01)/timeResolution))};
               mmRightStrip_.push_back(mmHit);
             }
             else if(mmChan[i] > 33 && mmChan[i] < 68) { // Chains
-              mmChainStrip mmHit = {bin, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i])};
+              mmChainStrip mmHit = {bin, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<int>(floor((static_cast<double>(mmTime[i]) + 0.01)/timeResolution))};
               mmRightChain_.push_back(mmHit);
             }
           }
@@ -349,30 +359,32 @@ void Spectra::Loop() {
           else if(mmAget[i] == 1) {
             int bin = MM_Map_Asad3_Aget1[mmChan[i]];
             if(mmChan[i] < 34) { // Strips
-              mmChainStrip mmHit = {bin, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i])};
+              mmChainStrip mmHit = {bin, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<int>(floor((static_cast<double>(mmTime[i]) + 0.01)/timeResolution))};
               mmRightStrip_.push_back(mmHit);
             }
             else if(mmChan[i] > 33 && mmChan[i] < 68) { // Chains
-              mmChainStrip mmHit = {bin, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i])};
+              mmChainStrip mmHit = {bin, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<int>(floor((static_cast<double>(mmTime[i]) + 0.01)/timeResolution))};
               mmRightChain_.push_back(mmHit);
             }
           }
           // Aget2
           else if(mmAget[i] == 2) {
             std::pair<int, int> pad = MM_Map_Asad3_Aget2[mmChan[i]];
-            mmCenter mmHit = {pad.first, pad.second, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1])};
+            mmCenter mmHit = {pad.first, pad.second, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1]),
+                              static_cast<int>(floor((static_cast<double>(mmTime[i]) + 0.01)/timeResolution))};
             mmCenter_.push_back(mmHit);
             mmCenter mmHitMatched = {pad.first, pad.second, static_cast<double>(mmEnergy[i])*scale[pad.first][pad.second], static_cast<double>(mmTime[i]),
-                                     static_cast<double>(mmPa[i][3]/mmPa[i][1])};
+                                     static_cast<double>(mmPa[i][3]/mmPa[i][1]), static_cast<int>(floor((static_cast<double>(mmTime[i]) + 0.01)/timeResolution))};
             mmCenterMatched_.push_back(mmHitMatched);
           }
           // Aget3
           else if(mmAget[i] == 3) {
             std::pair<int, int> pad = MM_Map_Asad3_Aget3[mmChan[i]];
-            mmCenter mmHit = {pad.first, pad.second, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1])};
+            mmCenter mmHit = {pad.first, pad.second, static_cast<double>(mmEnergy[i]), static_cast<double>(mmTime[i]), static_cast<double>(mmPa[i][3]/mmPa[i][1]),
+                             static_cast<int>(floor((static_cast<double>(mmTime[i]) + 0.01)/timeResolution))};
             mmCenter_.push_back(mmHit);
             mmCenter mmHitMatched = {pad.first, pad.second, static_cast<double>(mmEnergy[i])*scale[pad.first][pad.second], static_cast<double>(mmTime[i]),
-                                     static_cast<double>(mmPa[i][3]/mmPa[i][1])};
+                                     static_cast<double>(mmPa[i][3]/mmPa[i][1]), static_cast<int>(floor((static_cast<double>(mmTime[i]) + 0.01)/timeResolution))};
             mmCenterMatched_.push_back(mmHitMatched);
           }
         }

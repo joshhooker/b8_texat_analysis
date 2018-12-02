@@ -38,6 +38,7 @@ typedef struct mmCenter {
   double energy;
   double time;
   double cwt;
+  int timeBucket;
 } mmCenter;
 
 typedef struct mmTrack {
@@ -54,6 +55,7 @@ typedef struct mmChainStrip {
   int row;
   double energy;
   double time;
+  int timeBucket;
 } mmStripChain;
 
 typedef struct xy {

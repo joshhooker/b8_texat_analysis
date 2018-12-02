@@ -2019,7 +2019,7 @@ inline void Spectra::InitVariables() {
   rowConversion = 1.75; // Side of row in mm
   rowConversionOffset = 1.75/2.; // Put the position in middle of row
 
-  timeResolution = 40; // Buckets to time (40 ns time buckets)
+  timeResolution = 40.; // Buckets to time (40 ns time buckets)
 
   beamEnergy = 56.; // In MeV, after havar window
   density = 0.00038175; // in g/cm3, from LISE++ (Methane at 435 torr)
