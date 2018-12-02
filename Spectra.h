@@ -397,20 +397,9 @@ private:
                        std::vector<mmChainStrip> chain_,
                        std::vector<mmChainStrip> strip_, bool leftSide, double siTime);
   size_t ChainStripTime0NumTimeBuckets(std::vector<mmTrack> matched);
-  size_t ChainStripNumberTimeBuckets(std::vector<mmChainStrip> chain, std::vector<mmChainStrip> strip);
-  void ChainStripMatchingOutward(std::vector<mmTrack> &chainStripMatched, std::vector<mmChainStrip> chain,
-                                 std::vector<mmChainStrip> strip, bool leftSide, double siTime);
-  void ChainStripMatchingBox(std::vector<mmTrack> &chainStripMatched, std::vector<mmChainStrip> chain,
-                             std::vector<mmChainStrip> strip, bool leftSide, double siTime);
   void ChainStripMatchingBoxTime0(std::vector<mmTrack> &chainStripMatched, std::vector<mmTrack> time0);
   void ChainStripMatchingTime(std::vector<mmTrack> &chainStripMatched, std::vector<mmChainStrip> chain,
                               std::vector<mmChainStrip> strip, bool leftSide, double siTime, int timeWindow);
-  void ChainStripMatchingTimeSlopeFit(std::vector<mmTrack> &chainStripMatched, std::vector<mmChainStrip> chain,
-                                      std::vector<mmChainStrip> strip, bool leftSide, double siTime,
-                                      double timeWindow);
-  void ChainStripMatchingTimeSlopeHough(std::vector<mmTrack> &chainStripMatched, std::vector<mmChainStrip> chain,
-                                        std::vector<mmChainStrip> strip, bool leftSide, double siTime,
-                                        double timeWindow);
   double ChainStripSize(std::vector<mmTrack> chainStripMatched);
 
 // Visualize Hough Transform
