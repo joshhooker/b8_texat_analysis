@@ -177,12 +177,12 @@ private:
   TH2F* hMicroMegasCenterHeight;
 
   // Micromegas - Left
-  TH1F* hMicroMegasStripLeftCumulative;
   TH1F* hMicroMegasChainLeftCumulative;
+  TH1F* hMicroMegasStripLeftCumulative;
 
   // Micromegas - Right
-  TH1F* hMicroMegasStripRightCumulative;
   TH1F* hMicroMegasChainRightCumulative;
+  TH1F* hMicroMegasStripRightCumulative;
 
   // Number of Si detectors fired
   TH1I* hSiFired;
@@ -245,9 +245,11 @@ private:
 
   // Time vs Column Number Forward Detectors
   TH2F* hTimeChainForward[10][4];
+  TH2F* hTimeChainForwardCumulative;
 
   // Time vs Strip Number Forward Detectors
   TH2F* hTimeStripForward[10][4];
+  TH2F* hTimeStripForwardCumulative;
 
   // Time vs Central Region Forward Detectors
   TH2F* hTimeCentralForward[10];
@@ -339,13 +341,13 @@ private:
       std::vector<mmTrack> right_, std::vector<mmTrack> rightRaw_);
   int totalEventTrackSideCanvas;
   int eventTrackSideCanvasNum, eventTrackSideCanvasXYNum, eventTrackSideCanvasXNum, eventTrackSideCanvasYNum;
-  TCanvas* eventTrackSideCanvas[15];
+  TCanvas* eventTrackSideCanvas[5];
 
   // Draw dE Event Track for Side Region
   void DrawEventTrackSidedECanvas(int count, std::vector<mmTrack> leftRaw_, std::vector<mmTrack> rightRaw_, double leftAngle, double rightAngle);
   int totalEventTrackSidedECanvas;
   int eventTrackSidedECanvasNum, eventTrackSidedECanvasXYNum, eventTrackSidedECanvasXNum, eventTrackSidedECanvasYNum;
-  TCanvas* eventTrackSidedECanvas[15];
+  TCanvas* eventTrackSidedECanvas[5];
 
   void WriteCanvas();
 
@@ -396,13 +398,13 @@ private:
   void ChainStripMatch(std::vector<mmTrack> &chainStripMatched, std::vector<mmTrack> &chainStripRaw,
                        std::vector<mmChainStrip> chain_,
                        std::vector<mmChainStrip> strip_, bool leftSide, double siTime);
-  size_t ChainStripTime0NumTimeBuckets(std::vector<mmTrack> matched);
-  void ChainStripMatchingBoxTime0(std::vector<mmTrack> &chainStripMatched, std::vector<mmTrack> time0);
   void ChainStripMatchingTime(std::vector<mmTrack> &chainStripMatched, std::vector<mmChainStrip> chain,
                               std::vector<mmChainStrip> strip, bool leftSide, double siTime, int timeWindow);
+  size_t ChainStripTime0NumTimeBuckets(std::vector<mmTrack> matched);
+  void ChainStripMatchingBoxTime0(std::vector<mmTrack> &chainStripMatched, std::vector<mmTrack> time0);
   double ChainStripSize(std::vector<mmTrack> chainStripMatched);
 
-// Visualize Hough Transform
+  // Visualize Hough Transform
   void GetMinMaxD(std::vector<mmTrack> initPoints, int &minXY, int &maxXY, int &minYZ, int &maxYZ);
   void VisualizeHough(std::vector<mmTrack> initPoints, TH2I* fXY, TH2I* fYZ);
   void GetMinMaxDRestricted(std::vector<mmTrack> initPoints, int &minXY, int &maxXY, int &minYZ, int &maxYZ, int siDet);
@@ -1072,12 +1074,12 @@ inline void Spectra::InitHistograms() {
   hMicroMegasCenterHeight = new TH2F("MM_Center_Height", "MM_Center_Height", 130, -1, 129, 160, -200, 200);
 
   // Micromegas - Left
-  hMicroMegasStripLeftCumulative = new TH1F("MM_Strip_Left_Cumulative", "MM_Strip_Left_Cumulative", 64, 0, 64);
   hMicroMegasChainLeftCumulative = new TH1F("MM_Chain_Left_Cumulative", "MM_Chain_Left_Cumulative", 64, 0, 64);
+  hMicroMegasStripLeftCumulative = new TH1F("MM_Strip_Left_Cumulative", "MM_Strip_Left_Cumulative", 64, 0, 64);
 
   // Micromegas - Right
-  hMicroMegasStripRightCumulative = new TH1F("MM_Strip_Right_Cumulative", "MM_Strip_Right_Cumulative", 64, 0, 64);
   hMicroMegasChainRightCumulative = new TH1F("MM_Chain_Right_Cumulative", "MM_Chain_Right_Cumulative", 64, 0, 64);
+  hMicroMegasStripRightCumulative = new TH1F("MM_Strip_Right_Cumulative", "MM_Strip_Right_Cumulative", 64, 0, 64);
 
   // Number of Si detectors fired
   hSiFired = new TH1I("siFired", "siFired", 15, 0, 15);
@@ -1333,6 +1335,12 @@ inline void Spectra::InitHistograms() {
     }
   }
 
+  hTimeChainForwardCumulative = new TH2F("timeColumnForward", "timeColumnForward", 68, -2, 66, 75, 0, 3000);
+  hTimeChainForwardCumulative->GetXaxis()->SetTitle("Chain #"); hTimeChainForwardCumulative->GetXaxis()->CenterTitle();
+  hTimeChainForwardCumulative->GetYaxis()->SetTitle("Time [ns]"); hTimeChainForwardCumulative->GetYaxis()->CenterTitle();
+  hTimeChainForwardCumulative->GetYaxis()->SetTitleOffset(1.4);
+  hTimeChainForwardCumulative->SetStats(false);
+
   // Time vs Strip Number Forward Detectors
   for(uint i = 0; i < 10; i++) {
     for(uint j = 0; j < 4; j++) {
@@ -1344,6 +1352,12 @@ inline void Spectra::InitHistograms() {
       hTimeStripForward[i][j]->SetStats(false);
     }
   }
+
+  hTimeStripForwardCumulative = new TH2F("timeStripForward", "timeStripForward", 68, -2, 66, 75, 0, 3000);
+  hTimeStripForwardCumulative->GetXaxis()->SetTitle("Strip #"); hTimeStripForwardCumulative->GetXaxis()->CenterTitle();
+  hTimeStripForwardCumulative->GetYaxis()->SetTitle("Time [ns]"); hTimeStripForwardCumulative->GetYaxis()->CenterTitle();
+  hTimeStripForwardCumulative->GetYaxis()->SetTitleOffset(1.4);
+  hTimeStripForwardCumulative->SetStats(false);
 
   // Time vs Central Region Forward Detectors
   for(uint i = 0; i < 10; i++) {
@@ -2091,8 +2105,14 @@ inline void Spectra::WriteHistograms() {
   hMicroMegasCenterCumulativePositionRaw->Write();
   hMicroMegasCenterTime->Write();
 
+  hMicroMegasChainLeftCumulative->Write();
+  hMicroMegasStripLeftCumulative->Write();
+
+  hMicroMegasChainRightCumulative->Write();
+  hMicroMegasStripRightCumulative->Write();
+
   // Number of Si fired
-  hSiFired->Write();
+  // hSiFired->Write();
 
   // Forward Si and Csi Detectors
   // for(uint i = 0; i < 10; i++) {
@@ -2171,6 +2191,8 @@ inline void Spectra::WriteHistograms() {
       // hTimeStripForward[i][j]->Write();
     // }
   // }
+  hTimeChainForwardCumulative->Write();
+  hTimeStripForwardCumulative->Write();
 
   // Time vs Central Row Forward Detectors
   // for(uint i = 0; i < 10; i++) {

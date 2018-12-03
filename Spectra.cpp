@@ -163,9 +163,9 @@ void Spectra::Loop() {
   printf("Starting Main Loop\n");
 
   long nbytes = 0, nb = 0;
-  for(long jentry = 0; jentry < 50000; jentry++) {
+  // for(long jentry = 0; jentry < 50000; jentry++) {
   // for(long jentry = 4747; jentry < 4748; jentry++) {
-  // for(long jentry = 0; jentry < nentries; jentry++) {
+  for(long jentry = 0; jentry < nentries; jentry++) {
     long ientry = LoadTree(jentry);
     if(ientry < 0) break;
     nb = fChain->GetEntry(jentry);   nbytes += nb;
@@ -607,8 +607,8 @@ void Spectra::Loop() {
     std::map<int, double>::iterator it;
     for(it = centralPadPosition.begin(); it != centralPadPosition.end(); it++) {
       int row = it->first;
-      mmTrack hit = {0, 0., 0., 0., 0., 0., 0};
-      if(centralPadTotalEnergy[row] == 0) continue;
+      mmTrack hit = {0, 0., 0., 0., 0., 0., 0, 0};
+      if(centralPadTotalEnergy[row] < 1) continue;
       if(centralPadTotal[row] == 0) continue;
       hit.row = row;
       hit.xPosition = centralPadPosition[row]/centralPadTotalEnergy[row];
@@ -616,6 +616,7 @@ void Spectra::Loop() {
       hit.time = centralPadTime[row]/static_cast<double>(centralPadTotal[row]) - siTime;
       hit.energy = centralPadTotalEnergy[row];
       hit.height = heightOffset - hit.time*driftVelocity;
+      hit.timeBucket = static_cast<int>(floor((centralPadTime[row]/static_cast<double>(centralPadTotal[row]) + 0.01)/timeResolution));
       hit.total = centralPadTotal[row];
       hMicroMegasCenterCumulativePosition->Fill(hit.xPosition, hit.yPosition);
       if(row < 112) {
@@ -733,6 +734,60 @@ void Spectra::Loop() {
   WriteTree();
 
   file->Close();
+
+  // Write strips and chains with > 3000 cumulative hits
+  // Left Chain
+  FILE* leftChainFile = fopen("leftChainHits.out", "w");
+  int i_size_leftChain = hMicroMegasChainLeftCumulative->GetSize();
+  TAxis *xaxis_leftChain = hMicroMegasChainLeftCumulative->GetXaxis();
+  for(int i = 1; i < i_size_leftChain - 1; i++) {
+    double binContent = hMicroMegasChainLeftCumulative->GetBinContent(i);
+    if(binContent < 3000) continue;
+    int binLowEdge = static_cast<int>(xaxis_leftChain->GetBinLowEdge(i));
+    fprintf(leftChainFile, "%d\n", binLowEdge);
+  }
+  fflush(leftChainFile);
+  fclose(leftChainFile);
+
+  // Left Strip
+  FILE* leftStripFile = fopen("leftStripHits.out", "w");
+  int i_size_leftStrip = hMicroMegasStripLeftCumulative->GetSize();
+  TAxis *xaxis_leftStrip = hMicroMegasStripLeftCumulative->GetXaxis();
+  for(int i = 1; i < i_size_leftStrip - 1; i++) {
+    double binContent = hMicroMegasStripLeftCumulative->GetBinContent(i);
+    if(binContent < 3000) continue;
+    int binLowEdge = static_cast<int>(xaxis_leftStrip->GetBinLowEdge(i));
+    fprintf(leftStripFile, "%d\n", binLowEdge);
+  }
+  fflush(leftStripFile);
+  fclose(leftStripFile);
+
+  // Right Chain
+  FILE* rightChainFile = fopen("rightChainHits.out", "w");
+  int i_size_rightChain = hMicroMegasChainRightCumulative->GetSize();
+  TAxis *xaxis_rightChain = hMicroMegasChainRightCumulative->GetXaxis();
+  for(int i = 1; i < i_size_rightChain - 1; i++) {
+    double binContent = hMicroMegasChainRightCumulative->GetBinContent(i);
+    if(binContent < 3000) continue;
+    int binLowEdge = static_cast<int>(xaxis_rightChain->GetBinLowEdge(i));
+    fprintf(rightChainFile, "%d\n", binLowEdge);
+  }
+  fflush(rightChainFile);
+  fclose(rightChainFile);
+
+  // Right Strip
+  FILE* rightStripFile = fopen("rightStripHits.out", "w");
+  int i_size_rightStrip = hMicroMegasStripRightCumulative->GetSize();
+  TAxis *xaxis_rightStrip = hMicroMegasStripRightCumulative->GetXaxis();
+  for(int i = 1; i < i_size_rightStrip - 1; i++) {
+    double binContent = hMicroMegasStripRightCumulative->GetBinContent(i);
+    if(binContent < 3000) continue;
+    int binLowEdge = static_cast<int>(xaxis_rightStrip->GetBinLowEdge(i));
+    fprintf(rightStripFile, "%d\n", binLowEdge);
+  }
+  fflush(rightStripFile);
+  fclose(rightStripFile);
+
 }
 
 bool Spectra::AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std::vector<mmTrack> centerBeamTotal_,
@@ -867,18 +922,26 @@ bool Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::vec
   // Left Chain
   for(auto mm : leftChain_) {
     hTimeChainForward[siDet][siQuad]->Fill(mm.row, mm.time - siTime);
+    hTimeChainForwardCumulative->Fill(mm.row, mm.time - siTime);
+    hMicroMegasChainLeftCumulative->Fill(mm.row);
   }
   // Left Strip
   for(auto mm : leftStrip_) {
     hTimeStripForward[siDet][siQuad]->Fill(mm.row, mm.time - siTime);
+    hTimeStripForwardCumulative->Fill(mm.row, mm.time - siTime);
+    hMicroMegasStripLeftCumulative->Fill(mm.row);
   }
   // Right Chain
   for(auto mm : rightChain_) {
     hTimeChainForward[siDet][siQuad]->Fill(mm.row, mm.time - siTime);
+    hTimeChainForwardCumulative->Fill(mm.row, mm.time - siTime);
+    hMicroMegasChainRightCumulative->Fill(mm.row);
   }
   // Right Strip
   for(auto mm : rightStrip_) {
     hTimeStripForward[siDet][siQuad]->Fill(mm.row, mm.time - siTime);
+    hTimeStripForwardCumulative->Fill(mm.row, mm.time - siTime);
+    hMicroMegasStripRightCumulative->Fill(mm.row);
   }
 
   // Gate on time vs chain/strip
@@ -1478,6 +1541,41 @@ void Spectra::ChainStripMatch(std::vector<mmTrack> &chainStripMatched, std::vect
   // chainStripRaw = totalTime1;
 }
 
+void Spectra::ChainStripMatchingTime(std::vector<mmTrack> &chainStripMatched, std::vector<mmChainStrip> chain,
+                                     std::vector<mmChainStrip> strip, bool leftSide, double siTime,
+                                     int timeWindow) {
+  // Function to match strips and chains. Chains and strips are matched if their time is within the timeWindow parameter
+  // The timeWindow parameter is the window of time buckets to look for using the timeResolution parameter
+  // which is the ns -> bucket
+  // Position transform = 10.5 + 1.75/2 + 1.75*chain (chain starting at 0)
+  // Row transform = strip*2
+  // Row position transform = Row * rowConversion + rowConversionOffset
+
+  for(auto chainVec : chain) {
+    int timeChain = chainVec.timeBucket;
+    // Loop over strips and find strips when the time is within the timeWindow
+    for(auto stripVec : strip) {
+      int timeStrip = stripVec.timeBucket;
+      if((timeStrip > timeChain - timeWindow - 1) &&
+          (timeStrip < timeChain + timeWindow + 1)) {
+        mmTrack hit = {0, 0., 0., 0., 0., 0., 0, 0};
+        double position = 10.5 + 1.75/2 + 1.75*chainVec.row;
+        if(leftSide) position = -position;
+        int row = stripVec.row*2;
+        hit.row = row;
+        hit.xPosition = position;
+        hit.yPosition = hit.row*rowConversion + rowConversionOffset;
+        hit.time = stripVec.time - siTime;
+        hit.energy = stripVec.energy;
+        hit.height = heightOffset - hit.time*driftVelocity;
+        hit.timeBucket = timeStrip;
+        hit.total = 1;
+        chainStripMatched.push_back(hit);
+      }
+    }
+  }
+}
+
 size_t Spectra::ChainStripTime0NumTimeBuckets(std::vector<mmTrack> matched) {
   // Function that finds the number of different time buckets for the time0 algorithm
   // This is used if you want to change the strip/chain matching algorithm (if all on the same plane)
@@ -1485,7 +1583,7 @@ size_t Spectra::ChainStripTime0NumTimeBuckets(std::vector<mmTrack> matched) {
   std::map<int, int> timeMap;
 
   for(auto mm : matched) {
-    timeMap[mm.time] = 1;
+    timeMap[mm.timeBucket] = 1;
   }
 
   return timeMap.size();
@@ -1516,39 +1614,6 @@ void Spectra::ChainStripMatchingBoxTime0(std::vector<mmTrack> &chainStripMatched
 
   chainStripMatched.push_back(closestHit);
   chainStripMatched.push_back(furthestHit);
-}
-
-void Spectra::ChainStripMatchingTime(std::vector<mmTrack> &chainStripMatched, std::vector<mmChainStrip> chain,
-                                     std::vector<mmChainStrip> strip, bool leftSide, double siTime,
-                                     int timeWindow) {
-  // Function to match strips and chains. Chains and strips are matched if their time is within the timeWindow parameter
-  // The timeWindow parameter is the window of time buckets to look for using the timeResolution parameter
-  // which is the ns -> bucket
-  // Position transform = 10.5 + 1.75/2 + 1.75*chain (chain starting at 0)
-  // Row transform = strip*2
-  // Row position transform = Row * rowConversion + rowConversionOffset
-
-  for(auto chainVec : chain) {
-    double timeChain = chainVec.time;
-    // Loop over strips and find strips when the time is within the timeWindow
-    for(auto stripVec : strip) {
-      if((stripVec.time > timeChain - timeWindow*timeResolution - timeResolution/2.) &&
-          (stripVec.time < timeChain + timeWindow*timeResolution + timeResolution/2.)) {
-        mmTrack hit = {0, 0., 0., 0., 0., 0., 0};
-        double position = 10.5 + 1.75/2 + 1.75*chainVec.row;
-        if(leftSide) position = -position;
-        int row = stripVec.row*2;
-        hit.row = row;
-        hit.xPosition = position;
-        hit.yPosition = hit.row*rowConversion + rowConversionOffset;
-        hit.time = chainVec.time - siTime;
-        hit.energy = stripVec.energy;
-        hit.height = heightOffset - hit.time*driftVelocity;
-        hit.total = 1;
-        chainStripMatched.push_back(hit);
-      }
-    }
-  }
 }
 
 double Spectra::ChainStripSize(std::vector<mmTrack> chainStripMatched) {

@@ -48,6 +48,7 @@ typedef struct mmTrack {
   double time;
   double energy;
   double height;
+  int timeBucket;
   int total;
 } mmTrack;
 
