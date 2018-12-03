@@ -24,7 +24,11 @@ set(SCRIPTS
     csReg3.out
     cuts.root
     EnergyLoss.dat
+    leftChainHits.out
+    leftStripHits.out
     proton_methane.dat
+    rightChainHits.out
+    rightStripHits.out
     siCalibration.dat
     )
 

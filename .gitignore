@@ -15,5 +15,4 @@ cmake-build-debug/
 compareGrisha/
 pictures/
 compile_commands.json
-CMakeLists.txt.user
-CMakeLists.txt.user.7bce647
+CMakeLists.txt.user*

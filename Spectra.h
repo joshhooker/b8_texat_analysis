@@ -443,6 +443,10 @@ private:
   std::pair<double, double> mmColumnSize[6];
   double padError;
   double padErrorTwoColumns;
+  std::vector<int> leftChainHits;
+  std::vector<int> leftStripHits;
+  std::vector<int> rightChainHits;
+  std::vector<int> rightStripHits;
 
   EnergyLoss *boronMethane;
   EnergyLoss *protonMethane;
@@ -2094,6 +2098,35 @@ inline void Spectra::InitVariables() {
   // Pad Error for Fitting of Central Pads
   padError = 1.75; // in mm
   padErrorTwoColumns = 0.5; // in mm
+
+  // Read in hits on leftChain, leftStrip, rightChain, rightStrip
+  std::ifstream inLeftChain("leftChainHits.out");
+  int leftChain;
+  while(inLeftChain >> leftChain) {
+    leftChainHits.push_back(leftChain);
+  }
+  inLeftChain.close();
+
+  std::ifstream inLeftStrip("leftStripHits.out");
+  int leftStrip;
+  while(inLeftStrip >> leftStrip) {
+    leftStripHits.push_back(leftStrip);
+  }
+  inLeftStrip.close();
+
+  std::ifstream inRightChain("rightChainHits.out");
+  int rightChain;
+  while(inRightChain >> rightChain) {
+    rightChainHits.push_back(rightChain);
+  }
+  inRightChain.close();
+
+  std::ifstream inRightStrip("rightStripHits.out");
+  int rightStrip;
+  while(inRightStrip >> rightStrip) {
+    rightStripHits.push_back(rightStrip);
+  }
+  inRightStrip.close();
 }
 
 inline void Spectra::WriteHistograms() {

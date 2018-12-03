@@ -17,10 +17,10 @@ TChain* MakeChain() {
   auto *chain = new TChain("mfmData");
 
   // Home
-  TString PathToFiles = "/hd/research/data/run0817a/rootM2R-WaveformReduced/run";
+  // TString PathToFiles = "/hd/research/data/run0817a/rootM2R-WaveformReduced/run";
 
-  // Mac Laptop
-  // TString PathToFiles = "/Users/joshhooker/Desktop/data/run0817a/run";
+  // Laptop
+  TString PathToFiles = "/Users/joshhooker/Desktop/data/run0817a/run";
 
   // Alpha source test in gas
   // chain->Add(PathToFiles+"004.root");
@@ -163,9 +163,9 @@ void Spectra::Loop() {
   printf("Starting Main Loop\n");
 
   long nbytes = 0, nb = 0;
-  // for(long jentry = 0; jentry < 50000; jentry++) {
+  for(long jentry = 0; jentry < 50000; jentry++) {
   // for(long jentry = 4747; jentry < 4748; jentry++) {
-  for(long jentry = 0; jentry < nentries; jentry++) {
+  // for(long jentry = 0; jentry < nentries; jentry++) {
     long ientry = LoadTree(jentry);
     if(ientry < 0) break;
     nb = fChain->GetEntry(jentry);   nbytes += nb;
@@ -734,60 +734,6 @@ void Spectra::Loop() {
   WriteTree();
 
   file->Close();
-
-  // Write strips and chains with > 3000 cumulative hits
-  // Left Chain
-  FILE* leftChainFile = fopen("leftChainHits.out", "w");
-  int i_size_leftChain = hMicroMegasChainLeftCumulative->GetSize();
-  TAxis *xaxis_leftChain = hMicroMegasChainLeftCumulative->GetXaxis();
-  for(int i = 1; i < i_size_leftChain - 1; i++) {
-    double binContent = hMicroMegasChainLeftCumulative->GetBinContent(i);
-    if(binContent < 3000) continue;
-    int binLowEdge = static_cast<int>(xaxis_leftChain->GetBinLowEdge(i));
-    fprintf(leftChainFile, "%d\n", binLowEdge);
-  }
-  fflush(leftChainFile);
-  fclose(leftChainFile);
-
-  // Left Strip
-  FILE* leftStripFile = fopen("leftStripHits.out", "w");
-  int i_size_leftStrip = hMicroMegasStripLeftCumulative->GetSize();
-  TAxis *xaxis_leftStrip = hMicroMegasStripLeftCumulative->GetXaxis();
-  for(int i = 1; i < i_size_leftStrip - 1; i++) {
-    double binContent = hMicroMegasStripLeftCumulative->GetBinContent(i);
-    if(binContent < 3000) continue;
-    int binLowEdge = static_cast<int>(xaxis_leftStrip->GetBinLowEdge(i));
-    fprintf(leftStripFile, "%d\n", binLowEdge);
-  }
-  fflush(leftStripFile);
-  fclose(leftStripFile);
-
-  // Right Chain
-  FILE* rightChainFile = fopen("rightChainHits.out", "w");
-  int i_size_rightChain = hMicroMegasChainRightCumulative->GetSize();
-  TAxis *xaxis_rightChain = hMicroMegasChainRightCumulative->GetXaxis();
-  for(int i = 1; i < i_size_rightChain - 1; i++) {
-    double binContent = hMicroMegasChainRightCumulative->GetBinContent(i);
-    if(binContent < 3000) continue;
-    int binLowEdge = static_cast<int>(xaxis_rightChain->GetBinLowEdge(i));
-    fprintf(rightChainFile, "%d\n", binLowEdge);
-  }
-  fflush(rightChainFile);
-  fclose(rightChainFile);
-
-  // Right Strip
-  FILE* rightStripFile = fopen("rightStripHits.out", "w");
-  int i_size_rightStrip = hMicroMegasStripRightCumulative->GetSize();
-  TAxis *xaxis_rightStrip = hMicroMegasStripRightCumulative->GetXaxis();
-  for(int i = 1; i < i_size_rightStrip - 1; i++) {
-    double binContent = hMicroMegasStripRightCumulative->GetBinContent(i);
-    if(binContent < 3000) continue;
-    int binLowEdge = static_cast<int>(xaxis_rightStrip->GetBinLowEdge(i));
-    fprintf(rightStripFile, "%d\n", binLowEdge);
-  }
-  fflush(rightStripFile);
-  fclose(rightStripFile);
-
 }
 
 bool Spectra::AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std::vector<mmTrack> centerBeamTotal_,
