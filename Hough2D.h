@@ -18,6 +18,7 @@ public:
 
   Hough2D(std::vector<mmTrack> initPoints, int det, int quad);
   Hough2D(std::vector<mmTrack> initPoints, int det, int quad, int binsX, int binsY);
+  Hough2D(std::vector<mmTrack> initPoints, int det, int quad, int help);
 
   void SetPoints(std::vector<mmTrack> initPoints);
   void SetPoints(std::vector<mmTrack> initPoints, int det);
@@ -82,22 +83,22 @@ inline void Hough2D::InitHough2D() {
   siXPosForward[5][1] = 0. + 12.5;
   siXPosForward[5][2] = 0. + 12.5;
   siXPosForward[5][3] = 0. + 12.5;
-  siXPosForward[6][0] = 62.2 - 12.5;
-  siXPosForward[6][1] = 62.2 - 12.5;
-  siXPosForward[6][2] = 62.2 + 12.5;
-  siXPosForward[6][3] = 62.2 + 12.5;
-  siXPosForward[7][0] = 62.2 - 12.5;
-  siXPosForward[7][1] = 62.2 + 12.5;
-  siXPosForward[7][2] = 62.2 + 12.5;
-  siXPosForward[7][3] = 62.2 - 12.5;
-  siXPosForward[8][0] = 124. - 12.5;
-  siXPosForward[8][1] = 124. + 12.5;
-  siXPosForward[8][2] = 124. + 12.5;
-  siXPosForward[8][3] = 124. - 12.5;
-  siXPosForward[9][0] = 124. - 12.5;
-  siXPosForward[9][1] = 124. + 12.5;
-  siXPosForward[9][2] = 124. + 12.5;
-  siXPosForward[9][3] = 124. - 12.5;
+  siXPosForward[6][0] = -62.2 + 12.5;
+  siXPosForward[6][1] = -62.2 + 12.5;
+  siXPosForward[6][2] = -62.2 - 12.5;
+  siXPosForward[6][3] = -62.2 - 12.5;
+  siXPosForward[7][0] = -62.2 + 12.5;
+  siXPosForward[7][1] = -62.2 - 12.5;
+  siXPosForward[7][2] = -62.2 - 12.5;
+  siXPosForward[7][3] = -62.2 + 12.5;
+  siXPosForward[8][0] = -124. + 12.5;
+  siXPosForward[8][1] = -124. - 12.5;
+  siXPosForward[8][2] = -124. - 12.5;
+  siXPosForward[8][3] = -124. + 12.5;
+  siXPosForward[9][0] = -124. + 12.5;
+  siXPosForward[9][1] = -124. - 12.5;
+  siXPosForward[9][2] = -124. - 12.5;
+  siXPosForward[9][3] = -124. + 12.5;
 }
 
 #endif //HOUGH2D_H

@@ -17,10 +17,10 @@ TChain* MakeChain() {
   auto *chain = new TChain("mfmData");
 
   // Home
-  // TString PathToFiles = "/hd/research/data/run0817a/rootM2R-WaveformReduced/run";
+  TString PathToFiles = "/hd/research/data/run0817a/rootM2R-WaveformReduced/run";
 
   // Laptop
-  TString PathToFiles = "/Users/joshhooker/Desktop/data/run0817a/run";
+  // TString PathToFiles = "/Users/joshhooker/Desktop/data/run0817a/run";
 
   // Alpha source test in gas
   // chain->Add(PathToFiles+"004.root");
@@ -156,6 +156,8 @@ void Spectra::Loop() {
   InitCentralPadGainMatch();
   InitAverageBeamEnergy();
 
+  InitMaxPeak();
+
   InitTree();
 
   long nentries = fChain->GetEntriesFast();
@@ -163,9 +165,9 @@ void Spectra::Loop() {
   printf("Starting Main Loop\n");
 
   long nbytes = 0, nb = 0;
-  for(long jentry = 0; jentry < 50000; jentry++) {
+  // for(long jentry = 0; jentry < 5000; jentry++) {
   // for(long jentry = 4747; jentry < 4748; jentry++) {
-  // for(long jentry = 0; jentry < nentries; jentry++) {
+  for(long jentry = 0; jentry < nentries; jentry++) {
     long ientry = LoadTree(jentry);
     if(ientry < 0) break;
     nb = fChain->GetEntry(jentry);   nbytes += nb;
@@ -627,6 +629,32 @@ void Spectra::Loop() {
       }
     }
 
+    // Sort Chains/Strips and Clean Strips
+    std::vector<mmChainStrip> mmLeftStripCleaned_;
+    std::vector<mmChainStrip> mmRightStripCleaned_;
+
+    // Sorting mmLeftChain_
+    if(!mmLeftChain_.empty()) {
+      std::sort(mmLeftChain_.begin(), mmLeftChain_.end(), sortByRowMMChainStrip());
+    }
+
+    // Sorting mmLeftStrip_
+    if(!mmLeftStrip_.empty()) {
+      std::sort(mmLeftStrip_.begin(), mmLeftStrip_.end(), sortByRowMMChainStrip());
+      // CleanLeftStrip(mmLeftStripCleaned_, mmLeftStrip_);
+    }
+
+    // Sorting mmRightChain_
+    if(!mmRightChain_.empty()) {
+      std::sort(mmRightChain_.begin(), mmRightChain_.end(), sortByRowMMChainStrip());
+    }
+
+    // Sorting mmRightStrip_
+    if(!mmRightStrip_.empty()) {
+      std::sort(mmRightStrip_.begin(), mmRightStrip_.end(), sortByRowMMChainStrip());
+      // CleanRightStrip(mmRightStripCleaned_, mmRightStrip_);
+    }
+
     //*************************************//
     // Get dE for side and central regions //
     //*************************************//
@@ -712,20 +740,32 @@ void Spectra::Loop() {
 
 
     bool event = false;
-//    if(central) {
-//      event = AnalysisForwardCentral(mmCenterMatchedReducedNoise_, mmCenterBeamTotal_, mmCenterProton_, centralPadTotalEnergy);
-//    }
-    if(left || right) {
-      event = AnalysisForwardSide(mmCenterMatchedReducedNoise_, mmCenterBeamTotal_, mmLeftChain_, mmLeftStrip_, mmRightChain_,
-          mmRightStrip_);
+    if(central) {
+      event = AnalysisForwardCentral(mmCenterMatchedReducedNoise_, mmCenterBeamTotal_, mmCenterProton_, centralPadTotalEnergy,
+                                     mmLeftChain_, mmLeftStrip_, mmRightChain_, mmRightStrip_);
     }
+//    if(left || right) {
+//      event = AnalysisForwardSide(mmCenterMatchedReducedNoise_, mmCenterBeamTotal_, mmCenterProton_,
+//                                  mmLeftChain_, mmLeftStrip_, mmRightChain_, mmRightStrip_);
+//    }
 
-    // if(!event) continue;
+    if(!event) continue;
 
     //  ** End of event by event analysis ** //
     FillTree();
-
   }
+
+  ReadSolidAngle();
+
+  DivideTargetThickness(s1);
+  SolidAngle(s1, 1);
+  s1->Scale(1./numberB8);
+  s1->Write();
+
+  DivideTargetThickness(s3);
+  SolidAngle(s3, 3);
+  s3->Scale(1./numberB8);
+  s3->Write();
 
   WriteHistograms();
 
@@ -737,7 +777,9 @@ void Spectra::Loop() {
 }
 
 bool Spectra::AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std::vector<mmTrack> centerBeamTotal_,
-                                     std::vector<mmTrack> centerProton_, std::map<int, double> centralPadTotalEnergy) {
+                                     std::vector<mmTrack> centerProton_, std::map<int, double> centralPadTotalEnergy,
+                                     std::vector<mmChainStrip> leftChain_, std::vector<mmChainStrip> leftStrip_,
+                                     std::vector<mmChainStrip> rightChain_, std::vector<mmChainStrip> rightStrip_) {
 
   // Find dE for center region
   dE = 0.;
@@ -759,105 +801,222 @@ bool Spectra::AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std::
   hdEEForwardCal[siDet]->Fill(siEnergyCal, dE);
   hdEEForwardCalTotal[siDet]->Fill(totalEnergy, dE);
 
-  if(dE < 200) return false;
-  if(siEnergyCal < 1000) return false;
+  if(!dEEForwardCut[siDet]->IsInside(siEnergyCal, dE)) return false;
 
-  // if(!dEEForwardCut[siDet]->IsInside(siEnergy, dE)) return false;
+//  // Match strips with chains
+//  std::vector<mmTrack> chainStripMatchedLeft_;
+//  std::vector<mmTrack> chainStripMatchedRight_;
+//  std::vector<mmTrack> chainStripRawLeft_;
+//  std::vector<mmTrack> chainStripRawRight_;
+//  if(!leftChain_.empty() && !leftStrip_.empty()) {
+//    ChainStripMatch(chainStripMatchedLeft_, chainStripRawLeft_, leftChain_, leftStrip_, true, siTime);
+//  }
+//  if(!rightChain_.empty() && !rightStrip_.empty()) {
+//    ChainStripMatch(chainStripMatchedRight_, chainStripRawRight_, rightChain_, rightStrip_, false,
+//                    siTime);
+//  }
 
-  if(centerBeamTotal_.size() > 10) {
-    // Make reduced beam (70% of beam track)
-    int centerBeamSize = static_cast<int>(centerBeamTotal_.size());
-    centerBeamSize = static_cast<int>(floor(0.7*centerBeamSize));
+  bool oneProtonEvent = true;
 
-    std::vector<mmTrack> centerBeamSmall_;
-    for(int i = 0; i < centerBeamSize; i++) {
-      centerBeamSmall_.push_back(centerBeamTotal_[i]);
+  if(siDet != 4) return false;
+
+//  // Clean left side track
+//  double leftTrackAngle = 0;
+//  if(chainStripMatchedLeft_.size() > 1) {
+//    auto *fitLeft = new HoughTrack();
+//    fitLeft->AddTrack(chainStripMatchedLeft_, siDet, siQuad);
+//    double minDistOther = fitLeft->Fit();
+//    std::vector<double> parsOther = fitLeft->GetPars();
+//    delete fitLeft;
+//    double m_xComponentOther = fabs(parsOther[1]);
+//    leftTrackAngle = atan(m_xComponentOther);
+
+//    int changes;
+//    std::vector<mmTrack> leftTrackCleaned_;
+//    std::vector<mmTrack> leftTrackCleanedRaw_;
+//    bool change = true;
+//    while(change) {
+//      CleanSideTracks(leftTrackCleaned_, leftTrackCleanedRaw_, chainStripRawLeft_, leftTrackAngle, changes);
+//      chainStripMatchedLeft_ = leftTrackCleaned_;
+//      chainStripRawLeft_ = leftTrackCleanedRaw_;
+//      if(changes == 0) change = false;
+
+//      if(leftTrackCleanedRaw_.size() < 2 || chainStripMatchedLeft_.size() < 2) change = false;
+
+//      auto *fitLeft = new HoughTrack();
+//      fitLeft->AddTrack(chainStripMatchedLeft_, siDet, siQuad);
+//      double minDistOther = fitLeft->Fit();
+//      std::vector<double> parsOther = fitLeft->GetPars();
+//      delete fitLeft;
+//      double m_xComponentOther = fabs(parsOther[1]);
+//      leftTrackAngle = atan(m_xComponentOther);
+//    }
+//  }
+
+//  // Check dE of left track and see if proton
+//  if(chainStripMatchedLeft_.size() > 1) {
+//    double dESide = 0.;
+//    int totalSide = 0;
+//    for(auto mm : chainStripMatchedLeft_) {
+//      dESide += mm.energy*cos(leftTrackAngle);
+//      totalSide++;
+//    }
+//    dESide /= static_cast<double>(totalSide);
+
+//    if(dESide > 200 && dESide < 1700) oneProtonEvent = false;
+//  }
+
+//  if(!oneProtonEvent) return false;
+
+//  // Clean right side track
+//  double rightTrackAngle = 0;
+//  if(chainStripMatchedRight_.size() > 1) {
+//    auto *fitRight = new HoughTrack();
+//    fitRight->AddTrack(chainStripMatchedRight_, siDet, siQuad);
+//    double minDistOther = fitRight->Fit();
+//    std::vector<double> parsOther = fitRight->GetPars();
+//    delete fitRight;
+//    double m_xComponentOther = fabs(parsOther[1]);
+//    rightTrackAngle = atan(m_xComponentOther);
+
+//    int changes;
+//    std::vector<mmTrack> rightTrackCleaned_;
+//    std::vector<mmTrack> rightTrackCleanedRaw_;
+//    bool change = true;
+//    while(change) {
+//      CleanSideTracks(rightTrackCleaned_, rightTrackCleanedRaw_, chainStripRawRight_, rightTrackAngle, changes);
+//      chainStripMatchedRight_ = rightTrackCleaned_;
+//      chainStripRawRight_ = rightTrackCleanedRaw_;
+//      if(changes == 0) change = false;
+
+//      if(rightTrackCleanedRaw_.size() < 2 || chainStripMatchedRight_.size() < 2) change = false;
+
+//      auto *fitRight = new HoughTrack();
+//      fitRight->AddTrack(chainStripMatchedRight_, siDet, siQuad);
+//      double minDistOther = fitRight->Fit();
+//      std::vector<double> parsOther = fitRight->GetPars();
+//      delete fitRight;
+//      double m_xComponentOther = fabs(parsOther[1]);
+//      rightTrackAngle = atan(m_xComponentOther);
+//    }
+//  }
+
+//  // Check dE of right track and see if proton
+//  if(chainStripMatchedRight_.size() > 1) {
+//    double dESide = 0.;
+//    int totalSide = 0;
+//    for(auto mm : chainStripMatchedRight_) {
+//      dESide += mm.energy*cos(rightTrackAngle);
+//      totalSide++;
+//    }
+//    dESide /= static_cast<double>(totalSide);
+
+//    if(dESide > 200 && dESide < 1700) oneProtonEvent = false;
+//  }
+
+//  if(!oneProtonEvent) return false;
+
+  // Remove events with no or very little counts for beam
+  if(centerBeamTotal_.size() < 5) return false;
+
+  int maxPeakRow;
+  double maxPeakEnergy, avgPeakEnergy, maxPeakDeriv;
+  FindMaxCentralEnergy(centerBeamTotal_, maxPeakRow, maxPeakEnergy, avgPeakEnergy, maxPeakDeriv);
+
+  if(maxPeakRow < 5) return false;
+
+  // Find maxPeakRow in maxPeakMap
+  if(maxPeakMap.find(maxPeakRow) == maxPeakMap.end()) return false;
+
+  double vertex = maxPeakMap[maxPeakRow];
+  int vertexRow = 0;
+  if(vertex > 0) {
+    vertexRow = static_cast<int>(vertex/1.75);
+  }
+
+  // std::cout << maxPeakRow << '\t' << vertex << '\t' << vertexRow << std::endl;
+
+  mmTrack centerVertexPoint;
+  if(vertexRow == 0) {
+    mmTrack hit = {0, 0., vertex, 0, 0, 0, 0, 0};
+    centerVertexPoint = hit;
+  }
+  else {
+    // Get vertex from centralBeam
+    double closestVertexValue = 1000;
+    mmTrack closestVertex;
+    for(auto mm : centerBeamTotal_) {
+      double diff = fabs(mm.yPosition - vertex);
+      if(diff < closestVertexValue) {
+        closestVertexValue = diff;
+        closestVertex = mm;
+      }
     }
+    centerVertexPoint = closestVertex;
+  }
 
-    // int lastRow = centerBeamTotal_[centerBeamTotal_.size() - 1].row;
-    // auto *fitBeam = new HoughTrack();
-    // fitBeam->AddTrack(centerBeamTotal_, siDet, siQuad);
-    // double minDist = fitBeam->Fit();
-    // std::vector<double> parsBeam = fitBeam->GetPars();
-    // delete fitBeam;
+  centerProton_.push_back(centerVertexPoint);
 
-    int lastRow = centerBeamSmall_[centerBeamSmall_.size() - 1].row;
-    auto *fitBeam = new HoughTrack();
-    fitBeam->AddTrack(centerBeamSmall_, siDet, siQuad);
-    double minDist = fitBeam->Fit();
-    std::vector<double> parsBeam = fitBeam->GetPars();
-    delete fitBeam;
+  auto *fitProton = new HoughTrack();
+  fitProton->AddTrack(centerProton_, siDet, siQuad);
+  double minDistProton = fitProton->Fit();
+  std::vector<double> parsProton = fitProton->GetPars();
+  delete fitProton;
 
-    int maxPeakRow;
-    double maxPeakEnergy, avgPeakEnergy, maxPeakDeriv;
-    FindMaxCentralEnergy(centerBeamTotal_, maxPeakRow, maxPeakEnergy, avgPeakEnergy, maxPeakDeriv);
+  // Plot XZ hit position of forward non-central detectors
+  double x, y, z;
+  line(siYPosForward, parsProton, x, y, z);
+  siPosX = x;
+  siPosY = siYPosForward;
+  siPosZ = z;
+  hHitPositionsXZForward->Fill(x, z);
+  hHitPositionsXZForwardInd[siDet]->Fill(x, z);
 
-    hMaxPeakSiE[siDet]->Fill(maxPeakRow, siEnergyCal);
-    hMaxPeakAvgPeakE[siDet]->Fill(maxPeakRow, avgPeakEnergy);
-    hMaxPeakEAvgPeakE[siDet]->Fill(maxPeakEnergy, avgPeakEnergy);
-    hAvgPeakESiE[siDet]->Fill(avgPeakEnergy, siEnergyCal);
-    hMaxPeakEDerivPeak[siDet]->Fill(maxPeakEnergy, maxPeakDeriv);
+  double vertexToSi = siYPosForward - vertex;
 
-    bool singleColumn = CenterOnlyOneColumn(centerBeamTotal_);
-    // if(!singleColumn) return true;
+  double siX, siY, siZ;
+  line(siYPosForward, parsProton, siX, siY, siZ);
 
-    std::vector<double> parsRecoil;
-    DrawCenterBeamLinearCanvas(totalCenterBeamLinearCanvas, centerBeamTotal_, parsBeam, parsRecoil, 0);
-    totalCenterBeamLinearCanvas++;
+  TVector3 v1(siX, vertexToSi, siZ);
+  TVector3 v2(0, vertexToSi, 0);
+  angle = v1.Angle(v2);
+  double cosAngle = cos(angle);
 
-    // std::vector<mmTrack> averageTrack_ = GetRunningEnergyAverageThree(centerBeamTotal_);
-    std::vector<mmTrack> averageTrack_ = GetRunningEnergyAverageFive(centerBeamTotal_);
-    DrawCenterEnergyRunningAverageCanvas(totalCenterEnergyRunningCanvas, centerBeamTotal_, averageTrack_);
-    totalCenterEnergyRunningCanvas++;
+  double pathLength = vertexToSi/cosAngle;
 
-    // std::vector<centerDeriv> threePoint_ = CenterEnergyThreePointDeriv(centerBeamTotal_);
-    // std::vector<centerDeriv> fivePoint_ = CenterEnergyFivePointDeriv(centerBeamTotal_);
-    std::vector<centerDeriv> threePoint_ = CenterEnergyThreePointDeriv(averageTrack_);
-    std::vector<centerDeriv> fivePoint_ = CenterEnergyFivePointDeriv(averageTrack_);
-    DrawCenterEnergyDerivCanvas(totalCenterEnergyDerivCanvas, threePoint_, fivePoint_);
-    totalCenterEnergyDerivCanvas++;
+  if(pathLength < 0) pathLength = 200.;
+  if(pathLength > 700) pathLength = 700.;
 
-    std::pair<int, int> derivPeak = CenterGetDerivMax(threePoint_, fivePoint_);
-    int derivDiff = maxPeakRow - derivPeak.first;
-    hMaxPeakDerivDiff[siDet]->Fill(maxPeakRow, derivDiff);
-    hDerivPeakDerivDiff[siDet]->Fill(derivPeak.first, derivDiff);
+  double protonEnergy = protonMethane->AddBack(totalEnergy/1000., pathLength);
+  double beamEnergy = protonEnergy*(m1 + m2)*(m1 + m2)/(4.*m1*m2*cosAngle*cosAngle);
 
-    // CorrectCenterEnergy(centerBeamTotal_, parsBeam, lastRow);
-    DrawCenterEnergyCanvas(totalCenterEnergyCanvas, centerMatched_, centerBeamTotal_);
-    totalCenterEnergyCanvas++;
-    DrawCenterBeamCanvas(totalCenterBeamCanvas, centerBeamTotal_, parsBeam, lastRow);
-    totalCenterBeamCanvas++;
+  cmEnergy = beamEnergy*m2/(m1 + m2);
+
+  hVertexSiEForward[siDet]->Fill(siEnergy, vertexPositionY);
+  hVertexSiEForwardCal[siDet]->Fill(siEnergyCal, vertexPositionY);
+  hVertexSiEForwardCalTotal[siDet]->Fill(totalEnergy, vertexPositionY);
+
+  hAngleEForward[siDet]->Fill(siEnergy, angle);
+  hAngleEForwardCal[siDet]->Fill(siEnergyCal, angle);
+  hAngleEForwardCalTotal[siDet]->Fill(totalEnergy, angle);
+  hAngleEForwardProtonEnergy[siDet]->Fill(protonEnergy, angle);
+
+  hVertexAngleForward[siDet]->Fill(vertexPositionY, angle);
+
+  if(siDet == 4 && cmEnergy > 0.9) {
+    s1->Fill(cmEnergy);
   }
 
   return true;
 }
 
 bool Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::vector<mmTrack> centerBeamTotal_,
+                                  std::vector<mmTrack> centerProton_,
                                   std::vector<mmChainStrip> leftChain_, std::vector<mmChainStrip> leftStrip_,
                                   std::vector<mmChainStrip> rightChain_, std::vector<mmChainStrip> rightStrip_) {
   // Sorting mmCenterBeamTotal_ by row
   if(!centerBeamTotal_.empty()) {
     std::sort(centerBeamTotal_.begin(), centerBeamTotal_.end(), sortByRowMMTrack());
-  }
-
-  // Sorting mmLeftChain_
-  if(!leftChain_.empty()) {
-    std::sort(leftChain_.begin(), leftChain_.end(), sortByRowMMChainStrip());
-  }
-
-  // Sorting mmLeftStrip_
-  if(!leftStrip_.empty()) {
-    std::sort(leftStrip_.begin(), leftStrip_.end(), sortByRowMMChainStrip());
-  }
-
-  // Sorting mmRightChain_
-  if(!rightChain_.empty()) {
-    std::sort(rightChain_.begin(), rightChain_.end(), sortByRowMMChainStrip());
-  }
-
-  // Sorting mmRightStrip_
-  if(!rightStrip_.empty()) {
-    std::sort(rightStrip_.begin(), rightStrip_.end(), sortByRowMMChainStrip());
   }
 
   bool left = false;
@@ -895,28 +1054,44 @@ bool Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::vec
   std::vector<mmChainStrip> leftStripReduced_;
   std::vector<mmChainStrip> rightChainReduced_;
   std::vector<mmChainStrip> rightStripReduced_;
-  // Left Chain
-  for(auto mm : leftChain_) {
-    if(timeChainForwardCut[siDet][siQuad]->IsInside(mm.row, mm.time - siTime)) {
-      leftChainReduced_.push_back(mm);
+  if(left) {
+    // Left Chain
+    for(auto mm : leftChain_) {
+      if(timeChainForwardCut[siDet][siQuad]->IsInside(mm.row, mm.time - siTime)) {
+        leftChainReduced_.push_back(mm);
+      }
     }
-  }
-  // Left Strip
-  for(auto mm : leftStrip_) {
-    if(timeStripForwardCut[siDet][siQuad]->IsInside(mm.row, mm.time - siTime)) {
-      leftStripReduced_.push_back(mm);
+    // Left Strip
+    for(auto mm : leftStrip_) {
+      if(timeStripForwardCut[siDet][siQuad]->IsInside(mm.row, mm.time - siTime)) {
+        leftStripReduced_.push_back(mm);
+      }
     }
-  }
-  // Right Chain
-  for(auto mm : rightChain_) {
-    if(timeChainForwardCut[siDet][siQuad]->IsInside(mm.row, mm.time - siTime)) {
+    for(auto mm : rightChain_) {
       rightChainReduced_.push_back(mm);
     }
-  }
-  // Right Strip
-  for(auto mm : rightStrip_) {
-    if(timeStripForwardCut[siDet][siQuad]->IsInside(mm.row, mm.time - siTime)) {
+    for(auto mm : rightStrip_) {
       rightStripReduced_.push_back(mm);
+    }
+  }
+  else if(right) {
+    // Right Chain
+    for(auto mm : rightChain_) {
+      if(timeChainForwardCut[siDet][siQuad]->IsInside(mm.row, mm.time - siTime)) {
+        rightChainReduced_.push_back(mm);
+      }
+    }
+    // Right Strip
+    for(auto mm : rightStrip_) {
+      if(timeStripForwardCut[siDet][siQuad]->IsInside(mm.row, mm.time - siTime)) {
+        rightStripReduced_.push_back(mm);
+      }
+    }
+    for(auto mm : leftChain_) {
+      leftChainReduced_.push_back(mm);
+    }
+    for(auto mm : leftStrip_) {
+      leftStripReduced_.push_back(mm);
     }
   }
 
@@ -937,6 +1112,12 @@ bool Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::vec
                     siTime);
   }
 
+  // Assign proton track for side regions
+  std::vector<mmTrack> protonTrack_;
+  std::vector<mmTrack> protonTrackRaw_;
+  std::vector<mmTrack> otherTrack_;
+  std::vector<mmTrack> otherTrackRaw_;
+
   double leftTrackLength = 0.;
   double rightTrackLength = 0.;
   if(!chainStripMatchedLeft_.empty()) leftTrackLength = ChainStripSize(chainStripMatchedLeft_);
@@ -944,97 +1125,229 @@ bool Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::vec
 
   double protonTrackLength = 0.;
   double otherTrackLength = 0.;
+  double protonTrackAngle = 0.;
+  double otherTrackAngle = 0.;
   if(right) {
+    protonTrack_ = chainStripMatchedRight_;
+    protonTrackRaw_ = chainStripRawRight_;
+    otherTrack_ = chainStripMatchedLeft_;
+    otherTrackRaw_ = chainStripRawLeft_;
+
     protonTrackLength = rightTrackLength;
     otherTrackLength = leftTrackLength;
   }
   else if(left) {
+    protonTrack_ = chainStripMatchedLeft_;
+    protonTrackRaw_ = chainStripRawLeft_;
+    otherTrack_ = chainStripMatchedRight_;
+    otherTrackRaw_ = chainStripRawRight_;
+
     protonTrackLength = leftTrackLength;
     otherTrackLength = rightTrackLength;
   }
 
-//  if(leftTrackLength > 0 && rightTrackLength > 0) {
-//    std::cout << "Proton: " << protonTrackLength << "; Other: " << otherTrackLength << std::endl;
-//  }
-  if(protonTrackLength > 0  && otherTrackLength > 0) {
-    DrawEventTrackSideCanvas(totalEventTrackSideCanvas, centerBeamTotal_, chainStripMatchedLeft_, chainStripRawLeft_,
-          chainStripMatchedRight_, chainStripRawRight_);
-    totalEventTrackSideCanvas++;
+  // If proton length is very short or 0, event is bad (no matching?)
+  if(protonTrackLength < 0.1 || protonTrack_.empty()) return false;
 
-    auto *fitLeft = new HoughTrack();
-    fitLeft->AddTrack(chainStripMatchedLeft_, siDet, siQuad);
-    double minDistLeft = fitLeft->Fit();
-    std::vector<double> parsLeft = fitLeft->GetPars();
-    delete fitLeft;
-    double m_xcomponentLeft = fabs(parsLeft[1]);
-    double xAngleLeft = atan(m_xcomponentLeft);
+  bool oneProtonEvent = true;
+  bool goodEvent = true;
 
-    auto *fitRight = new HoughTrack();
-    fitRight->AddTrack(chainStripMatchedRight_, siDet, siQuad);
-    double minDistRight = fitRight->Fit();
-    std::vector<double> parsRight = fitRight->GetPars();
-    delete fitRight;
-    double m_xcomponentRight = fabs(parsRight[1]);
-    double xAngleRight = atan(m_xcomponentRight);
+  // Clean other track
+  if(otherTrack_.size() > 1) {
+    auto *fitOther = new HoughTrack();
+    fitOther->AddTrack(otherTrack_, siDet, siQuad);
+    double minDistOther = fitOther->Fit();
+    std::vector<double> parsOther = fitOther->GetPars();
+    delete fitOther;
+    double m_xComponentOther = fabs(parsOther[1]);
+    otherTrackAngle = atan(m_xComponentOther);
 
-    DrawEventTrackSidedECanvas(totalEventTrackSidedECanvas, chainStripRawLeft_, chainStripRawRight_, xAngleLeft, xAngleRight);
-    totalEventTrackSidedECanvas++;
+    int changes;
+    std::vector<mmTrack> otherTrackCleaned_;
+    std::vector<mmTrack> otherTrackCleanedRaw_;
+    bool change = true;
+    while(change) {
+      CleanSideTracks(otherTrackCleaned_, otherTrackCleanedRaw_, otherTrackRaw_, otherTrackAngle, changes);
+      otherTrack_ = otherTrackCleaned_;
+      otherTrackRaw_ = otherTrackCleanedRaw_;
+      if(changes == 0) change = false;
+
+      if(otherTrackCleanedRaw_.size() < 2 || otherTrack_.size() < 2) change = false;
+
+      auto *fitOther = new HoughTrack();
+      fitOther->AddTrack(otherTrack_, siDet, siQuad);
+      double minDistOther = fitOther->Fit();
+      std::vector<double> parsOther = fitOther->GetPars();
+      delete fitOther;
+      double m_xComponentOther = fabs(parsOther[1]);
+      otherTrackAngle = atan(m_xComponentOther);
+    }
   }
 
-//  if(otherTrackLength > 0.9*protonTrackLength) {
-//    DrawEventTrackSideCanvas(totalEventTrackSideCanvas, centerBeamTotal_, chainStripMatchedLeft_, chainStripRawLeft_,
-//        chainStripMatchedRight_, chainStripRawRight_);
-//    totalEventTrackSideCanvas++;
-//  }
+  // Check dE of other track and see if proton
+  if(otherTrack_.size() > 1) {
+    double dESide = 0.;
+    int totalSide = 0;
+    for(auto mm : otherTrackRaw_) {
+      dESide += mm.energy*cos(otherTrackAngle);
+      totalSide++;
+    }
+    dESide /= static_cast<double>(totalSide);
 
-//  if(otherTrackLength > 0.9*protonTrackLength) return false;
-
-//  if(!chainStripMatchedLeft_.empty() && !chainStripMatchedRight_.empty()) {
-//    // std::cout << "Det Fired: " << siDet << std::endl;
-//    // std::cout << "Left Size: " << ChainStripSize(chainStripMatchedLeft_) << '\t' << "Right Size: " <<
-//    //    ChainStripSize(chainStripMatchedRight_) << std::endl;
-//
-//    DrawEventTrackSideCanvas(totalEventTrackSideCanvas, centerBeamTotal_, chainStripMatchedLeft_, chainStripMatchedRight_);
-//    totalEventTrackSideCanvas++;
-//  }
-
-  // Assign proton track for side regions
-  std::vector<mmTrack> protonTrack;
-
-  if(left) {
-    protonTrack = chainStripMatchedLeft_;
-  }
-  else if(right) {
-    protonTrack = chainStripMatchedRight_;
+    if(dESide > 200 && dESide < 1700) oneProtonEvent = false;
   }
 
+  if(!oneProtonEvent) return false;
+
+  // Check if dE is proton (dE average is between 200 - 2700)
+  if(!centerProton_.empty()) {
+    // Find dE for center region
+    double dECenter = 0.;
+    int totalRows = 0;
+    for(auto mm : centerProton_) {
+      if(mm.row > 115 && mm.row < 124 && mm.row != 117) {
+        if(mm.energy < 50) continue;
+        dECenter += mm.energy;
+        totalRows++;
+      }
+    }
+    dECenter /= static_cast<double>(totalRows);
+
+    if(dECenter > 200 && dECenter < 2700) oneProtonEvent = false;
+  }
+
+  if(!oneProtonEvent) return false;
+
+  // Initial fit of proton track
+  auto *fitProton = new HoughTrack();
+  fitProton->AddTrack(protonTrack_, siDet, siQuad);
+  double minDistProton = fitProton->FitRestricted();
+  std::vector<double> parsProton = fitProton->GetPars();
+  double houghAngleXY = fitProton->GetHoughAngleXY();
+  double houghAngleYZ = fitProton->GetHoughAngleYZ();
+  hHoughAngle[siDet]->Fill(houghAngleXY);
+  delete fitProton;
+  double m_xComponentProton = fabs(parsProton[1]);
+  protonTrackAngle = atan(m_xComponentProton);
+
+  // Clean proton track
+  int changes;
+  std::vector<mmTrack> protonTrackCleaned_;
+  std::vector<mmTrack> protonTrackCleanedRaw_;
+  bool change = true;
+  while(change) {
+    CleanSideTracks(protonTrackCleaned_, protonTrackCleanedRaw_, protonTrackRaw_, protonTrackAngle, changes);
+    protonTrack_ = protonTrackCleaned_;
+    protonTrackRaw_ = protonTrackCleanedRaw_;
+    if(changes == 0) change = false;
+
+    if(protonTrackRaw_.size() < 2 || protonTrack_.size() < 2) change = false;
+
+    auto *fitProton = new HoughTrack();
+    fitProton->AddTrack(protonTrack_, siDet, siQuad);
+    double minDistProton = fitProton->FitRestricted();
+    std::vector<double> parsProton = fitProton->GetPars();
+    delete fitProton;
+    double m_xComponentProton = fabs(parsProton[1]);
+    protonTrackAngle = atan(m_xComponentProton);
+  }
+
+  if(protonTrack_.empty()) return false;
+
+  // Remove really small tracks when no beam track
+  if(centerBeamTotal_.empty()) {
+    double protonTrackLength = ChainStripSize(protonTrack_);
+    if(protonTrackLength < 10) goodEvent = false;
+  }
+
+  if(!oneProtonEvent) return false;
+  if(!goodEvent) return false;
 
   // Find vertex using the proton track in side regions
   vertexPositionX = 0.;
   vertexPositionY = -400.;
   vertexPositionZ = 0.;
 
-  double protonEnergy = 0.;
-
-  if(protonTrack.empty()) {
-    // std::cout << "protonTrack Empty: " << protonTrackLength << " OtherTrack: " << otherTrackLength << std::endl;
-    return false;
+  SideVertexFinder(centerBeamTotal_, protonTrack_, vertexPositionX, vertexPositionY, vertexPositionZ, parsProton);
+  if(vertexPositionY < -390) {
+    SideVertexFinderSingleHelp(centerBeamTotal_, protonTrack_, vertexPositionX, vertexPositionY, vertexPositionZ, parsProton);
+  }
+  if(vertexPositionY < -390) {
+    SideVertexFinderHelp(centerBeamTotal_, protonTrack_, vertexPositionX, vertexPositionY, vertexPositionZ, parsProton);
   }
 
+  if(vertexPositionY < -390) {
+    DrawEventTrackSideCanvas(totalEventTrackSideCanvas, centerBeamTotal_, centerProton_, protonTrack_, protonTrackRaw_,
+              otherTrack_, otherTrackRaw_, parsProton);
+    totalEventTrackSideCanvas++;
+  }
+
+  // Plot XZ hit position of forward non-central detectors
+  double x, y, z;
+  line(siYPosForward, parsProton, x, y, z);
+  siPosX = x;
+  siPosY = siYPosForward;
+  siPosZ = z;
+  hHitPositionsXZForward->Fill(x, z);
+  hHitPositionsXZForwardInd[siDet]->Fill(x, z);
+
+  double vertexToSi = siYPosForward - vertexPositionY;
+
+  double siX, siY, siZ;
+  line(siYPosForward, parsProton, siX, siY, siZ);
+
+  TVector3 v1(siX, vertexToSi, siZ);
+  TVector3 v2(0, vertexToSi, 0);
+  angle = v1.Angle(v2);
+  double cosAngle = cos(angle);
+
+  double pathLength = vertexToSi/cosAngle;
+
+  if(pathLength < 0) pathLength = 200.;
+  if(pathLength > 700) pathLength = 700.;
+
+  double protonEnergy = protonMethane->AddBack(totalEnergy/1000., pathLength);
+  double beamEnergy = protonEnergy*(m1 + m2)*(m1 + m2)/(4.*m1*m2*cosAngle*cosAngle);
+
+  cmEnergy = beamEnergy*m2/(m1 + m2);
+
+  hVertexSiEForward[siDet]->Fill(siEnergy, vertexPositionY);
+  hVertexSiEForwardCal[siDet]->Fill(siEnergyCal, vertexPositionY);
+  hVertexSiEForwardCalTotal[siDet]->Fill(totalEnergy, vertexPositionY);
+
+  hAngleEForward[siDet]->Fill(siEnergy, angle);
+  hAngleEForwardCal[siDet]->Fill(siEnergyCal, angle);
+  hAngleEForwardCalTotal[siDet]->Fill(totalEnergy, angle);
+  hAngleEForwardProtonEnergy[siDet]->Fill(protonEnergy, angle);
+
+  hVertexAngleForward[siDet]->Fill(vertexPositionY, angle);
+
+  if(siDet == 0 || siDet == 1 || siDet == 9) {
+//    hVertexSiETotalRegion3->Fill(totalEnergy, vertexPositionY);
+//    s3->Fill(cmEnergy);
+    if(angleTotEnergyCut[siDet]->IsInside(protonEnergy, angle)) {
+      hVertexSiETotalRegion3->Fill(totalEnergy, vertexPositionY);
+      hVertexCMERegion3->Fill(cmEnergy, vertexPositionY);
+      s3->Fill(cmEnergy);
+    }
+  }
+
+  return true;
+}
+
+void Spectra::SideVertexFinder(std::vector<mmTrack> centerBeam_, std::vector<mmTrack> protonTrack_, double &vertexPositionX,
+                               double &vertexPositionY, double &vertexPositionZ, std::vector<double> &parsProton) {
+  vertexPositionX = 0.;
+  vertexPositionY = -400.;
+  vertexPositionZ = 0.;
 
   auto *fitProton = new HoughTrack();
-  fitProton->AddTrack(protonTrack, siDet, siQuad);
-  double minDist = fitProton->FitRestricted();
-  std::vector<double> parsProton = fitProton->GetPars();
-  double houghAngleXY = fitProton->GetHoughAngleXY();
-  double houghAngleYZ = fitProton->GetHoughAngleYZ();
-  hHoughAngle[siDet]->Fill(houghAngleXY);
-
+  fitProton->AddTrack(protonTrack_, siDet, siQuad);
+  double minDistProton = fitProton->FitRestricted();
+  parsProton = fitProton->GetPars();
   delete fitProton;
 
-  unsigned long mmCenterSize = centerBeamTotal_.size();
-  /*
-  if(mmCenterSize == 0) {
+  if(centerBeam_.empty()) {
     double beamX_old = 0.;
     double beamY_old = 250.;
     double beamZ_old = 0.;
@@ -1048,7 +1361,7 @@ bool Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::vec
     double xDiff_old = beamX - protonX_old;
     double xDiff = xDiff_old;
     double yPos = beamY_old;
-    while(yPos > -300.) {
+    while(yPos > -350.) {
       beamY = yPos;
       line(beamY, parsProton, x, y, z);
       protonX = x;
@@ -1064,29 +1377,14 @@ bool Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::vec
       beamY_old = beamY;
       protonX_old = protonX;
       xDiff_old = xDiff;
-      yPos -= 1.;
-    }
-    // Did not fit well
-    if(vertexPositionY == -400) {
-      double m_xcomponent = fabs(parsProton[1]);
-      double xAngle = atan(m_xcomponent);
-
-      double yDist = siXPosForward[siDet][siQuad]/fabs(tan(xAngle));
-
-      if(250. - yDist < -400) {
-        vertexPositionY = -400.;
-      }
-      else {
-        vertexPositionY = 250. - yDist;
-      }
+      yPos -= 0.2;
     }
   }
-  else if()
   else {
     // Loop through beam in central region starting from last
-    double beamX_old = centerBeamTotal_[mmCenterSize - 1].xPosition;
-    double beamY_old = centerBeamTotal_[mmCenterSize - 1].yPosition;
-    double beamZ_old = centerBeamTotal_[mmCenterSize - 1].height;
+    double beamX_old = centerBeam_[0].xPosition;
+    double beamY_old = centerBeam_[0].yPosition;
+    double beamZ_old = centerBeam_[0].height;
     double beamX = beamX_old;
     double beamY = beamY_old;
     double beamZ = beamZ_old;
@@ -1097,10 +1395,10 @@ bool Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::vec
     double xDiff_old = beamX - protonX_old;
     double xDiff = xDiff_old;
     Bool_t foundVertex = false;
-    for(ULong_t i = mmCenterSize - 1; i > -1; i--) {
-      beamX = centerBeamTotal_[i].xPosition;
-      beamY = centerBeamTotal_[i].yPosition;
-      beamZ = centerBeamTotal_[i].height;
+    for(auto mm : centerBeam_) {
+      beamX = mm.xPosition;
+      beamY = mm.yPosition;
+      beamZ = mm.height;
       line(beamY, parsProton, x, y, z);
       protonX = x;
       xDiff = beamX - protonX;
@@ -1120,7 +1418,8 @@ bool Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::vec
       xDiff_old = xDiff;
     }
     if(!foundVertex) {
-      double beamY = -1.;
+      beamX = centerBeam_[0].xPosition;
+      beamY = 250.;
       while(beamY > -300.) {
         line(beamY, parsProton, x, y, z);
         protonX = x;
@@ -1139,77 +1438,230 @@ bool Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::vec
         beamY -= 1.;
       }
     }
-    // Did not fit well
-    if(vertexPositionY == -400) {
-      double m_xcomponent = fabs(parsProton[1]);
-      double xAngle = atan(m_xcomponent);
+  }
+}
 
-      double yDist = siXPosForward[siDet][siQuad]/fabs(tan(xAngle));
+void Spectra::SideVertexFinderSingleHelp(std::vector<mmTrack> centerBeam_, std::vector<mmTrack> protonTrack_, double &vertexPositionX,
+                               double &vertexPositionY, double &vertexPositionZ, std::vector<double> &parsProton) {
+  vertexPositionX = 0.;
+  vertexPositionY = -400.;
+  vertexPositionZ = 0.;
 
-      if(250. - yDist < -400) {
-        vertexPositionY = -400.;
+  auto *fitProton = new HoughTrack();
+  fitProton->AddTrack(protonTrack_, siDet, siQuad);
+  double minDistProton = fitProton->FitRestrictedSingleHelp();
+  parsProton = fitProton->GetPars();
+  delete fitProton;
+
+  if(centerBeam_.empty()) {
+    double beamX_old = 0.;
+    double beamY_old = 250.;
+    double beamZ_old = 0.;
+    double beamX = beamX_old;
+    double beamY = beamY_old;
+    double beamZ = beamZ_old;
+    double x, y, z;
+    line(beamY, parsProton, x, y, z);
+    double protonX_old = x;
+    double protonX = protonX_old;
+    double xDiff_old = beamX - protonX_old;
+    double xDiff = xDiff_old;
+    double yPos = beamY_old;
+    while(yPos > -350.) {
+      beamY = yPos;
+      line(beamY, parsProton, x, y, z);
+      protonX = x;
+      xDiff = beamX - protonX;
+      if(xDiff_old*xDiff < 0) {
+        double m = (beamY - beamY_old)/(xDiff - xDiff_old);
+        double b = beamY - m*xDiff;
+        vertexPositionX = beamX;
+        vertexPositionY = beamY;
+        vertexPositionZ = beamZ;
+        break;
       }
-      else {
-        vertexPositionY = 250. - yDist;
+      beamY_old = beamY;
+      protonX_old = protonX;
+      xDiff_old = xDiff;
+      yPos -= 0.2;
+    }
+  }
+  else {
+    // Loop through beam in central region starting from last
+    double beamX_old = centerBeam_[0].xPosition;
+    double beamY_old = centerBeam_[0].yPosition;
+    double beamZ_old = centerBeam_[0].height;
+    double beamX = beamX_old;
+    double beamY = beamY_old;
+    double beamZ = beamZ_old;
+    double x, y, z;
+    line(beamY, parsProton, x, y, z);
+    double protonX_old = x;
+    double protonX = protonX_old;
+    double xDiff_old = beamX - protonX_old;
+    double xDiff = xDiff_old;
+    Bool_t foundVertex = false;
+    for(auto mm : centerBeam_) {
+      beamX = mm.xPosition;
+      beamY = mm.yPosition;
+      beamZ = mm.height;
+      line(beamY, parsProton, x, y, z);
+      protonX = x;
+      xDiff = beamX - protonX;
+      if(xDiff_old*xDiff < 0) {
+        double m = (beamY - beamY_old)/(xDiff - xDiff_old);
+        double b = beamY - m*xDiff;
+        vertexPositionX = beamX;
+        vertexPositionY = b;
+        vertexPositionZ = beamZ;
+        foundVertex = true;
+        break;
+      }
+      beamX_old = beamX;
+      beamY_old = beamY;
+      beamZ_old = beamZ;
+      protonX_old = protonX;
+      xDiff_old = xDiff;
+    }
+    if(!foundVertex) {
+      beamX = centerBeam_[0].xPosition;
+      beamY = 250.;
+      while(beamY > -300.) {
+        line(beamY, parsProton, x, y, z);
+        protonX = x;
+        xDiff = beamX - x;
+        if(xDiff*xDiff_old < 0) {
+          double m = (beamY - beamY_old)/(xDiff - xDiff_old);
+          double b = beamY - m*xDiff;
+          vertexPositionX = beamX;
+          vertexPositionY = b;
+          vertexPositionZ = 0.;
+          break;
+        }
+        beamY_old = beamY;
+        protonX_old = protonX;
+        xDiff_old = xDiff;
+        beamY -= 1.;
       }
     }
   }
-
-  // Plot XZ hit position of forward non-central detectors
-  double x, y, z;
-  line(siYPosForward, parsProton, x, y, z);
-  siPosX = x;
-  siPosY = siYPosForward;
-  siPosZ = z;
-  hHitPositionsXZForward->Fill(x, z);
-  hHitPositionsXZForwardInd[siDet]->Fill(x, z);
-
-  double vertexToSi = siYPosForward - vertexPositionY;
-
-  double siX, siY, siZ;
-  line(siYPosForward, parsProton, siX, siY, siZ);
-
-  // double angleX = atan(fabs(siX)/(vertexToSi));
-  // double angleZ = atan(fabs(siZ)/(vertexToSi));
-  // double cosAngle = cos(angleX)*cos(angleZ);
-  // angle = acos(cosAngle);
-
-  TVector3 v1(siX, vertexToSi, siZ);
-  TVector3 v2(0, vertexToSi, 0);
-  angle = v1.Angle(v2);
-  double cosAngle = cos(angle);
-
-  double pathLength = vertexToSi/cosAngle;
-
-  if(pathLength < 0) pathLength = 200.;
-  if(pathLength > 700) pathLength = 700.;
-
-  protonEnergy = protonMethane->AddBack(totalEnergy/1000., pathLength);
-  double beamEnergy = protonEnergy*(m1 + m2)*(m1 + m2)/(4.*m1*m2*cosAngle*cosAngle);
-
-  cmEnergy = beamEnergy*m2/(m1 + m2);
-
-  hVertexSiEForward[siDet]->Fill(siEnergy, vertexPositionY);
-  hVertexSiEForwardCal[siDet]->Fill(siEnergyCal, vertexPositionY);
-  hVertexSiEForwardCalTotal[siDet]->Fill(totalEnergy, vertexPositionY);
-
-  hAngleEForward[siDet]->Fill(siEnergy, angle);
-  hAngleEForwardCal[siDet]->Fill(siEnergyCal, angle);
-  hAngleEForwardCalTotal[siDet]->Fill(totalEnergy, angle);
-  hAngleEForwardProtonEnergy[siDet]->Fill(protonEnergy, angle);
-
-  hVertexAngleForward[siDet]->Fill(vertexPositionY, angle);
-
-  if(siDet == 0 || siDet == 1 || siDet == 9) {
-    if(angleTotEnergyCut[siDet]->IsInside(protonEnergy, angle)) {
-      hVertexSiETotalRegion3->Fill(totalEnergy, vertexPositionY);
-      hVertexCMERegion3->Fill(cmEnergy, vertexPositionY);
-      s1->Fill(cmEnergy);
+  if(vertexPositionY < -390) {
+    double m_xcomponent = fabs(parsProton[1]);
+    double xAngle = atan(m_xcomponent);
+    double yDist = siXPosForward[siDet][siQuad]/fabs(tan(xAngle));
+    if(275. - yDist < -400) {
+      vertexPositionY = -400.;
+    }
+    else {
+      vertexPositionY = 275. - yDist;
     }
   }
-  */
+}
 
-  return true;
+void Spectra::SideVertexFinderHelp(std::vector<mmTrack> centerBeam_, std::vector<mmTrack> protonTrack_, double &vertexPositionX,
+                               double &vertexPositionY, double &vertexPositionZ, std::vector<double> &parsProton) {
+  vertexPositionX = 0.;
+  vertexPositionY = -400.;
+  vertexPositionZ = 0.;
+
+  auto *fitProton = new HoughTrack();
+  fitProton->AddTrack(protonTrack_, siDet, siQuad);
+  double minDistProton = fitProton->FitRestrictedHelp();
+  parsProton = fitProton->GetPars();
+  delete fitProton;
+
+  if(centerBeam_.empty()) {
+    double beamX_old = 0.;
+    double beamY_old = 250.;
+    double beamZ_old = 0.;
+    double beamX = beamX_old;
+    double beamY = beamY_old;
+    double beamZ = beamZ_old;
+    double x, y, z;
+    line(beamY, parsProton, x, y, z);
+    double protonX_old = x;
+    double protonX = protonX_old;
+    double xDiff_old = beamX - protonX_old;
+    double xDiff = xDiff_old;
+    double yPos = beamY_old;
+    while(yPos > -350.) {
+      beamY = yPos;
+      line(beamY, parsProton, x, y, z);
+      protonX = x;
+      xDiff = beamX - protonX;
+      if(xDiff_old*xDiff < 0) {
+        double m = (beamY - beamY_old)/(xDiff - xDiff_old);
+        double b = beamY - m*xDiff;
+        vertexPositionX = beamX;
+        vertexPositionY = beamY;
+        vertexPositionZ = beamZ;
+        break;
+      }
+      beamY_old = beamY;
+      protonX_old = protonX;
+      xDiff_old = xDiff;
+      yPos -= 0.2;
+    }
+  }
+  else {
+    // Loop through beam in central region starting from last
+    double beamX_old = centerBeam_[0].xPosition;
+    double beamY_old = centerBeam_[0].yPosition;
+    double beamZ_old = centerBeam_[0].height;
+    double beamX = beamX_old;
+    double beamY = beamY_old;
+    double beamZ = beamZ_old;
+    double x, y, z;
+    line(beamY, parsProton, x, y, z);
+    double protonX_old = x;
+    double protonX = protonX_old;
+    double xDiff_old = beamX - protonX_old;
+    double xDiff = xDiff_old;
+    Bool_t foundVertex = false;
+    for(auto mm : centerBeam_) {
+      beamX = mm.xPosition;
+      beamY = mm.yPosition;
+      beamZ = mm.height;
+      line(beamY, parsProton, x, y, z);
+      protonX = x;
+      xDiff = beamX - protonX;
+      if(xDiff_old*xDiff < 0) {
+        double m = (beamY - beamY_old)/(xDiff - xDiff_old);
+        double b = beamY - m*xDiff;
+        vertexPositionX = beamX;
+        vertexPositionY = b;
+        vertexPositionZ = beamZ;
+        foundVertex = true;
+        break;
+      }
+      beamX_old = beamX;
+      beamY_old = beamY;
+      beamZ_old = beamZ;
+      protonX_old = protonX;
+      xDiff_old = xDiff;
+    }
+    if(!foundVertex) {
+      beamX = centerBeam_[0].xPosition;
+      beamY = 250.;
+      while(beamY > -300.) {
+        line(beamY, parsProton, x, y, z);
+        protonX = x;
+        xDiff = beamX - x;
+        if(xDiff*xDiff_old < 0) {
+          double m = (beamY - beamY_old)/(xDiff - xDiff_old);
+          double b = beamY - m*xDiff;
+          vertexPositionX = beamX;
+          vertexPositionY = b;
+          vertexPositionZ = 0.;
+          break;
+        }
+        beamY_old = beamY;
+        protonX_old = protonX;
+        xDiff_old = xDiff;
+        beamY -= 1.;
+      }
+    }
+  }
 }
 
 std::vector<mmCenter> Spectra::CenterReduceNoise(std::vector<mmCenter> center) {
@@ -1460,6 +1912,42 @@ std::pair<int, int> Spectra::CenterGetDerivMax(std::vector<centerDeriv> threePoi
   return pair;
 }
 
+void Spectra::CleanLeftStrip(std::vector<mmChainStrip> &cleaned, std::vector<mmChainStrip> left) {
+  cleaned.clear();
+
+  if(left.size() < 2) return;
+
+  for(uint i = 0; i < left.size(); i++) {
+    bool validStrip = false;
+
+    std::vector<int>::iterator it = std::find(leftStripHits.begin(), leftStripHits.end(), left[i].row);
+    if(it == leftStripHits.end()) continue;
+    int listIndex = std::distance(leftStripHits.begin(), it);
+
+    if(!validStrip) return;
+
+    cleaned.push_back(left[i]);
+    // std::cout << mm.row << '\t' << listIndex << std::endl;
+  }
+
+  return;
+}
+
+void Spectra::CleanRightStrip(std::vector<mmChainStrip> &cleaned, std::vector<mmChainStrip> right) {
+  cleaned.clear();
+
+  if(right.size() < 2) return;
+
+  for(auto mm : right) {
+    std::vector<int>::iterator it = std::find(rightStripHits.begin(), rightStripHits.end(), mm.row);
+    if(it == rightStripHits.end()) continue;
+    int listIndex = std::distance(rightStripHits.begin(), it);
+    // std::cout << mm.row << '\t' << listIndex << std::endl;
+  }
+
+  return;
+}
+
 void Spectra::ChainStripMatch(std::vector<mmTrack> &chainStripMatched, std::vector<mmTrack> &chainStripRaw,
                               std::vector<mmChainStrip> chain_,
                               std::vector<mmChainStrip> strip_, bool leftSide, double siTime) {
@@ -1576,6 +2064,43 @@ double Spectra::ChainStripSize(std::vector<mmTrack> chainStripMatched) {
   return distance;
 }
 
+void Spectra::CleanSideTracks(std::vector<mmTrack> &cleaned_, std::vector<mmTrack> &cleanedRaw_, std::vector<mmTrack> trackRaw_,
+                              double angle, int &changes) {
+  // Get dE average and compare, remove hits with difference between average > 400
+  changes = 0;
+  double maxDiff = 400.;
+
+  double averageEnergy = 0.;
+  int totalRows = 0;
+  for(auto mm : trackRaw_) {
+    if(mm.energy > 2700) continue;
+    averageEnergy += mm.energy*cos(angle);
+    totalRows++;
+  }
+  averageEnergy /= static_cast<double>(totalRows);
+
+  cleaned_.clear();
+  cleanedRaw_.clear();
+  for(auto mm : trackRaw_) {
+    if(fabs(mm.energy*cos(angle) - averageEnergy) > maxDiff) {
+      changes++;
+      continue;
+    }
+    cleanedRaw_.push_back(mm);
+  }
+
+  if(cleanedRaw_.size() < 2) return;
+
+  unsigned long numTimeBuckets = ChainStripTime0NumTimeBuckets(cleanedRaw_);
+  if(numTimeBuckets < 4) {
+    ChainStripMatchingBoxTime0(cleaned_, cleanedRaw_);
+  }
+  else {
+    cleaned_ = cleanedRaw_;
+  }
+  return;
+}
+
 void Spectra::DivideTargetThickness(TH1F *f) {
   int i_size = f->GetSize();
 
@@ -1600,25 +2125,37 @@ void Spectra::DivideTargetThickness(TH1F *f) {
 }
 
 void Spectra::ReadSolidAngle() {
-  std::ifstream in("csReg3.out");
-  assert(in.is_open());
 
   double var1, var2, var3, var4;
-  std::vector<double> cmEnergy_, solidAngle_, labAngle_, cmAngle_;
-  while(in >> var1 >> var2 >> var3 >> var3) {
-    cmEnergy_.push_back(var1);
-    solidAngle_.push_back(var2);
-    labAngle_.push_back(var3);
-    cmAngle_.push_back(var4);
+
+  std::ifstream inReg1("csReg1_4.out");
+  assert(inReg1.is_open());
+  std::vector<double> cmEnergyReg1_, solidAngleReg1_, labAngleReg1_, cmAngleReg1_;
+  while(inReg1 >> var1 >> var2 >> var3 >> var4) {
+    cmEnergyReg1_.push_back(var1);
+    solidAngleReg1_.push_back(var2);
+    labAngleReg1_.push_back(var3);
+    cmAngleReg1_.push_back(var4);
   }
+  reg1SA.SetPoints(cmEnergyReg1_, solidAngleReg1_);
+  reg1CMAngle.SetPoints(cmEnergyReg1_, cmAngleReg1_);
+  inReg1.close();
 
-  reg3SA.SetPoints(cmEnergy_, solidAngle_);
-  reg3CMAngle.SetPoints(cmEnergy_, cmAngle_);
-
-  in.close();
+  std::ifstream inReg3("csReg3.out");
+  assert(inReg3.is_open());
+  std::vector<double> cmEnergyReg3_, solidAngleReg3_, labAngleReg3_, cmAngleReg3_;
+  while(inReg3 >> var1 >> var2 >> var3 >> var4) {
+    cmEnergyReg3_.push_back(var1);
+    solidAngleReg3_.push_back(var2);
+    labAngleReg3_.push_back(var3);
+    cmAngleReg3_.push_back(var4);
+  }
+  reg3SA.SetPoints(cmEnergyReg3_, solidAngleReg3_);
+  reg3CMAngle.SetPoints(cmEnergyReg3_, cmAngleReg3_);
+  inReg3.close();
 }
 
-void Spectra::SolidAngle(TH1F *f) {
+void Spectra::SolidAngle(TH1F *f, int region) {
   int i_size = f->GetSize();
   TAxis *x_axis = f->GetXaxis();
 
@@ -1627,10 +2164,15 @@ void Spectra::SolidAngle(TH1F *f) {
     double binContent = f->GetBinContent(i);
     double binError = f->GetBinError(i);
 
-    double simCS = reg3SA(binCenter);
-    // std::cout << binCenter << '\t' << simCS << std::endl;
+    double simCS = 0;
+    if(region == 1) {
+      simCS = reg1SA(binCenter);
+    }
+    if(region == 3) {
+      simCS = reg3SA(binCenter);
+    }
 
-    if(simCS == 0) {
+    if(simCS < 0.001) {
       f->SetBinContent(i, 0.);
       f->SetBinError(i, 0.);
     }

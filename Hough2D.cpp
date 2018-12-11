@@ -47,6 +47,43 @@ Hough2D::Hough2D(std::vector<mmTrack> initPoints, int det, int quad, int binsX, 
   CalculateHoughRestricted();
 }
 
+Hough2D::Hough2D(std::vector<mmTrack> initPoints, int det, int quad, int help): nBinsX(360), nBinsY(1440) {
+  for(auto point : initPoints) {
+    xy initPointsXY = {point.xPosition, point.yPosition};
+    yz initPointsYZ = {point.yPosition, point.height};
+    pointsXY.push_back(initPointsXY);
+    pointsYZ.push_back(initPointsYZ);
+  }
+  // Single Si Help
+  if(help == 0) {
+    xy initPointsXY = {siXPosForward[det][quad], 275.34};
+    pointsXY.push_back(initPointsXY);
+    pointsXY.push_back(initPointsXY);
+  }
+  // Full Si Help (3 points)
+  else if(help == 1) {
+    xy initPointsXY1 = {siXPosForward[det][quad] - 12.5, 275.34};
+    xy initPointsXY2 = {siXPosForward[det][quad], 275.34};
+    xy initPointsXY3 = {siXPosForward[det][quad] + 12.5, 275.34};
+    pointsXY.push_back(initPointsXY1);
+    pointsXY.push_back(initPointsXY2);
+    pointsXY.push_back(initPointsXY3);
+    pointsXY.push_back(initPointsXY1);
+    pointsXY.push_back(initPointsXY2);
+    pointsXY.push_back(initPointsXY3);
+    pointsXY.push_back(initPointsXY1);
+    pointsXY.push_back(initPointsXY2);
+    pointsXY.push_back(initPointsXY3);
+  }
+
+  detFired = det;
+  quadFired = quad;
+
+  CalculateHoughRestricted();
+}
+
+
+
 void Hough2D::SetPoints(std::vector<mmTrack> initPoints) {
   for(auto point : initPoints) {
     xy initPointsXY = {point.xPosition, point.yPosition};

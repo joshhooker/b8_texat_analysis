@@ -37,9 +37,6 @@ double HoughTrack::Fit() {
   houghDYZ = houghEvent->GetMaxDYZ();
   delete houghEvent;
 
-  // std::cout << houghAngleXY << '\t' << houghDXY << std::endl;
-  // std::cout << houghAngleYZ << '\t' << houghDYZ << std::endl;
-
   par.push_back(houghDXY/cos(houghAngleXY*M_PI/180.));
   par.push_back(-sin(houghAngleXY*M_PI/180.)/cos(houghAngleXY*M_PI/180.));
   par.push_back(houghDYZ/sin(houghAngleYZ*M_PI/180.));
@@ -59,8 +56,43 @@ double HoughTrack::FitRestricted() {
   houghDYZ = houghEvent->GetMaxDYZ();
   delete houghEvent;
 
-  // std::cout << houghAngleXY << '\t' << houghDXY << std::endl;
-  // std::cout << houghAngleYZ << '\t' << houghDYZ << std::endl;
+  par.push_back(houghDXY/cos(houghAngleXY*M_PI/180.));
+  par.push_back(-sin(houghAngleXY*M_PI/180.)/cos(houghAngleXY*M_PI/180.));
+  par.push_back(houghDYZ/sin(houghAngleYZ*M_PI/180.));
+  par.push_back(-cos(houghAngleYZ*M_PI/180.)/sin(houghAngleYZ*M_PI/180.));
+
+  double trackMinDistance = CalculateDistance();
+
+  return trackMinDistance;
+}
+
+double HoughTrack::FitRestrictedSingleHelp() {
+  par.clear();
+  Hough2D *houghEvent = new Hough2D(track, detFired, quadFired, 0);
+  houghAngleXY = houghEvent->GetMaxThetaXY();
+  houghDXY = houghEvent->GetMaxDXY();
+  houghAngleYZ = houghEvent->GetMaxThetaYZ();
+  houghDYZ = houghEvent->GetMaxDYZ();
+  delete houghEvent;
+
+  par.push_back(houghDXY/cos(houghAngleXY*M_PI/180.));
+  par.push_back(-sin(houghAngleXY*M_PI/180.)/cos(houghAngleXY*M_PI/180.));
+  par.push_back(houghDYZ/sin(houghAngleYZ*M_PI/180.));
+  par.push_back(-cos(houghAngleYZ*M_PI/180.)/sin(houghAngleYZ*M_PI/180.));
+
+  double trackMinDistance = CalculateDistance();
+
+  return trackMinDistance;
+}
+
+double HoughTrack::FitRestrictedHelp() {
+  par.clear();
+  Hough2D *houghEvent = new Hough2D(track, detFired, quadFired, 1);
+  houghAngleXY = houghEvent->GetMaxThetaXY();
+  houghDXY = houghEvent->GetMaxDXY();
+  houghAngleYZ = houghEvent->GetMaxThetaYZ();
+  houghDYZ = houghEvent->GetMaxDYZ();
+  delete houghEvent;
 
   par.push_back(houghDXY/cos(houghAngleXY*M_PI/180.));
   par.push_back(-sin(houghAngleXY*M_PI/180.)/cos(houghAngleXY*M_PI/180.));

@@ -20,7 +20,10 @@ set(SCRIPTS
     averageBeamEnergy.dat
     b8_methane.dat
     centerGain.dat
+    centralPeakVertex.out
     csiCalibration.dat
+    csReg1.out
+    csReg1_4.out
     csReg3.out
     cuts.root
     EnergyLoss.dat

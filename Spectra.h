@@ -290,6 +290,8 @@ private:
 
   // Cross Section
   TH1F* s1;
+  TH1F* s2;
+  TH1F* s3;
 
   void WriteHistograms();
 
@@ -337,8 +339,8 @@ private:
   TCanvas* centerBeamLinearCanvas[5];
 
   // Draw Event Track
-  void DrawEventTrackSideCanvas(int count, std::vector<mmTrack> center_, std::vector<mmTrack> left_, std::vector<mmTrack> leftRaw_,
-      std::vector<mmTrack> right_, std::vector<mmTrack> rightRaw_);
+  void DrawEventTrackSideCanvas(int count, std::vector<mmTrack> center_, std::vector<mmTrack> centerProton_, std::vector<mmTrack> left_, std::vector<mmTrack> leftRaw_,
+      std::vector<mmTrack> right_, std::vector<mmTrack> rightRaw_, std::vector<double> parProton);
   int totalEventTrackSideCanvas;
   int eventTrackSideCanvasNum, eventTrackSideCanvasXYNum, eventTrackSideCanvasXNum, eventTrackSideCanvasYNum;
   TCanvas* eventTrackSideCanvas[5];
@@ -369,13 +371,19 @@ private:
   void InitAverageBeamEnergy();
   double averageBeamEnergy[6][128];
 
+// Central Max Peak
+  void InitMaxPeak();
+  std::map<int, double> maxPeakMap;
+
 // General Methods
   bool AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std::vector<mmTrack> centerBeamTotal_,
-                              std::vector<mmTrack> centerProton_, std::map<int, double> centralPadTotalEnergy);
+                              std::vector<mmTrack> centerProton_, std::map<int, double> centralPadTotalEnergy,
+                              std::vector<mmChainStrip> leftChain_, std::vector<mmChainStrip> leftStrip_,
+                              std::vector<mmChainStrip> rightChain_, std::vector<mmChainStrip> rightStrip_);
   bool AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::vector<mmTrack> centerBeamTotal_,
+                           std::vector<mmTrack> centerProton_,
                            std::vector<mmChainStrip> leftChain_, std::vector<mmChainStrip> leftStrip_,
-                           std::vector<mmChainStrip> rightChain_,
-                           std::vector<mmChainStrip> rightStrip_);
+                           std::vector<mmChainStrip> rightChain_, std::vector<mmChainStrip> rightStrip_);
   bool AnalysisLeftSide();
 
 // MicroMegas Functions
@@ -395,6 +403,8 @@ private:
   std::vector<double> FitCenterPadsLinear(std::vector<mmTrack> centerMatched_, int vertexRow);
 
   // Side Functions
+  void CleanLeftStrip(std::vector<mmChainStrip> &cleaned, std::vector<mmChainStrip> left);
+  void CleanRightStrip(std::vector<mmChainStrip> &cleaned, std::vector<mmChainStrip> rightStrip);
   void ChainStripMatch(std::vector<mmTrack> &chainStripMatched, std::vector<mmTrack> &chainStripRaw,
                        std::vector<mmChainStrip> chain_,
                        std::vector<mmChainStrip> strip_, bool leftSide, double siTime);
@@ -403,6 +413,15 @@ private:
   size_t ChainStripTime0NumTimeBuckets(std::vector<mmTrack> matched);
   void ChainStripMatchingBoxTime0(std::vector<mmTrack> &chainStripMatched, std::vector<mmTrack> time0);
   double ChainStripSize(std::vector<mmTrack> chainStripMatched);
+  void CleanSideTracks(std::vector<mmTrack> &cleaned, std::vector<mmTrack> &cleanedRaw, std::vector<mmTrack> track,
+                       double angle, int &changes);
+
+  void SideVertexFinder(std::vector<mmTrack> centerBeam_, std::vector<mmTrack> protonTrack_, double &vertexPositionX,
+                        double &vertexPositionY, double &vertexPositionZ, std::vector<double> &parsProton);
+  void SideVertexFinderSingleHelp(std::vector<mmTrack> centerBeam_, std::vector<mmTrack> protonTrack_, double &vertexPositionX,
+                        double &vertexPositionY, double &vertexPositionZ, std::vector<double> &parsProton);
+  void SideVertexFinderHelp(std::vector<mmTrack> centerBeam_, std::vector<mmTrack> protonTrack_, double &vertexPositionX,
+                        double &vertexPositionY, double &vertexPositionZ, std::vector<double> &parsProton);
 
   // Visualize Hough Transform
   void GetMinMaxD(std::vector<mmTrack> initPoints, int &minXY, int &maxXY, int &minYZ, int &maxYZ);
@@ -415,8 +434,12 @@ private:
 private:
   void DivideTargetThickness(TH1F *f);
   void ReadSolidAngle();
-  void SolidAngle(TH1F *f);
-  void WriteSpectrumToFile(TH1F *f, Int_t region);
+  void SolidAngle(TH1F *f, int region);
+  void WriteSpectrumToFile(TH1F *f, int region);
+  CubicSpline reg1SA;
+  CubicSpline reg1CMAngle;
+  CubicSpline reg2SA;
+  CubicSpline reg2CMAngle;
   CubicSpline reg3SA;
   CubicSpline reg3CMAngle;
 
@@ -1314,12 +1337,14 @@ inline void Spectra::InitHistograms() {
   hVertexSiETotalRegion3 = new TH2F("vertexSiERegion3", "vertexSiERegion3", 500, 0, 20000, 500, -450, 300);
   hVertexSiETotalRegion3->GetXaxis()->SetTitle("Total Energy [keV]"); hVertexSiETotalRegion3->GetXaxis()->CenterTitle();
   hVertexSiETotalRegion3->GetYaxis()->SetTitle("Vertex [mm]"); hVertexSiETotalRegion3->GetYaxis()->CenterTitle();
-  hVertexSiETotalRegion3->GetYaxis()->SetTitleOffset(1.4); hVertexSiETotalRegion3->SetStats(false);
+  hVertexSiETotalRegion3->GetYaxis()->SetTitleOffset(1.4);
+  // hVertexSiETotalRegion3->SetStats(false);
 
   hVertexCMERegion3 = new TH2F("vertexCMERegion3", "vertexCMERegion3", 500, 0, 6, 500, -450, 300);
   hVertexCMERegion3->GetXaxis()->SetTitle("CM Energy [MeV]"); hVertexCMERegion3->GetXaxis()->CenterTitle();
   hVertexCMERegion3->GetYaxis()->SetTitle("Vertex [mm]"); hVertexCMERegion3->GetYaxis()->CenterTitle();
-  hVertexCMERegion3->GetYaxis()->SetTitleOffset(1.4); hVertexCMERegion3->SetStats(false);
+  hVertexCMERegion3->GetYaxis()->SetTitleOffset(1.4);
+  hVertexCMERegion3->SetStats(false);
 
   // Vertex vs Angle Histograms Forward Si
   for(uint i = 0; i < 10; i++) {
@@ -1482,11 +1507,23 @@ inline void Spectra::InitHistograms() {
   }
 
   // Cross Section Histograms
-  s1 = new TH1F("s1", "Outside Forward", 70, 0, 6);
+  s1 = new TH1F("s1", "Central Forward", 50, 0, 5);
   s1->Sumw2();
   s1->GetXaxis()->SetTitle("Center of Mass Energy [MeV]"); s1->GetXaxis()->CenterTitle();
   s1->GetYaxis()->SetTitle("Cross Section [b/sr]"); s1->GetYaxis()->CenterTitle();
   s1->GetYaxis()->SetTitleOffset(1.2);
+
+  s2 = new TH1F("s2", "Inside Forward", 50, 0, 5);
+  s2->Sumw2();
+  s2->GetXaxis()->SetTitle("Center of Mass Energy [MeV]"); s2->GetXaxis()->CenterTitle();
+  s2->GetYaxis()->SetTitle("Cross Section [b/sr]"); s2->GetYaxis()->CenterTitle();
+  s2->GetYaxis()->SetTitleOffset(1.2);
+
+  s3 = new TH1F("s3", "Outside Forward", 50, 0, 5);
+  s3->Sumw2();
+  s3->GetXaxis()->SetTitle("Center of Mass Energy [MeV]"); s3->GetXaxis()->CenterTitle();
+  s3->GetYaxis()->SetTitle("Cross Section [b/sr]"); s3->GetYaxis()->CenterTitle();
+  s3->GetYaxis()->SetTitleOffset(1.2);
 }
 
 inline void Spectra::InitCanvas() {
@@ -1856,14 +1893,18 @@ inline void Spectra::DrawCenterBeamLinearCanvas(int count, std::vector<mmTrack> 
   }
 }
 
-inline void Spectra::DrawEventTrackSideCanvas(int count, std::vector<mmTrack> center_,
-    std::vector<mmTrack> left_, std::vector<mmTrack> leftRaw_, std::vector<mmTrack> right_, std::vector<mmTrack> rightRaw_) {
+inline void Spectra::DrawEventTrackSideCanvas(int count, std::vector<mmTrack> center_, std::vector<mmTrack> centerProton_,
+    std::vector<mmTrack> proton_, std::vector<mmTrack> protonRaw_, std::vector<mmTrack> other_, std::vector<mmTrack> otherRaw_,
+                                              std::vector<double> parProton) {
   TMultiGraph* mgEvent = new TMultiGraph();
   TGraph* graphCenter = new TGraph();
-  TGraph* graphLeft = new TGraph();
-  TGraph* graphLeftRaw = new TGraph();
-  TGraph* graphRight = new TGraph();
-  TGraph* graphRightRaw = new TGraph();
+  TGraph* graphCenterProton = new TGraph();
+  TGraph* graphProton = new TGraph();
+  TGraph* graphProtonRaw = new TGraph();
+  TGraph* graphOther = new TGraph();
+  TGraph* graphOtherRaw = new TGraph();
+
+  TGraph* graphProtonFit = new TGraph();
 
   int i = 0;
   for(auto mm : center_) {
@@ -1872,41 +1913,61 @@ inline void Spectra::DrawEventTrackSideCanvas(int count, std::vector<mmTrack> ce
   }
 
   i = 0;
-  for(auto mm : left_) {
-    graphLeft->SetPoint(i, mm.xPosition, mm.yPosition);
+  for(auto mm : centerProton_) {
+    graphCenterProton->SetPoint(i, mm.xPosition, mm.yPosition);
     i++;
   }
 
   i = 0;
-  for(auto mm : leftRaw_) {
-    graphLeftRaw->SetPoint(i, mm.xPosition, mm.yPosition);
+  for(auto mm : proton_) {
+    graphProton->SetPoint(i, mm.xPosition, mm.yPosition);
     i++;
   }
 
   i = 0;
-  for(auto mm : right_) {
-    graphRight->SetPoint(i, mm.xPosition, mm.yPosition);
+  for(auto mm : protonRaw_) {
+    graphProtonRaw->SetPoint(i, mm.xPosition, mm.yPosition);
     i++;
   }
 
   i = 0;
-  for(auto mm : rightRaw_) {
-    graphRightRaw->SetPoint(i, mm.xPosition, mm.yPosition);
+  for(auto mm : other_) {
+    graphOther->SetPoint(i, mm.xPosition, mm.yPosition);
+    i++;
+  }
+
+  i = 0;
+  for(auto mm : otherRaw_) {
+    graphOtherRaw->SetPoint(i, mm.xPosition, mm.yPosition);
+    i++;
+  }
+
+  i = 0;
+  double x, y, z;
+  for(double point = 0; point < 250; point += 0.1) {
+    line(point, parProton, x, y, z);
+    graphProtonFit->SetPoint(i, x, y);
     i++;
   }
 
   graphCenter->SetMarkerColor(1);
   graphCenter->SetMarkerStyle(8);
 
-  graphLeft->SetMarkerColor(2);
-  graphLeft->SetMarkerStyle(8);
-  graphLeftRaw->SetMarkerColor(3);
-  graphLeftRaw->SetMarkerStyle(7);
+  graphCenterProton->SetMarkerColor(2);
+  graphCenterProton->SetMarkerStyle(8);
 
-  graphRight->SetMarkerColor(2);
-  graphRight->SetMarkerStyle(8);
-  graphRightRaw->SetMarkerColor(4);
-  graphRightRaw->SetMarkerStyle(7);
+  graphProton->SetMarkerColor(2);
+  graphProton->SetMarkerStyle(8);
+  graphProtonRaw->SetMarkerColor(3);
+  graphProtonRaw->SetMarkerStyle(7);
+
+  graphOther->SetMarkerColor(2);
+  graphOther->SetMarkerStyle(8);
+  graphOtherRaw->SetMarkerColor(4);
+  graphOtherRaw->SetMarkerStyle(7);
+
+  graphProtonFit->SetMarkerColor(6);
+  graphProtonFit->SetMarkerStyle(7);
 
   if(count < eventTrackSideCanvasNum*eventTrackSideCanvasXYNum) {
     int histNum = count/eventTrackSideCanvasXYNum;
@@ -1914,10 +1975,12 @@ inline void Spectra::DrawEventTrackSideCanvas(int count, std::vector<mmTrack> ce
     mgEvent->SetTitle(name);
     eventTrackSideCanvas[histNum]->cd(count + 1 - histNum*eventTrackSideCanvasXYNum);
     if(graphCenter->GetN() > 0) mgEvent->Add(graphCenter);
-    if(graphLeft->GetN() > 0) mgEvent->Add(graphLeft);
-    if(graphLeftRaw->GetN() > 0) mgEvent->Add(graphLeftRaw);
-    if(graphRight->GetN() > 0) mgEvent->Add(graphRight);
-    if(graphRightRaw->GetN() > 0) mgEvent->Add(graphRightRaw);
+    if(graphCenterProton->GetN() > 0) mgEvent->Add(graphCenterProton);
+    if(graphProton->GetN() > 0) mgEvent->Add(graphProton);
+    if(graphProtonRaw->GetN() > 0) mgEvent->Add(graphProtonRaw);
+    if(graphOther->GetN() > 0) mgEvent->Add(graphOther);
+    if(graphOtherRaw->GetN() > 0) mgEvent->Add(graphOtherRaw);
+    if(graphProtonFit->GetN() > 0) mgEvent->Add(graphProtonFit);
     mgEvent->GetXaxis()->SetLimits(-200, 200);
     mgEvent->SetMinimum(0);
     mgEvent->SetMaximum(300);
@@ -1926,34 +1989,34 @@ inline void Spectra::DrawEventTrackSideCanvas(int count, std::vector<mmTrack> ce
   }
 }
 
-inline void Spectra::DrawEventTrackSidedECanvas(int count, std::vector<mmTrack> leftRaw_, std::vector<mmTrack> rightRaw_,
-                                                double leftAngle, double rightAngle) {
+inline void Spectra::DrawEventTrackSidedECanvas(int count, std::vector<mmTrack> protonRaw_, std::vector<mmTrack> otherRaw_,
+                                                double protonAngle, double otherAngle) {
   TMultiGraph* mgEvent = new TMultiGraph();
-  TGraph* graphLeftRaw = new TGraph();
-  TGraph* graphRightRaw = new TGraph();
+  TGraph* graphProtonRaw = new TGraph();
+  TGraph* graphOtherRaw = new TGraph();
 
   int i = 0;
-  for(auto mm : leftRaw_) {
-    graphLeftRaw->SetPoint(i, mm.yPosition, mm.energy*cos(leftAngle));
+  for(auto mm : protonRaw_) {
+    graphProtonRaw->SetPoint(i, mm.yPosition, mm.energy*cos(protonAngle));
     i++;
   }
 
   i = 0;
-  for(auto mm : rightRaw_) {
-    graphRightRaw->SetPoint(i, mm.yPosition, mm.energy*cos(rightAngle));
+  for(auto mm : otherRaw_) {
+    graphOtherRaw->SetPoint(i, mm.yPosition, mm.energy*cos(otherAngle));
     i++;
   }
 
-  graphLeftRaw->SetLineColor(3);
-  graphRightRaw->SetLineColor(4);
+  graphProtonRaw->SetLineColor(3);
+  graphOtherRaw->SetLineColor(4);
 
   if(count < eventTrackSidedECanvasNum*eventTrackSideCanvasXYNum) {
     int histNum = count/eventTrackSidedECanvasXYNum;
     TString name = Form("Event_%ld", entry);
     mgEvent->SetTitle(name);
     eventTrackSidedECanvas[histNum]->cd(count + 1 - histNum*eventTrackSidedECanvasXYNum);
-    if(graphLeftRaw->GetN() > 0) mgEvent->Add(graphLeftRaw);
-    if(graphRightRaw->GetN() > 0) mgEvent->Add(graphRightRaw);
+    if(graphProtonRaw->GetN() > 0) mgEvent->Add(graphProtonRaw);
+    if(graphOtherRaw->GetN() > 0) mgEvent->Add(graphOtherRaw);
     mgEvent->GetXaxis()->SetLimits(0, 300);
     mgEvent->SetMinimum(0);
     mgEvent->SetMaximum(4000);
@@ -2008,6 +2071,16 @@ inline void Spectra::InitAverageBeamEnergy() {
   double varE;
   while(inBeamFile >> varI >> varJ >> varE) {
     averageBeamEnergy[varJ][varI] = varE;
+  }
+}
+
+inline void Spectra::InitMaxPeak() {
+  std::ifstream inMaxPeakFile("centralPeakVertex.out");
+  assert(inMaxPeakFile.is_open());
+  double var1, var2, var3;
+  int var4;
+  while(inMaxPeakFile >> var1 >> var2 >> var3 >> var4) {
+    maxPeakMap[var4] = var3;
   }
 }
 
@@ -2200,7 +2273,7 @@ inline void Spectra::WriteHistograms() {
     // hVertexSiEForwardCal[i]->Write();
     // hVertexSiEForwardCalTotal[i]->Write();
   // }
-  // hVertexSiETotalRegion3->Write();
+  hVertexSiETotalRegion3->Write();
   // hVertexCMERegion3->Write();
 
   // Forward Angle vs Si Energy
@@ -2314,9 +2387,9 @@ inline void Spectra::WriteCanvas() {
     eventTrackSideCanvas[i]->Write();
   }
 
-  for(int i = 0; i < eventTrackSidedECanvasNum; i++) {
-    eventTrackSidedECanvas[i]->Write();
-  }
+//  for(int i = 0; i < eventTrackSidedECanvasNum; i++) {
+//    eventTrackSidedECanvas[i]->Write();
+//  }
 }
 
 inline void Spectra::InitTree() {

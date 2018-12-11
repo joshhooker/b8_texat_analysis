@@ -54,6 +54,8 @@ public:
 
   double Fit();
   double FitRestricted();
+  double FitRestrictedSingleHelp();
+  double FitRestrictedHelp();
   double CalculateDistance();
 
   std::vector<double> GetPars() { return par;};
