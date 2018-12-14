@@ -17,10 +17,10 @@ TChain* MakeChain() {
   auto *chain = new TChain("mfmData");
 
   // Home
-  // TString PathToFiles = "/hd3/research/data/run0817a/rootM2R-WaveformReduced/run";
+  TString PathToFiles = "/hd/research/data/run0817a/rootM2R-WaveformReduced/run";
 
   // Mac Laptop
-  TString PathToFiles = "/Users/joshhooker/Desktop/data/run0817a/run";
+  // TString PathToFiles = "/Users/joshhooker/Desktop/data/run0817a/run";
 
   // Alpha source test in gas
   // chain->Add(PathToFiles+"004.root");
@@ -96,11 +96,11 @@ TChain* MakeChain() {
 //  chain->Add(PathToFiles + "224.root");
 
   // Alpha source test in vacuum
-  // chain->Add(PathToFiles + "230.root");
-  // chain->Add(PathToFiles + "231.root");
+  chain->Add(PathToFiles + "230.root");
+  chain->Add(PathToFiles + "231.root");
 
   // Alpha source test in gas
-  chain->Add(PathToFiles + "232.root");
+  // chain->Add(PathToFiles + "232.root");
 
   return chain;
 }
