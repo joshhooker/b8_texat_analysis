@@ -701,7 +701,6 @@ void Spectra::Loop() {
       if(det.det < 4) dERegion = dERight;
       else if(det.det > 5) dERegion = dELeft;
       else dERegion = dECentral;
-      if(det.punchthrough) continue;
       hdEEForward[det.det]->Fill(det.siEnergy, dERegion);
       hdEEForwardCal[det.det]->Fill(det.siEnergyCal, dERegion);
       hdEEForwardCalTotal[det.det]->Fill(det.totalEnergy, dERegion);
