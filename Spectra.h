@@ -2247,14 +2247,14 @@ inline void Spectra::WriteHistograms() {
   // }
 
   // Forward Si Energy vs CsI Energy
-  // for(uint i = 0; i < 10; i++) {
+  for(uint i = 0; i < 10; i++) {
     // hSiCsiEForwardDet[i]->Write();
-    // hSiCsiEForwardDetCal[i]->Write();
+    hSiCsiEForwardDetCal[i]->Write();
     // for(uint j = 0; j < 4; j++) {
       // hSiCsiEForward[i][j]->Write();
       // hSiCsiEForwardCal[i][j]->Write();
     // }
-   // }
+  }
 
   // Forward dE vs Si Energy
   for(uint i = 0; i < 10; i++) {
