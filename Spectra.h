@@ -1507,7 +1507,7 @@ inline void Spectra::InitHistograms() {
   }
 
   // Cross Section Histograms
-  s1 = new TH1F("s1", "Central Forward", 50, 0, 5);
+  s1 = new TH1F("s1", "Central Forward", 40, 0, 5);
   s1->Sumw2();
   s1->GetXaxis()->SetTitle("Center of Mass Energy [MeV]"); s1->GetXaxis()->CenterTitle();
   s1->GetYaxis()->SetTitle("Cross Section [b/sr]"); s1->GetYaxis()->CenterTitle();
@@ -2081,6 +2081,7 @@ inline void Spectra::InitMaxPeak() {
   int var4;
   while(inMaxPeakFile >> var1 >> var2 >> var3 >> var4) {
     maxPeakMap[var4] = var3;
+
   }
 }
 
@@ -2273,7 +2274,7 @@ inline void Spectra::WriteHistograms() {
     // hVertexSiEForwardCal[i]->Write();
     // hVertexSiEForwardCalTotal[i]->Write();
   // }
-  hVertexSiETotalRegion3->Write();
+  // hVertexSiETotalRegion3->Write();
   // hVertexCMERegion3->Write();
 
   // Forward Angle vs Si Energy
@@ -2297,8 +2298,8 @@ inline void Spectra::WriteHistograms() {
       // hTimeStripForward[i][j]->Write();
     // }
   // }
-  hTimeChainForwardCumulative->Write();
-  hTimeStripForwardCumulative->Write();
+  // hTimeChainForwardCumulative->Write();
+  // hTimeStripForwardCumulative->Write();
 
   // Time vs Central Row Forward Detectors
   // for(uint i = 0; i < 10; i++) {

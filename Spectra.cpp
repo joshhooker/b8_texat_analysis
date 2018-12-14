@@ -562,7 +562,7 @@ void Spectra::Loop() {
       else {
         if(time < 4700 || time > 6300) continue;
         hCWTECentral->Fill(mm.energy, mm.cwt);
-        if(!cwtE_CentralProtonCut->IsInside(mm.energy, mm.cwt)) continue;
+        // if(!cwtE_CentralProtonCut->IsInside(mm.energy, mm.cwt)) continue;
         mmCenterMatchedReduced_.push_back(mm);
       }
     }
@@ -664,6 +664,7 @@ void Spectra::Loop() {
     int totalRowsCentral = 0;
     for(auto mm : mmCenterProton_) {
       if(mm.row > 115 && mm.row < 124 && mm.row != 117) {
+        if(mm.energy < 50) continue;
         dECentral += mm.energy;
         totalRowsCentral++;
       }
@@ -700,6 +701,7 @@ void Spectra::Loop() {
       if(det.det < 4) dERegion = dERight;
       else if(det.det > 5) dERegion = dELeft;
       else dERegion = dECentral;
+      if(det.punchthrough) continue;
       hdEEForward[det.det]->Fill(det.siEnergy, dERegion);
       hdEEForwardCal[det.det]->Fill(det.siEnergyCal, dERegion);
       hdEEForwardCalTotal[det.det]->Fill(det.totalEnergy, dERegion);
@@ -740,10 +742,10 @@ void Spectra::Loop() {
 
 
     bool event = false;
-    if(central) {
-      event = AnalysisForwardCentral(mmCenterMatchedReducedNoise_, mmCenterBeamTotal_, mmCenterProton_, centralPadTotalEnergy,
-                                     mmLeftChain_, mmLeftStrip_, mmRightChain_, mmRightStrip_);
-    }
+//    if(central) {
+//      event = AnalysisForwardCentral(mmCenterMatchedReducedNoise_, mmCenterBeamTotal_, mmCenterProton_, centralPadTotalEnergy,
+//                                     mmLeftChain_, mmLeftStrip_, mmRightChain_, mmRightStrip_);
+//    }
 //    if(left || right) {
 //      event = AnalysisForwardSide(mmCenterMatchedReducedNoise_, mmCenterBeamTotal_, mmCenterProton_,
 //                                  mmLeftChain_, mmLeftStrip_, mmRightChain_, mmRightStrip_);
@@ -818,7 +820,7 @@ bool Spectra::AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std::
 
   bool oneProtonEvent = true;
 
-  if(siDet != 4) return false;
+  // if(siDet != 4) return false;
 
 //  // Clean left side track
 //  double leftTrackAngle = 0;
@@ -1003,7 +1005,7 @@ bool Spectra::AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std::
 
   hVertexAngleForward[siDet]->Fill(vertexPositionY, angle);
 
-  if(siDet == 4 && cmEnergy > 0.9) {
+  if(cmEnergy < 4.5) {
     s1->Fill(cmEnergy);
   }
 
@@ -2128,7 +2130,7 @@ void Spectra::ReadSolidAngle() {
 
   double var1, var2, var3, var4;
 
-  std::ifstream inReg1("csReg1_4.out");
+  std::ifstream inReg1("csReg1.out");
   assert(inReg1.is_open());
   std::vector<double> cmEnergyReg1_, solidAngleReg1_, labAngleReg1_, cmAngleReg1_;
   while(inReg1 >> var1 >> var2 >> var3 >> var4) {
