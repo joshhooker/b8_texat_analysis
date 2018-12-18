@@ -24,6 +24,7 @@ set(SCRIPTS
     csiCalibration.dat
     csReg1.out
     csReg1_4.out
+    csReg1_Corrected.out
     csReg3.out
     cuts.root
     EnergyLoss.dat
@@ -42,13 +43,6 @@ foreach(_script ${SCRIPTS})
         COPYONLY
     )
 endforeach()
-
-IF(EXISTS "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/compile_commands.json")
-    EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E copy
-        ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/compile_commands.json
-        ${PROJECT_SOURCE_DIR}/compile_commands.json
-    )
-ENDIF()
 
 add_executable(b8_texat_analysis
   Spectra.cpp Hough2D.cpp HoughTrack.cpp EnergyLoss.cpp)

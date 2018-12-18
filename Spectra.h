@@ -22,6 +22,7 @@
 #include <TMath.h>
 #include <TMultiGraph.h>
 #include <TPolyLine3D.h>
+#include <TRandom3.h>
 #include <TROOT.h>
 #include <TStyle.h>
 #include <TVector3.h>
@@ -499,6 +500,7 @@ private:
   double siPosX;
   double siPosY;
   double siPosZ;
+  TRandom3 *rng;
 
 };
 #endif
@@ -2106,8 +2108,8 @@ inline void Spectra::InitVariables() {
   density = 0.00038175; // in g/cm3, from LISE++ (Methane at 435 torr)
   numberB8 = 174809089.;
 
-  distanceHavarToSilicon = 544.07; // Distance from Havar to Forward Silicon in mm
-  distanceHavarToMM = 268.73; // Distance from Havar to beginning of MM in mm
+  distanceHavarToSilicon = 544.; // Distance from Havar to Forward Silicon in mm
+  distanceHavarToMM = 270.; // Distance from Havar to beginning of MM in mm
 
   // Initialize EnergyLoss
   boronMethane = new EnergyLoss("b8_methane.dat");
@@ -2156,7 +2158,7 @@ inline void Spectra::InitVariables() {
   siXPosForward[9][3] = 124. - 12.5;
 
   // Y position of Forward Si Detectors
-  siYPosForward = 275.34;
+  siYPosForward = 274.;
 
   // Position resolution of gas (-2000 V of 435 torr Methane)
   gasPositionResolution = 0.029364;
@@ -2201,11 +2203,13 @@ inline void Spectra::InitVariables() {
     rightStripHits.push_back(rightStrip);
   }
   inRightStrip.close();
+
+  rng = new TRandom3();
 }
 
 inline void Spectra::WriteHistograms() {
-  // hIonizationChamberE->Write();
-  // hIonizationChamberT->Write();
+  hIonizationChamberE->Write();
+  hIonizationChamberT->Write();
 
   hMicroMegasCenterCumulative->Write();
   hMicroMegasCenterCumulativePosition->Write();
@@ -2219,7 +2223,7 @@ inline void Spectra::WriteHistograms() {
   hMicroMegasStripRightCumulative->Write();
 
   // Number of Si fired
-  // hSiFired->Write();
+  hSiFired->Write();
 
   // Forward Si and Csi Detectors
   // for(uint i = 0; i < 10; i++) {
@@ -2247,19 +2251,19 @@ inline void Spectra::WriteHistograms() {
   // }
 
   // Forward Si Energy vs CsI Energy
-  // for(uint i = 0; i < 10; i++) {
+  for(uint i = 0; i < 10; i++) {
     // hSiCsiEForwardDet[i]->Write();
-    // hSiCsiEForwardDetCal[i]->Write();
+    hSiCsiEForwardDetCal[i]->Write();
     // for(uint j = 0; j < 4; j++) {
       // hSiCsiEForward[i][j]->Write();
       // hSiCsiEForwardCal[i][j]->Write();
     // }
-  // }
+  }
 
   // Forward dE vs Si Energy
   for(uint i = 0; i < 10; i++) {
     // hdEEForward[i]->Write();
-    hdEEForwardCal[i]->Write();
+    // hdEEForwardCal[i]->Write();
     hdEEForwardCalTotal[i]->Write();
   }
 

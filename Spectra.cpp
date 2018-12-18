@@ -17,10 +17,10 @@ TChain* MakeChain() {
   auto *chain = new TChain("mfmData");
 
   // Home
-  TString PathToFiles = "/hd/research/data/run0817a/rootM2R-WaveformReduced/run";
+  // TString PathToFiles = "/hd/research/data/run0817a/rootM2R-WaveformReduced/run";
 
   // Laptop
-  // TString PathToFiles = "/Users/joshhooker/Desktop/data/run0817a/run";
+  TString PathToFiles = "/Users/joshhooker/Desktop/data/run0817a/run";
 
   // Alpha source test in gas
   // chain->Add(PathToFiles+"004.root");
@@ -705,7 +705,7 @@ void Spectra::Loop() {
       hdEEForwardCal[det.det]->Fill(det.siEnergyCal, dERegion);
       hdEEForwardCalTotal[det.det]->Fill(det.totalEnergy, dERegion);
 
-      if(!dEEForwardCut[det.det]->IsInside(det.siEnergyCal, dERegion)) continue;
+      if(!dEEForwardCut[det.det]->IsInside(det.totalEnergy, dERegion)) continue;
       protonDetReduced_.push_back(det);
     }
 
@@ -739,12 +739,13 @@ void Spectra::Loop() {
       central = true;
     }
 
+    if(siDet == 2 || siDet == 3 || siDet == 6 || siDet == 7) continue;
 
     bool event = false;
-//    if(central) {
-//      event = AnalysisForwardCentral(mmCenterMatchedReducedNoise_, mmCenterBeamTotal_, mmCenterProton_, centralPadTotalEnergy,
-//                                     mmLeftChain_, mmLeftStrip_, mmRightChain_, mmRightStrip_);
-//    }
+    if(central) {
+      event = AnalysisForwardCentral(mmCenterMatchedReducedNoise_, mmCenterBeamTotal_, mmCenterProton_, centralPadTotalEnergy,
+                                     mmLeftChain_, mmLeftStrip_, mmRightChain_, mmRightStrip_);
+    }
 //    if(left || right) {
 //      event = AnalysisForwardSide(mmCenterMatchedReducedNoise_, mmCenterBeamTotal_, mmCenterProton_,
 //                                  mmLeftChain_, mmLeftStrip_, mmRightChain_, mmRightStrip_);
@@ -762,11 +763,13 @@ void Spectra::Loop() {
   SolidAngle(s1, 1);
   s1->Scale(1./numberB8);
   s1->Write();
+  WriteSpectrumToFile(s1, 1);
 
-  DivideTargetThickness(s3);
-  SolidAngle(s3, 3);
-  s3->Scale(1./numberB8);
-  s3->Write();
+//  DivideTargetThickness(s3);
+//  SolidAngle(s3, 3);
+//  s3->Scale(1./numberB8);
+//  s3->Write();
+//  WriteSpectrumToFile(s3, 3);
 
   WriteHistograms();
 
@@ -782,154 +785,29 @@ bool Spectra::AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std::
                                      std::vector<mmChainStrip> leftChain_, std::vector<mmChainStrip> leftStrip_,
                                      std::vector<mmChainStrip> rightChain_, std::vector<mmChainStrip> rightStrip_) {
 
-  // Find dE for center region
-  dE = 0.;
-  int totalRows = 0;
-  for(auto mm : centerProton_) {
-    if(mm.row > 115 && mm.row < 124 && mm.row != 117) {
-      if(mm.energy < 50) continue;
-      dE += mm.energy;
-      totalRows++;
-    }
-  }
-  dE /= static_cast<double>(totalRows);
-
   for(auto mm : centerMatched_) {
     hTimeCentraldEForward[siDet]->Fill(mm.row, mm.time - siTime);
   }
 
-  hdEEForward[siDet]->Fill(siEnergy, dE);
-  hdEEForwardCal[siDet]->Fill(siEnergyCal, dE);
-  hdEEForwardCalTotal[siDet]->Fill(totalEnergy, dE);
-
-  if(!dEEForwardCut[siDet]->IsInside(siEnergyCal, dE)) return false;
-
-//  // Match strips with chains
-//  std::vector<mmTrack> chainStripMatchedLeft_;
-//  std::vector<mmTrack> chainStripMatchedRight_;
-//  std::vector<mmTrack> chainStripRawLeft_;
-//  std::vector<mmTrack> chainStripRawRight_;
-//  if(!leftChain_.empty() && !leftStrip_.empty()) {
-//    ChainStripMatch(chainStripMatchedLeft_, chainStripRawLeft_, leftChain_, leftStrip_, true, siTime);
-//  }
-//  if(!rightChain_.empty() && !rightStrip_.empty()) {
-//    ChainStripMatch(chainStripMatchedRight_, chainStripRawRight_, rightChain_, rightStrip_, false,
-//                    siTime);
-//  }
-
   bool oneProtonEvent = true;
 
-  // if(siDet != 4) return false;
+  if(!oneProtonEvent) return false;
 
-//  // Clean left side track
-//  double leftTrackAngle = 0;
-//  if(chainStripMatchedLeft_.size() > 1) {
-//    auto *fitLeft = new HoughTrack();
-//    fitLeft->AddTrack(chainStripMatchedLeft_, siDet, siQuad);
-//    double minDistOther = fitLeft->Fit();
-//    std::vector<double> parsOther = fitLeft->GetPars();
-//    delete fitLeft;
-//    double m_xComponentOther = fabs(parsOther[1]);
-//    leftTrackAngle = atan(m_xComponentOther);
+  double vertex = -150.;
 
-//    int changes;
-//    std::vector<mmTrack> leftTrackCleaned_;
-//    std::vector<mmTrack> leftTrackCleanedRaw_;
-//    bool change = true;
-//    while(change) {
-//      CleanSideTracks(leftTrackCleaned_, leftTrackCleanedRaw_, chainStripRawLeft_, leftTrackAngle, changes);
-//      chainStripMatchedLeft_ = leftTrackCleaned_;
-//      chainStripRawLeft_ = leftTrackCleanedRaw_;
-//      if(changes == 0) change = false;
+  // if(centerBeamTotal_.empty()) return false;
 
-//      if(leftTrackCleanedRaw_.size() < 2 || chainStripMatchedLeft_.size() < 2) change = false;
+  if(centerBeamTotal_.size() > 5) {
+    int maxPeakRow;
+    double maxPeakEnergy, avgPeakEnergy, maxPeakDeriv;
+    FindMaxCentralEnergy(centerBeamTotal_, maxPeakRow, maxPeakEnergy, avgPeakEnergy, maxPeakDeriv);
 
-//      auto *fitLeft = new HoughTrack();
-//      fitLeft->AddTrack(chainStripMatchedLeft_, siDet, siQuad);
-//      double minDistOther = fitLeft->Fit();
-//      std::vector<double> parsOther = fitLeft->GetPars();
-//      delete fitLeft;
-//      double m_xComponentOther = fabs(parsOther[1]);
-//      leftTrackAngle = atan(m_xComponentOther);
-//    }
-//  }
+    // Find maxPeakRow in maxPeakMap
+    if(maxPeakMap.find(maxPeakRow) != maxPeakMap.end()) {
+      vertex = maxPeakMap[maxPeakRow];
+    }
+  }
 
-//  // Check dE of left track and see if proton
-//  if(chainStripMatchedLeft_.size() > 1) {
-//    double dESide = 0.;
-//    int totalSide = 0;
-//    for(auto mm : chainStripMatchedLeft_) {
-//      dESide += mm.energy*cos(leftTrackAngle);
-//      totalSide++;
-//    }
-//    dESide /= static_cast<double>(totalSide);
-
-//    if(dESide > 200 && dESide < 1700) oneProtonEvent = false;
-//  }
-
-//  if(!oneProtonEvent) return false;
-
-//  // Clean right side track
-//  double rightTrackAngle = 0;
-//  if(chainStripMatchedRight_.size() > 1) {
-//    auto *fitRight = new HoughTrack();
-//    fitRight->AddTrack(chainStripMatchedRight_, siDet, siQuad);
-//    double minDistOther = fitRight->Fit();
-//    std::vector<double> parsOther = fitRight->GetPars();
-//    delete fitRight;
-//    double m_xComponentOther = fabs(parsOther[1]);
-//    rightTrackAngle = atan(m_xComponentOther);
-
-//    int changes;
-//    std::vector<mmTrack> rightTrackCleaned_;
-//    std::vector<mmTrack> rightTrackCleanedRaw_;
-//    bool change = true;
-//    while(change) {
-//      CleanSideTracks(rightTrackCleaned_, rightTrackCleanedRaw_, chainStripRawRight_, rightTrackAngle, changes);
-//      chainStripMatchedRight_ = rightTrackCleaned_;
-//      chainStripRawRight_ = rightTrackCleanedRaw_;
-//      if(changes == 0) change = false;
-
-//      if(rightTrackCleanedRaw_.size() < 2 || chainStripMatchedRight_.size() < 2) change = false;
-
-//      auto *fitRight = new HoughTrack();
-//      fitRight->AddTrack(chainStripMatchedRight_, siDet, siQuad);
-//      double minDistOther = fitRight->Fit();
-//      std::vector<double> parsOther = fitRight->GetPars();
-//      delete fitRight;
-//      double m_xComponentOther = fabs(parsOther[1]);
-//      rightTrackAngle = atan(m_xComponentOther);
-//    }
-//  }
-
-//  // Check dE of right track and see if proton
-//  if(chainStripMatchedRight_.size() > 1) {
-//    double dESide = 0.;
-//    int totalSide = 0;
-//    for(auto mm : chainStripMatchedRight_) {
-//      dESide += mm.energy*cos(rightTrackAngle);
-//      totalSide++;
-//    }
-//    dESide /= static_cast<double>(totalSide);
-
-//    if(dESide > 200 && dESide < 1700) oneProtonEvent = false;
-//  }
-
-//  if(!oneProtonEvent) return false;
-
-  // Remove events with no or very little counts for beam
-  if(centerBeamTotal_.size() < 5) return false;
-
-  int maxPeakRow;
-  double maxPeakEnergy, avgPeakEnergy, maxPeakDeriv;
-  FindMaxCentralEnergy(centerBeamTotal_, maxPeakRow, maxPeakEnergy, avgPeakEnergy, maxPeakDeriv);
-
-  if(maxPeakRow < 5) return false;
-
-  // Find maxPeakRow in maxPeakMap
-  if(maxPeakMap.find(maxPeakRow) == maxPeakMap.end()) return false;
-
-  double vertex = maxPeakMap[maxPeakRow];
   int vertexRow = 0;
   if(vertex > 0) {
     vertexRow = static_cast<int>(vertex/1.75);
@@ -958,37 +836,44 @@ bool Spectra::AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std::
 
   centerProton_.push_back(centerVertexPoint);
 
-  auto *fitProton = new HoughTrack();
-  fitProton->AddTrack(centerProton_, siDet, siQuad);
-  double minDistProton = fitProton->Fit();
-  std::vector<double> parsProton = fitProton->GetPars();
-  delete fitProton;
+//  auto *fitProton = new HoughTrack();
+//  fitProton->AddTrack(centerProton_, siDet, siQuad);
+//  double minDistProton = fitProton->Fit();
+//  std::vector<double> parsProton = fitProton->GetPars();
+//  delete fitProton;
 
-  // Plot XZ hit position of forward non-central detectors
-  double x, y, z;
-  line(siYPosForward, parsProton, x, y, z);
-  siPosX = x;
-  siPosY = siYPosForward;
-  siPosZ = z;
-  hHitPositionsXZForward->Fill(x, z);
-  hHitPositionsXZForwardInd[siDet]->Fill(x, z);
+//  // Plot XZ hit position of forward non-central detectors
+//  double x, y, z;
+//  line(siYPosForward, parsProton, x, y, z);
+//  siPosX = x;
+//  siPosY = siYPosForward;
+//  siPosZ = z;
+//  hHitPositionsXZForward->Fill(x, z);
+//  hHitPositionsXZForwardInd[siDet]->Fill(x, z);
 
   double vertexToSi = siYPosForward - vertex;
 
-  double siX, siY, siZ;
-  line(siYPosForward, parsProton, siX, siY, siZ);
+//  double siX, siY, siZ;
+//  line(siYPosForward, parsProton, siX, siY, siZ);
 
-  TVector3 v1(siX, vertexToSi, siZ);
-  TVector3 v2(0, vertexToSi, 0);
-  angle = v1.Angle(v2);
+//  TVector3 v1(siX, vertexToSi, siZ);
+//  TVector3 v2(0, vertexToSi, 0);
+//  angle = v1.Angle(v2);
+  angle = 0.;
   double cosAngle = cos(angle);
 
   double pathLength = vertexToSi/cosAngle;
 
   if(pathLength < 0) pathLength = 200.;
-  if(pathLength > 700) pathLength = 700.;
+  if(pathLength > 600) pathLength = 600.;
 
-  double protonEnergy = protonMethane->AddBack(totalEnergy/1000., pathLength);
+  // double protonEnergy = protonMethane->AddBack(totalEnergy/1000., pathLength);
+
+  double protonEnergy = totalEnergy/1000.;
+  if(protonEnergy > 7.4 && protonEnergy < 9.7) {
+    protonEnergy = rng->Uniform(7.4, 9.7);
+  }
+  protonEnergy = protonMethane->AddBack(protonEnergy, 250);
   double beamEnergy = protonEnergy*(m1 + m2)*(m1 + m2)/(4.*m1*m2*cosAngle*cosAngle);
 
   cmEnergy = beamEnergy*m2/(m1 + m2);
@@ -1004,9 +889,7 @@ bool Spectra::AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std::
 
   hVertexAngleForward[siDet]->Fill(vertexPositionY, angle);
 
-  if(cmEnergy < 4.5) {
-    s1->Fill(cmEnergy);
-  }
+  s1->Fill(cmEnergy);
 
   return true;
 }
@@ -1307,7 +1190,12 @@ bool Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::vec
   if(pathLength < 0) pathLength = 200.;
   if(pathLength > 700) pathLength = 700.;
 
-  double protonEnergy = protonMethane->AddBack(totalEnergy/1000., pathLength);
+  double combinedEnergy = totalEnergy/1000.;
+  if(combinedEnergy > 10.5 && combinedEnergy < 13) {
+    combinedEnergy = rng->Uniform(10.5, 13);
+  }
+
+  double protonEnergy = protonMethane->AddBack(combinedEnergy, pathLength);
   double beamEnergy = protonEnergy*(m1 + m2)*(m1 + m2)/(4.*m1*m2*cosAngle*cosAngle);
 
   cmEnergy = beamEnergy*m2/(m1 + m2);
@@ -2129,6 +2017,7 @@ void Spectra::ReadSolidAngle() {
 
   double var1, var2, var3, var4;
 
+  // std::ifstream inReg1("csReg1_Corrected.out");
   std::ifstream inReg1("csReg1.out");
   assert(inReg1.is_open());
   std::vector<double> cmEnergyReg1_, solidAngleReg1_, labAngleReg1_, cmAngleReg1_;
@@ -2193,9 +2082,15 @@ void Spectra::WriteSpectrumToFile(TH1F *f, int region) {
   for(int i = 1; i <= i_size - 1; i++) {
     double binCenter = x_axis->GetBinCenter(i);
     double binContent = f->GetBinContent(i);
+    if(binContent < 0.0001) continue;
     double binError = f->GetBinError(i);
-
-    double cmAngle = reg3CMAngle(binCenter);
+    double cmAngle;
+    if(region == 1) {
+      cmAngle = reg1CMAngle(binCenter);
+    }
+    else if(region == 3) {
+      cmAngle = reg3CMAngle(binCenter);
+    }
 
     fprintf(spectrumFile, "%f %f %f %f\n", binCenter, binContent, binError, cmAngle);
   }
