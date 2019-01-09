@@ -238,6 +238,7 @@ private:
   TH2F* hVertexSiEForward[10];
   TH2F* hVertexSiEForwardCal[10];
   TH2F* hVertexSiEForwardCalTotal[10];
+  TH2F* hVertexSiETotalRegion1;
   TH2F* hVertexSiETotalRegion3;
   TH2F* hVertexCMERegion3;
 
@@ -1336,6 +1337,11 @@ inline void Spectra::InitHistograms() {
     hVertexSiEForwardCalTotal[i]->GetYaxis()->SetTitleOffset(1.4); hVertexSiEForwardCalTotal[i]->SetStats(false);
   }
 
+  hVertexSiETotalRegion1 = new TH2F("vertexSiERegion1", "vertexSiERegion1", 500, 0, 20000, 500, -450, 300);
+  hVertexSiETotalRegion1->GetXaxis()->SetTitle("Total Energy [keV]"); hVertexSiETotalRegion1->GetXaxis()->CenterTitle();
+  hVertexSiETotalRegion1->GetYaxis()->SetTitle("Vertex [mm]"); hVertexSiETotalRegion1->GetYaxis()->CenterTitle();
+  hVertexSiETotalRegion1->GetYaxis()->SetTitleOffset(1.4);
+
   hVertexSiETotalRegion3 = new TH2F("vertexSiERegion3", "vertexSiERegion3", 500, 0, 20000, 500, -450, 300);
   hVertexSiETotalRegion3->GetXaxis()->SetTitle("Total Energy [keV]"); hVertexSiETotalRegion3->GetXaxis()->CenterTitle();
   hVertexSiETotalRegion3->GetYaxis()->SetTitle("Vertex [mm]"); hVertexSiETotalRegion3->GetYaxis()->CenterTitle();
@@ -2278,7 +2284,8 @@ inline void Spectra::WriteHistograms() {
     // hVertexSiEForwardCal[i]->Write();
     // hVertexSiEForwardCalTotal[i]->Write();
   // }
-  // hVertexSiETotalRegion3->Write();
+  hVertexSiETotalRegion1->Write();
+  hVertexSiETotalRegion3->Write();
   // hVertexCMERegion3->Write();
 
   // Forward Angle vs Si Energy

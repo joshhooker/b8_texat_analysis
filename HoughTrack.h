@@ -17,6 +17,7 @@ extern double distance2(double x, double y, double z, const double *p);
 
 #ifndef SUMDISTANCE2FUNC
 #define SUMDISTANCE2FUNC
+
 // function Object to be minimized
 struct SumDistance2 {
   // the TGraph is a data memeber of the object

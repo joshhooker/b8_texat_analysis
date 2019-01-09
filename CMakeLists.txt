@@ -25,6 +25,7 @@ set(SCRIPTS
     csReg1.out
     csReg1_4.out
     csReg1_Corrected.out
+    csReg1_CorrectedPads.out
     csReg3.out
     cuts.root
     EnergyLoss.dat
