@@ -3,18 +3,6 @@ void plotReg1() {
 
     double var1, var2, var3, var4, var5, var6, var7, var8, var9;
 
-    std::vector<double> cm_05_25_05_35, exe_05_25_05_35;
-    std::vector<double> fit_05_25_05_35, cs_05_25_05_35, cserr_05_25_05_35;
-    ifstream in_05_25_05_35("9C_Reg1_0.5-_2.5-_0.5+_3.5-.out");
-    while(in_05_25_05_35 >> var1 >> var2 >> var3 >> var4 >> var5 >> var6 >> var7 >> var8 >> var9) {
-        cm_05_25_05_35.push_back(var1);
-        exe_05_25_05_35.push_back(var2);
-        fit_05_25_05_35.push_back(var4);
-        cs_05_25_05_35.push_back(var6);
-        cserr_05_25_05_35.push_back(var7);
-    }
-    in_05_25_05_35.close();
-
     std::vector<double> cm_05_25_15, exe_05_25_15;
     std::vector<double> fit_05_25_15;
     ifstream in_05_25_15("9C_Reg1_0.5-_2.5-_1.5-.out");
@@ -26,12 +14,14 @@ void plotReg1() {
     in_05_25_15.close();
 
     std::vector<double> cm_05_25_15_35, exe_05_25_15_35;
-    std::vector<double> fit_05_25_15_35;
+    std::vector<double> fit_05_25_15_35, cs_05_25_15_35, cserr_05_25_15_35;
     ifstream in_05_25_15_35("9C_Reg1_0.5-_2.5-_1.5+_3.5-.out");
     while(in_05_25_15_35 >> var1 >> var2 >> var3 >> var4 >> var5 >> var6 >> var7 >> var8 >> var9) {
         cm_05_25_15_35.push_back(var1);
         exe_05_25_15_35.push_back(var2);
         fit_05_25_15_35.push_back(var4);
+        cs_05_25_15_35.push_back(var6);
+        cserr_05_25_15_35.push_back(var7);
     }
     in_05_25_15_35.close();
 
@@ -66,7 +56,7 @@ void plotReg1() {
     in_05_25_35.close();
 
     TCanvas* c = new TCanvas("c");
-    int size = cm_05_25_05_35.size();
+    int size = cm_05_25_15_35.size();
 
     TGraphErrors *region1 = new TGraphErrors();
 
@@ -78,10 +68,8 @@ void plotReg1() {
     TGraph *gr_05_25_35 = new TGraph();
 
     for(int i = 0; i < size; i++) {
-        region1->SetPoint(i, cm_05_25_05_35[i] + 1.3, cs_05_25_05_35[i]*1000.);
-        region1->SetPointError(i, 0, cserr_05_25_05_35[i]*1000.);
-
-        gr_05_25_05_35->SetPoint(i, cm_05_25_05_35[i] + 1.3, fit_05_25_05_35[i]*1000.);
+        region1->SetPoint(i, cm_05_25_15_35[i] + 1.3, cs_05_25_15_35[i]*1000.);
+        region1->SetPointError(i, 0, cserr_05_25_15_35[i]*1000.);
 
         gr_05_25_15->SetPoint(i, cm_05_25_15[i] + 1.3, fit_05_25_15[i]*1000.);
 
@@ -105,7 +93,7 @@ void plotReg1() {
     TLatex latex;
     latex.DrawLatex(2, 140., "155^{o}-170^{o}");
 
-    // c->Print("9C_Region1_CS.pdf");
+    c->Print("9C_Region1_CS.pdf");
 
     //graph 1
 
@@ -129,17 +117,17 @@ void plotReg1() {
 
     // graph 2
 
-    // 05_25_25_35
-    gr_05_25_25_35->SetLineStyle(2); gr_05_25_25_35->SetLineColor(2); gr_05_25_25_35->SetLineWidth(5);
-    gr_05_25_25_35->Draw("PCsame");
+    // // 05_25_25_35
+    // gr_05_25_25_35->SetLineStyle(2); gr_05_25_25_35->SetLineColor(2); gr_05_25_25_35->SetLineWidth(5);
+    // gr_05_25_25_35->Draw("PCsame");
 
-    // 05_25_15_35
-    gr_05_25_15_35->SetLineStyle(9); gr_05_25_15_35->SetLineColor(3); gr_05_25_15_35->SetLineWidth(4);
-    gr_05_25_15_35->Draw("PCsame");
+    // // 05_25_15_35
+    // gr_05_25_15_35->SetLineStyle(9); gr_05_25_15_35->SetLineColor(3); gr_05_25_15_35->SetLineWidth(4);
+    // gr_05_25_15_35->Draw("PCsame");
 
     // // 05_25_05_35
     // gr_05_25_05_35->SetLineStyle(1); gr_05_25_05_35->SetLineColor(4); gr_05_25_05_35->SetLineWidth(4);
     // gr_05_25_05_35->Draw("PCsame");
 
-    c->Print("9C_Region1_CS_graph2.pdf");
+    // c->Print("9C_Region1_CS_graph2.pdf");
 }

@@ -17,10 +17,10 @@ TChain* MakeChain() {
   auto *chain = new TChain("mfmData");
 
   // Home
-  TString PathToFiles = "/hd/research/data/run0817a/rootM2R-WaveformReduced/run";
+  // TString PathToFiles = "/hd/research/data/run0817a/rootM2R-WaveformReduced/run";
 
   // Laptop
-  // TString PathToFiles = "/Users/joshhooker/Desktop/data/run0817a/run";
+  TString PathToFiles = "/Users/joshhooker/Desktop/data/run0817a/run";
 
   // Alpha source test in gas
   // chain->Add(PathToFiles+"004.root");
@@ -525,7 +525,8 @@ void Spectra::Loop() {
         hSiCsiEForwardDet[det.det]->Fill(det.siEnergy, det.csiEnergy);
 
         hSiCsiEForwardCal[det.det][det.quad]->Fill(det.siEnergyCal, det.csiEnergy);
-        hSiCsiEForwardDetCal[det.det]->Fill(det.siEnergyCal, det.csiEnergy);
+        // hSiCsiEForwardDetCal[det.det]->Fill(det.siEnergyCal, det.csiEnergy);
+        hSiCsiEForwardDetCal[det.det]->Fill(det.siEnergyCal, det.csiEnergyCal);
       }
 
       hTotalEForward[det.det]->Fill(det.totalEnergy);
@@ -746,10 +747,10 @@ void Spectra::Loop() {
       event = AnalysisForwardCentral(mmCenterMatchedReducedNoise_, mmCenterBeamTotal_, mmCenterProton_, centralPadTotalEnergy,
                                      mmLeftChain_, mmLeftStrip_, mmRightChain_, mmRightStrip_);
     }
-//    if(left || right) {
-//      event = AnalysisForwardSide(mmCenterMatchedReducedNoise_, mmCenterBeamTotal_, mmCenterProton_,
-//                                  mmLeftChain_, mmLeftStrip_, mmRightChain_, mmRightStrip_);
-//    }
+   // if(left || right) {
+   //   event = AnalysisForwardSide(mmCenterMatchedReducedNoise_, mmCenterBeamTotal_, mmCenterProton_,
+   //                               mmLeftChain_, mmLeftStrip_, mmRightChain_, mmRightStrip_);
+   // }
 
     if(!event) continue;
 

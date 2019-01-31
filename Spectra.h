@@ -918,7 +918,7 @@ inline void Spectra::InitChannelMap() {
   MM_Map_Asad2_Aget0[Aget_Map[0]] = 28;
   MM_Map_Asad2_Aget0[Aget_Map[1]] = 29;
   MM_Map_Asad2_Aget0[Aget_Map[2]] = 30;
-  MM_Map_Asad2_Aget0[Aget_Map[3]] = 31; 
+  MM_Map_Asad2_Aget0[Aget_Map[3]] = 31;
   // Chains
   MM_Map_Asad2_Aget0[Aget_Map[35]] = 32;
   MM_Map_Asad2_Aget0[Aget_Map[34]] = 33;
@@ -1203,7 +1203,8 @@ inline void Spectra::InitHistograms() {
     hSiCsiEForwardDet[i]->GetYaxis()->SetTitleOffset(1.4);
 
     name = Form("siCsiEForwardCal_d%d", i);
-    hSiCsiEForwardDetCal[i] = new TH2F(name, name, 500, 0, 16000, 500, 0, 10000);
+    // hSiCsiEForwardDetCal[i] = new TH2F(name, name, 500, 0, 16000, 500, 0, 10000);
+    hSiCsiEForwardDetCal[i] = new TH2F(name, name, 500, 0, 16000, 500, 0, 20000);
     hSiCsiEForwardDetCal[i]->GetXaxis()->SetTitle("Si Energy [keV]"); hSiCsiEForwardDetCal[i]->GetXaxis()->CenterTitle();
     hSiCsiEForwardDetCal[i]->GetYaxis()->SetTitle("CsI Energy [channels]"); hSiCsiEForwardDetCal[i]->GetYaxis()->CenterTitle();
     hSiCsiEForwardDetCal[i]->GetYaxis()->SetTitleOffset(1.4);
