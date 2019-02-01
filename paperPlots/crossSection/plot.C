@@ -214,7 +214,7 @@ void plot() {
     // Set up graphs //
     ///////////////////
 
-    TCanvas* c = new TCanvas("c");
+    TCanvas* c = new TCanvas("c", "canvas", 800, 1000);
 
     TPad *pad1 = new TPad("pad1", "pad1", 0, 0.5, 1, 1.0);
     pad1->SetBottomMargin(0);
