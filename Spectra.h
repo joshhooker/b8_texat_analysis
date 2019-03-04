@@ -1204,7 +1204,8 @@ inline void Spectra::InitHistograms() {
 
     name = Form("siCsiEForwardCal_d%d", i);
     // hSiCsiEForwardDetCal[i] = new TH2F(name, name, 500, 0, 16000, 500, 0, 10000);
-    hSiCsiEForwardDetCal[i] = new TH2F(name, name, 500, 0, 16000, 500, 0, 20000);
+    // hSiCsiEForwardDetCal[i] = new TH2F(name, name, 500, 0, 16000, 500, 0, 20000);
+    hSiCsiEForwardDetCal[i] = new TH2F(name, name, 500, 0, 20000, 500, 0, 20000);
     hSiCsiEForwardDetCal[i]->GetXaxis()->SetTitle("Si Energy [keV]"); hSiCsiEForwardDetCal[i]->GetXaxis()->CenterTitle();
     hSiCsiEForwardDetCal[i]->GetYaxis()->SetTitle("CsI Energy [channels]"); hSiCsiEForwardDetCal[i]->GetYaxis()->CenterTitle();
     hSiCsiEForwardDetCal[i]->GetYaxis()->SetTitleOffset(1.4);

@@ -526,7 +526,8 @@ void Spectra::Loop() {
 
         hSiCsiEForwardCal[det.det][det.quad]->Fill(det.siEnergyCal, det.csiEnergy);
         // hSiCsiEForwardDetCal[det.det]->Fill(det.siEnergyCal, det.csiEnergy);
-        hSiCsiEForwardDetCal[det.det]->Fill(det.siEnergyCal, det.csiEnergyCal);
+        // hSiCsiEForwardDetCal[det.det]->Fill(det.siEnergyCal, det.csiEnergyCal);
+        hSiCsiEForwardDetCal[det.det]->Fill(det.csiEnergyCal, det.siEnergyCal);
       }
 
       hTotalEForward[det.det]->Fill(det.totalEnergy);
@@ -747,10 +748,10 @@ void Spectra::Loop() {
       event = AnalysisForwardCentral(mmCenterMatchedReducedNoise_, mmCenterBeamTotal_, mmCenterProton_, centralPadTotalEnergy,
                                      mmLeftChain_, mmLeftStrip_, mmRightChain_, mmRightStrip_);
     }
-   // if(left || right) {
-   //   event = AnalysisForwardSide(mmCenterMatchedReducedNoise_, mmCenterBeamTotal_, mmCenterProton_,
-   //                               mmLeftChain_, mmLeftStrip_, mmRightChain_, mmRightStrip_);
-   // }
+    if(left || right) {
+      event = AnalysisForwardSide(mmCenterMatchedReducedNoise_, mmCenterBeamTotal_, mmCenterProton_,
+                               mmLeftChain_, mmLeftStrip_, mmRightChain_, mmRightStrip_);
+    }
 
     if(!event) continue;
 
