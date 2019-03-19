@@ -38,6 +38,7 @@
 #include <map>
 #include <math.h>
 #include <sstream>
+#include <stdio.h>
 
 #include "CubicSpline.h"
 #include "EnergyLoss.h"
@@ -502,6 +503,12 @@ private:
   double siPosY;
   double siPosZ;
   TRandom3 *rng;
+
+// Write to file
+  FILE* beamFile;
+  FILE* protonSideFile;
+  FILE* otherSideFile;
+  FILE* centerFile;
 
 };
 #endif

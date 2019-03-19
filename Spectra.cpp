@@ -164,10 +164,15 @@ void Spectra::Loop() {
 
   printf("Starting Main Loop\n");
 
+  long eventNum = 12251;
+
+  beamFile = fopen(Form("beam_Event_%ld.dat", eventNum), "w");
+  protonSideFile = fopen(Form("protonSide_Event_%ld.dat", eventNum), "w");
+  otherSideFile = fopen(Form("otherSide_Event_%ld.dat", eventNum), "w");
+  centerFile = fopen(Form("center_Event_%ld.dat", eventNum), "w");
+
   long nbytes = 0, nb = 0;
-  // for(long jentry = 0; jentry < 5000; jentry++) {
-  // for(long jentry = 4747; jentry < 4748; jentry++) {
-  for(long jentry = 0; jentry < nentries; jentry++) {
+  for(long jentry = eventNum; jentry < eventNum + 1; jentry++) {
     long ientry = LoadTree(jentry);
     if(ientry < 0) break;
     nb = fChain->GetEntry(jentry);   nbytes += nb;
@@ -745,10 +750,12 @@ void Spectra::Loop() {
 
     bool event = false;
     if(central) {
+      printf("Central\n");
       event = AnalysisForwardCentral(mmCenterMatchedReducedNoise_, mmCenterBeamTotal_, mmCenterProton_, centralPadTotalEnergy,
                                      mmLeftChain_, mmLeftStrip_, mmRightChain_, mmRightStrip_);
     }
     if(left || right) {
+      printf("Left || Right\n");
       event = AnalysisForwardSide(mmCenterMatchedReducedNoise_, mmCenterBeamTotal_, mmCenterProton_,
                                mmLeftChain_, mmLeftStrip_, mmRightChain_, mmRightStrip_);
     }
@@ -885,6 +892,28 @@ bool Spectra::AnalysisForwardCentral(std::vector<mmCenter> centerMatched_, std::
       rightTrackAngle = atan(m_xComponentOther);
     }
   }
+
+  for(auto mm : centerBeamTotal_) {
+    fprintf(beamFile, "%f %f %f\n", mm.xPosition, mm.yPosition, mm.height);
+    printf("%f %f %f\n", mm.xPosition, mm.yPosition, mm.height);
+  }
+  fflush(beamFile);
+  fclose(beamFile);
+  for(auto mm : chainStripMatchedRight_) {
+    fprintf(protonSideFile, "%f %f %f\n", mm.xPosition, mm.yPosition, mm.height);
+  }
+  fflush(protonSideFile);
+  fclose(protonSideFile);
+  for(auto mm : chainStripMatchedLeft_) {
+    fprintf(otherSideFile, "%f %f %f\n", mm.xPosition, mm.yPosition, mm.height);
+  }
+  fflush(otherSideFile);
+  fclose(otherSideFile);
+  for(auto mm : centerProton_) {
+    fprintf(centerFile, "%f %f %f\n", mm.xPosition, mm.yPosition, mm.height);
+  }
+  fflush(centerFile);
+  fclose(centerFile);
 
   // Check dE of right track and see if proton
   if(chainStripMatchedRight_.size() > 1) {
@@ -1214,6 +1243,29 @@ bool Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::vec
     if(dECenter > 200 && dECenter < 2700) oneProtonEvent = false;
   }
 
+  for(auto mm : centerBeamTotal_) {
+    fprintf(beamFile, "%f %f %f\n", mm.xPosition, mm.yPosition, mm.height);
+    // printf("%f %f %f\n", mm.xPosition, mm.yPosition, mm.height);
+  }
+  fflush(beamFile);
+  fclose(beamFile);
+  for(auto mm : protonTrack_) {
+    fprintf(protonSideFile, "%f %f %f\n", mm.xPosition, mm.yPosition, mm.height);
+  }
+  fflush(protonSideFile);
+  fclose(protonSideFile);
+  for(auto mm : otherTrack_) {
+    fprintf(otherSideFile, "%f %f %f\n", mm.xPosition, mm.yPosition, mm.height);
+  }
+  fflush(otherSideFile);
+  fclose(otherSideFile);
+  for(auto mm : centerProton_) {
+    fprintf(centerFile, "%f %f %f\n", mm.xPosition, mm.yPosition, mm.height);
+    printf("%f %f %f\n", mm.xPosition, mm.yPosition, mm.height);
+  }
+  fflush(centerFile);
+  fclose(centerFile);
+
   // Initial fit of proton track
   auto *fitProton = new HoughTrack();
   fitProton->AddTrack(protonTrack_, siDet, siQuad);
@@ -1272,11 +1324,9 @@ bool Spectra::AnalysisForwardSide(std::vector<mmCenter> centerMatched_, std::vec
     SideVertexFinderHelp(centerBeamTotal_, protonTrack_, vertexPositionX, vertexPositionY, vertexPositionZ, parsProton);
   }
 
-  if(vertexPositionY < -390) {
-    DrawEventTrackSideCanvas(totalEventTrackSideCanvas, centerBeamTotal_, centerProton_, protonTrack_, protonTrackRaw_,
+  DrawEventTrackSideCanvas(totalEventTrackSideCanvas, centerBeamTotal_, centerProton_, protonTrack_, protonTrackRaw_,
               otherTrack_, otherTrackRaw_, parsProton);
-    totalEventTrackSideCanvas++;
-  }
+  totalEventTrackSideCanvas++;
 
   // Plot XZ hit position of forward non-central detectors
   double x, y, z;
